@@ -1,0 +1,42 @@
+# Desativar a listagem de diretórios
+Options -Indexes
+
+# Configurações de Charset
+AddDefaultCharset UTF-8
+
+# Proteção contra acesso a arquivos sensíveis
+<FilesMatch "^\.">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+<Files "conexao.php">
+    Order allow,deny
+    Deny from all
+</Files>
+
+<Files ".env">
+    Order allow,deny
+    Deny from all
+</Files>
+
+# Headers de Segurança HTTP
+<IfModule mod_headers.c>
+    # HSTS - Forçar HTTPS (31536000 segundos = 1 ano)
+    # Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+    
+    # Prevenir Clickjacking
+    Header always set X-Frame-Options "SAMEORIGIN"
+    
+    # Prevenir MIME Sniffing
+    Header always set X-Content-Type-Options "nosniff"
+    
+    # Referrer Policy
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    
+    # Content Security Policy (CSP)
+    Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://fonts.googleapis.com; font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self';"
+    
+    # Remover assinatura do servidor
+    Header unset X-Powered-By
+</IfModule>

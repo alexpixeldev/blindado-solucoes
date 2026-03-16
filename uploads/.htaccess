@@ -1,0 +1,11 @@
+# Impedir execução de scripts PHP e outros nesta pasta
+<FilesMatch "\.(php|php5|php7|phtml|pl|py|jsp|asp|htm|html|sh|cgi)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Garantir que arquivos sejam tratados como download ou exibição estática
+ForceType application/octet-stream
+<FilesMatch "\.(jpg|jpeg|png|gif|pdf|mp3|mp4|webm|webp)$">
+    ForceType none
+</FilesMatch>
