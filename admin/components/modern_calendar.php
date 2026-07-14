@@ -20,12 +20,12 @@ function renderModernCalendar($name, $value = '', $label = 'Selecione a Data') {
             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                 <i class="fas fa-calendar-alt text-slate-400 text-sm"></i>
             </div>
-            <input type="text" 
-                   id="display_<?= $id ?>" 
-                   class="form-input pl-11 cursor-pointer bg-white" 
-                   placeholder="DD/MM/AAAA" 
-                   value="<?= $display_value ?>" 
-                   readonly>
+                 <input type="text" 
+                     id="display_<?= $id ?>" 
+                     class="form-input pl-11 cursor-pointer bg-white" 
+                     placeholder="DD/MM/AAAA" 
+                     value="<?= $display_value ?>" 
+                     readonly required>
             <input type="hidden" name="<?= $name ?>" id="value_<?= $id ?>" value="<?= $iso_value ?>">
             <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
                 <i class="fas fa-chevron-down text-slate-400 text-xs transition-transform duration-200" id="icon_<?= $id ?>"></i>

@@ -88,24 +88,18 @@ $categoria_label = $categoria_labels[$usuario_categoria] ?? 'Usuário';
             <div class="space-y-1">
                 <a href="registrar_entrega.php" class="group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all <?php echo isActive('registrar_entrega.php', $current_page); ?>">
                     <i class="fas fa-box text-lg"></i>
-                    <span>Registrar Entrega</span>
+                    <span>Registro de entregas</span>
                 </a>
-                <a href="consultar_entrega.php" class="group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all <?php echo isActive('consultar_entrega.php', $current_page); ?>">
-                    <i class="fas fa-boxes text-lg"></i>
-                    <span>Consultar Entregas</span>
-                </a>
+                <!-- 'Consultar Entregas' lateral menu intentionally hidden per request; page remains available at consultar_entrega.php -->
                 <a href="registrar_prestador.php" class="group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all <?php echo isActive('registrar_prestador.php', $current_page); ?>">
                     <i class="fas fa-user-shield text-lg"></i>
-                    <span>Registrar Prestador</span>
+                    <span>Registro de prestador</span>
                 </a>
-                <a href="consultar_prestador.php" class="group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all <?php echo isActive('consultar_prestador.php', $current_page); ?>">
-                    <i class="fas fa-id-card text-lg"></i>
-                    <span>Consultar Prestadores</span>
-                </a>
+                <!-- 'Consultar Prestadores' lateral menu intentionally hidden per request; page remains available at consultar_prestador.php -->
                 <?php if (in_array($usuario_categoria, ['supervisor', 'gerente', 'diretor'])): ?>
                     <a href="configurar_entregas.php" class="group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all <?php echo isActive('configurar_entregas.php', $current_page); ?>">
                         <i class="fas fa-cog text-lg"></i>
-                        <span>Configurar Entregas</span>
+                        <span>Configurações Portaria</span>
                     </a>
                 <?php endif; ?>
             </div>

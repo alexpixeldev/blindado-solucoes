@@ -16,25 +16,47 @@ if (in_array($usuario_categoria, ['administrativo', 'colaborador'])) {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $edificio_id = intval($_POST['edificio_id']);
-    $numero_apartamento = trim($_POST['numero_apartamento']);
-    $hora_entrega = $_POST['hora_entrega'];
-    $situacao_recebimento = $_POST['situacao_recebimento'];
-    $transportadora = $_POST['transportadora'];
-    $observacao = trim($_POST['observacao']);
+    $hora_entrega = $_POST['hora_entrega'] ?? '';
+    $transportadora = $_POST['transportadora'] ?? '';
+    // per-apartment observations
+    $observacoes_arr = $_POST['observacao_apartamento'] ?? [];
     $data_entrega = !empty($_POST['data_entrega']) ? $_POST['data_entrega'] : date('Y-m-d');
 
-    if ($edificio_id > 0 && !empty($numero_apartamento) && !empty($hora_entrega) && !empty($situacao_recebimento) && !empty($transportadora)) {
+    // Accept multiple apartments for batch registration
+    $apartamentos = $_POST['numero_apartamento'] ?? [];
+    $situacoes_arr = $_POST['situacao_recebimento'] ?? [];
+    if (!is_array($apartamentos)) $apartamentos = [$apartamentos];
+    if (!is_array($situacoes_arr)) $situacoes_arr = [$situacoes_arr];
+
+    if ($edificio_id > 0 && !empty($hora_entrega) && !empty($transportadora) && count($apartamentos) > 0) {
         $stmt = $conn->prepare("INSERT INTO entregas (edificio_id, numero_apartamento, data_entrega, hora_entrega, situacao_recebimento, transportadora, usuario_id, observacao) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("isssssss", $edificio_id, $numero_apartamento, $data_entrega, $hora_entrega, $situacao_recebimento, $transportadora, $usuario_id, $observacao);
-        
-        if ($stmt->execute()) {
-            $mensagem = "Entrega registrada com sucesso!";
-            $mensagem_tipo = "success";
+        if (!$stmt) {
+            $mensagem = "Erro ao preparar insert: " . $conn->error;
+            $mensagem_tipo = 'error';
         } else {
-            $mensagem = "Erro ao registrar entrega: " . $conn->error;
-            $mensagem_tipo = "error";
+            $successCount = 0;
+            foreach ($apartamentos as $i => $apt) {
+                $numero_apartamento = trim($apt);
+                if ($numero_apartamento === '') continue;
+                $situacao_recebimento = trim($situacoes_arr[$i] ?? '');
+                $observacao = trim($observacoes_arr[$i] ?? '');
+
+                $stmt->bind_param("isssssss", $edificio_id, $numero_apartamento, $data_entrega, $hora_entrega, $situacao_recebimento, $transportadora, $usuario_id, $observacao);
+                if ($stmt->execute()) {
+                    $successCount++;
+                } else {
+                    error_log("registrar_entrega.php insert error: " . $stmt->error);
+                }
+            }
+            if ($successCount > 0) {
+                $mensagem = "{$successCount} entrega(s) registrada(s) com sucesso!";
+                $mensagem_tipo = 'success';
+            } else {
+                $mensagem = "Nenhuma entrega foi registrada. Verifique os dados e tente novamente.";
+                $mensagem_tipo = 'error';
+            }
+            $stmt->close();
         }
-        $stmt->close();
     } else {
         $mensagem = "Preencha todos os campos obrigatórios!";
         $mensagem_tipo = "error";
@@ -101,18 +123,13 @@ $situacoes = $conn->query("SELECT nome FROM situacoes_entrega ORDER BY nome")->f
                     <div class="admin-card">
                         <form method="POST" class="space-y-8">
                             <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                                <div class="space-y-2">
+                                <div class="space-y-2 sm:col-span-1">
                                     <label class="form-label">Edifício</label>
                                     <div class="relative">
-                                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                            <i class="fas fa-building text-slate-400 text-sm"></i>
-                                        </div>
-                                        <select name="edificio_id" class="form-input pl-11 appearance-none" required>
+                                        <select name="edificio_id" class="form-input appearance-none pr-10" required>
                                             <option value="">-- Selecione o Edifício --</option>
                                             <?php foreach ($edificios as $ed): ?>
-                                                <option value="<?php echo $ed['id']; ?>">
-                                                    <?php echo htmlspecialchars($ed['nome']); ?>
-                                                </option>
+                                                <option value="<?= $ed['id'] ?>"><?= htmlspecialchars($ed['nome']) ?></option>
                                             <?php endforeach; ?>
                                         </select>
                                         <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
@@ -120,50 +137,12 @@ $situacoes = $conn->query("SELECT nome FROM situacoes_entrega ORDER BY nome")->f
                                         </div>
                                     </div>
                                 </div>
+
                                 
-                                <div class="space-y-2">
-                                    <label class="form-label">Apartamento / Unidade</label>
-                                    <div class="relative">
-                                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                            <i class="fas fa-door-open text-slate-400 text-sm"></i>
-                                        </div>
-                                        <input type="text" name="numero_apartamento" class="form-input pl-11" placeholder="Ex: 101" required>
-                                    </div>
-                                </div>
 
-                                <div class="space-y-2">
-                                    <?php renderModernCalendar('data_entrega', date('Y-m-d'), 'Data da Entrega'); ?>
-                                </div>
+                                
 
-                                <div class="space-y-2">
-                                    <label class="form-label">Hora da Entrega</label>
-                                    <div class="relative">
-                                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                            <i class="fas fa-clock text-slate-400 text-sm"></i>
-                                        </div>
-                                        <input type="time" name="hora_entrega" class="form-input pl-11" value="<?php echo date('H:i'); ?>" required>
-                                    </div>
-                                </div>
-
-                                <div class="space-y-2">
-                                    <label class="form-label">Situação do Recebimento</label>
-                                    <div class="relative">
-                                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                            <i class="fas fa-info-circle text-slate-400 text-sm"></i>
-                                        </div>
-                                        <select name="situacao_recebimento" class="form-input pl-11 appearance-none" required>
-                                            <option value="">-- Selecione --</option>
-                                            <?php foreach ($situacoes as $s): ?>
-                                                <option value="<?= htmlspecialchars($s['nome']) ?>"><?= htmlspecialchars($s['nome']) ?></option>
-                                            <?php endforeach; ?>
-                                        </select>
-                                        <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
-                                            <i class="fas fa-chevron-down text-slate-400 text-xs"></i>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="space-y-2">
+                                <div class="space-y-2 sm:col-span-1">
                                     <label class="form-label">Transportadora / Entregador</label>
                                     <div class="relative">
                                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -182,9 +161,52 @@ $situacoes = $conn->query("SELECT nome FROM situacoes_entrega ORDER BY nome")->f
                                 </div>
 
                                 <div class="space-y-2 sm:col-span-2">
-                                    <label class="form-label">Observações Adicionais</label>
-                                    <textarea name="observacao" class="form-input min-h-[120px] resize-none" placeholder="Descreva detalhes do pacote, se há avarias, etc..."></textarea>
+                                    <div class="grid grid-cols-12 gap-2 items-center mb-2">
+                                        <div class="col-span-4 text-sm font-medium text-slate-700">Apartamento</div>
+                                        <div class="col-span-3 text-sm font-medium text-slate-700">Situação</div>
+                                        <div class="col-span-3 text-sm font-medium text-slate-700">Observação</div>
+                                        <div class="col-span-2"></div>
+                                    </div>
+                                    <div id="apartamentos-container" class="space-y-3">
+                                        <div class="grid grid-cols-12 gap-2 items-stretch">
+                                            <div class="col-span-4">
+                                                <input type="text" name="numero_apartamento[]" class="form-input pl-11" placeholder="Ex: 101" required>
+                                            </div>
+                                            <div class="col-span-3">
+                                                <select name="situacao_recebimento[]" class="form-input" required>
+                                                    <option value="">-- Situação --</option>
+                                                    <?php foreach ($situacoes as $s): ?>
+                                                        <option value="<?= htmlspecialchars($s['nome']) ?>"><?= htmlspecialchars($s['nome']) ?></option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                            </div>
+                                            <div class="col-span-3">
+                                                <input type="text" name="observacao_apartamento[]" class="form-input" placeholder="Observação" />
+                                            </div>
+                                            <div class="col-span-2">
+                                                <button type="button" id="add-apartamento" class="bg-green-600 hover:bg-green-700 text-white rounded px-3 py-3 text-sm font-semibold w-full h-full whitespace-nowrap flex items-center justify-center">+ Adicionar</button>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
+
+                                <div class="space-y-2 sm:col-span-1">
+                                    <?php renderModernCalendar('data_entrega', date('Y-m-d'), 'Data da Entrega'); ?>
+                                </div>
+
+                                <div class="space-y-2">
+                                    <label class="form-label">Hora da Entrega</label>
+                                    <div class="relative">
+                                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                            <i class="fas fa-clock text-slate-400 text-sm"></i>
+                                        </div>
+                                        <input type="time" name="hora_entrega" class="form-input pl-11" value="<?php echo date('H:i'); ?>" required>
+                                    </div>
+                                </div>
+
+                                
+
+                                <!-- Global observations removed; use per-apartment observation instead -->
                             </div>
 
                             <div class="flex flex-col gap-4 pt-6 border-t border-slate-100 sm:flex-row sm:items-center sm:justify-end">
@@ -207,6 +229,137 @@ $situacoes = $conn->query("SELECT nome FROM situacoes_entrega ORDER BY nome")->f
             </footer>
         </div>
     </div>
+
+    <template id="template-apartamento">
+                <div class="grid grid-cols-12 gap-2 items-stretch apartamento-row">
+            <div class="col-span-4">
+                <input type="text" name="numero_apartamento[]" class="form-input pl-11" placeholder="Ex: 101" required>
+            </div>
+            <div class="col-span-3">
+                <select name="situacao_recebimento[]" class="form-input" required>
+                    <option value="">-- Situação --</option>
+                    <?php foreach ($situacoes as $s): ?>
+                        <option value="<?= htmlspecialchars($s['nome']) ?>"><?= htmlspecialchars($s['nome']) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="col-span-3">
+                <input type="text" name="observacao_apartamento[]" class="form-input" placeholder="Observação" />
+            </div>
+                	<div class="col-span-2">
+                	<button type="button" class="remove-apartamento bg-red-500 hover:bg-red-600 text-white rounded px-3 py-3 text-sm font-semibold w-full h-full">Remover</button>
+            	</div>
+        </div>
+    </template>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const container = document.getElementById('apartamentos-container');
+            const addBtn = document.getElementById('add-apartamento');
+            const template = document.getElementById('template-apartamento');
+
+            function addRow() {
+                const clone = template.content.cloneNode(true);
+                container.appendChild(clone);
+                // focus last input
+                const inputs = container.querySelectorAll('input[name="numero_apartamento[]"]');
+                if (inputs.length) inputs[inputs.length - 1].focus();
+                validateDuplicates();
+            }
+
+            addBtn.addEventListener('click', function() {
+                addRow();
+            });
+
+            // Delegate remove
+            container.addEventListener('click', function(e) {
+                if (e.target && e.target.classList.contains('remove-apartamento')) {
+                    const row = e.target.closest('.apartamento-row');
+                    if (row) {
+                        row.remove();
+                        validateDuplicates();
+                    }
+                }
+            });
+
+            // Edifício search -> set hidden edificio_id
+            // Form validation: ensure edificio_id is set and prevent duplicate apartments
+            const form = document.querySelector('form');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    // Let browser show built-in required validation first
+                    if (!form.checkValidity()) {
+                        e.preventDefault();
+                        form.reportValidity();
+                        return false;
+                    }
+
+                    if (!edificioIdInput.value || parseInt(edificioIdInput.value) <= 0) {
+                        e.preventDefault();
+                        alert('Por favor selecione um edifício válido da lista.');
+                        if (edificioSearch) edificioSearch.focus();
+                        return false;
+                    }
+
+                    // Check duplicate apartments (server block if any)
+                    const dupValues = getDuplicateValues();
+                    if (dupValues.length) {
+                        e.preventDefault();
+                        validateDuplicates();
+                        const aptInputs = container.querySelectorAll('input[name="numero_apartamento[]"]');
+                        const firstDup = Array.from(aptInputs).find(i => dupValues.includes((i.value || '').trim()));
+                        if (firstDup) firstDup.focus();
+                        return false;
+                    }
+                });
+            }
+
+            // helper: return array of duplicated values
+            function getDuplicateValues() {
+                const aptInputs = container.querySelectorAll('input[name="numero_apartamento[]"]');
+                const counts = {};
+                aptInputs.forEach(inp => {
+                    const v = (inp.value || '').trim();
+                    if (!v) return;
+                    counts[v] = (counts[v] || 0) + 1;
+                });
+                return Object.keys(counts).filter(k => counts[k] > 1);
+            }
+
+            // mark duplicates inline for all inputs
+            function validateDuplicates() {
+                const aptInputs = container.querySelectorAll('input[name="numero_apartamento[]"]');
+                const counts = {};
+                aptInputs.forEach(inp => {
+                    const v = (inp.value || '').trim();
+                    if (!v) return;
+                    counts[v] = (counts[v] || 0) + 1;
+                });
+
+                aptInputs.forEach(inp => {
+                    const v = (inp.value || '').trim();
+                    const existing = inp.parentElement.querySelector('.duplicate-error');
+                    if (existing) existing.remove();
+                    if (v && counts[v] > 1) {
+                        inp.classList.add('border-red-500');
+                        const err = document.createElement('div');
+                        err.className = 'duplicate-error text-sm text-red-600 mt-1';
+                        err.textContent = 'Este apartamento já foi inserido, você está inserindo uma informação duplicada';
+                        inp.parentElement.appendChild(err);
+                    } else {
+                        inp.classList.remove('border-red-500');
+                    }
+                });
+            }
+
+            // Re-validate while typing (dynamic)
+            container.addEventListener('input', function(e) {
+                if (e.target && e.target.matches('input[name="numero_apartamento[]"]')) {
+                    validateDuplicates();
+                }
+            });
+        });
+    </script>
 
     <?php include 'components/footer.php'; ?>
 </body>

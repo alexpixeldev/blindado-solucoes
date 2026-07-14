@@ -104,15 +104,10 @@ $edificios = $conn->query("SELECT e.id, e.nome, b.nome as base_nome FROM edifici
                                 <div class="space-y-2">
                                     <label class="form-label">Edifício *</label>
                                     <div class="relative">
-                                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                            <i class="fas fa-building text-slate-400 text-sm"></i>
-                                        </div>
-                                        <select name="edificio_id" class="form-input pl-11 appearance-none" required>
+                                        <select name="edificio_id" class="form-input appearance-none pr-10" required>
                                             <option value="">-- Selecione o Edifício --</option>
                                             <?php foreach ($edificios as $ed): ?>
-                                                <option value="<?php echo $ed['id']; ?>">
-                                                    <?php echo htmlspecialchars($ed['nome']); ?>
-                                                </option>
+                                                <option value="<?php echo $ed['id']; ?>"><?= htmlspecialchars($ed['nome']); ?></option>
                                             <?php endforeach; ?>
                                         </select>
                                         <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
