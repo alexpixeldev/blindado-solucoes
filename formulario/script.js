@@ -122,13 +122,41 @@ document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('input[type="file"][data-preview-target]').forEach(input => {
             input.addEventListener('change', handleSelfiePreview);
         });
+        document.querySelectorAll('.selfie-method-button').forEach(button => {
+            button.addEventListener('click', handleSelfieMethodButton);
+        });
+    }
+
+    function handleSelfieMethodButton(event) {
+        const button = event.currentTarget;
+        const method = button.dataset.method;
+        const inputId = button.dataset.inputTarget;
+        const input = document.getElementById(inputId);
+
+        if (!input) {
+            return;
+        }
+
+        if (method === 'camera') {
+            input.setAttribute('capture', 'user');
+        } else {
+            input.removeAttribute('capture');
+        }
+
+        input.click();
     }
 
     function handleSelfiePreview(event) {
         const input = event.target;
         const previewId = input.dataset.previewTarget;
         const preview = document.getElementById(previewId);
+        const fileNameId = previewId.replace('selfie-preview-', 'selfie-file-name-');
+        const fileNameElement = document.getElementById(fileNameId);
+
         if (!input.files || input.files.length === 0 || !preview) {
+            if (fileNameElement) {
+                fileNameElement.textContent = '';
+            }
             return;
         }
 
@@ -136,6 +164,9 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!file.type.startsWith('image/')) {
             preview.classList.add('hidden');
             preview.src = '';
+            if (fileNameElement) {
+                fileNameElement.textContent = '';
+            }
             return;
         }
 
@@ -143,6 +174,9 @@ document.addEventListener('DOMContentLoaded', function() {
         reader.onload = () => {
             preview.src = reader.result;
             preview.classList.remove('hidden');
+            if (fileNameElement) {
+                fileNameElement.textContent = `Arquivo selecionado: ${file.name}`;
+            }
         };
         reader.readAsDataURL(file);
     }
@@ -245,19 +279,33 @@ document.addEventListener('DOMContentLoaded', function() {
             templateHtml = templateHtml.replace(/__INDEX_NUMBER__/g, index + 1);
 
             inquilinosContainer.insertAdjacentHTML('beforeend', templateHtml);
-            
+
+            // Pegar o novo item inserido
+            const newItem = inquilinosContainer.querySelector(`.inquilino-item[data-index="${index}"]`);
+
             // Adicionar event listener para trim nos campos de nome
-            const nomeInput = document.querySelector(`input[name="inquilinos[${index}][nome]"]`);
+            const nomeInput = newItem ? newItem.querySelector(`input[name="inquilinos[${index}][nome]"]`) : null;
             if (nomeInput) {
                 nomeInput.addEventListener('blur', function() {
                     this.value = this.value.trim();
                 });
             }
 
-            // Configurar preview de selfie no novo item
-            const selfieInput = document.querySelector(`input[name="inquilinos[${index}][selfie]"]`);
-            if (selfieInput) {
-                selfieInput.addEventListener('change', handleSelfiePreview);
+            // Vincular botões de método (camera / file) no novo item
+            if (newItem) {
+                newItem.querySelectorAll('.selfie-method-button').forEach(btn => {
+                    btn.addEventListener('click', handleSelfieMethodButton);
+                });
+
+                // Configurar preview de selfie no novo item
+                const selfieInput = newItem.querySelector(`input[id^="selfie-input-"]`) || newItem.querySelector(`input[name="inquilinos[${index}][selfie]"]`);
+                if (selfieInput) {
+                    selfieInput.addEventListener('change', handleSelfiePreview);
+                }
+            } else {
+                // Fallback para compatibilidade (document-wide)
+                const selfieInput = document.querySelector(`input[name="inquilinos[${index}][selfie]"]`);
+                if (selfieInput) selfieInput.addEventListener('change', handleSelfiePreview);
             }
         });
     }
@@ -558,23 +606,35 @@ document.addEventListener('DOMContentLoaded', function() {
                 'X-Requested-With': 'XMLHttpRequest'
             }
         })
-        .then(response => response.json())
+        .then(async response => {
+            const text = await response.text();
+            console.log('salvar_locacao response text:', text);
+            try {
+                return JSON.parse(text);
+            } catch (e) {
+                console.error('Invalid JSON response from salvar_locacao.php:', text);
+                let serverMsg = text;
+                try {
+                    const parsed = JSON.parse(text.replace(/<[^>]*>/g, ''));
+                    serverMsg = parsed.message || JSON.stringify(parsed);
+                } catch (_ignored) {
+                    serverMsg = text.substring(0, 300);
+                }
+                throw new Error('Resposta inválida do servidor: ' + serverMsg);
+            }
+        })
         .then(result => {
             if (result.status === 'success') {
                 const msg = generateWhatsAppMessage(formData);
                 let telefone = '';
                 
                 if (data.user_type === 'locatario') {
-                    // Se for locatário, combina o DDI e o número do locador
                     const ddi = data.locador_ddi ? data.locador_ddi.replace(/\D/g, '') : '55';
                     const numero = data.locador_telefone ? data.locador_telefone.replace(/\D/g, '') : '';
                     telefone = ddi + numero;
                 } else {
-                    // Se for locador, mantém a lógica atual (telefone da base responsável pelo edifício)
                     const edificio = EDIFICIOS_DATA.find(e => e.id == data.edificio_id);
                     telefone = edificio && edificio.telefone ? edificio.telefone.replace(/\D/g, '') : '';
-                    
-                    // Se o telefone da base não tiver prefixo de país, assume Brasil (55)
                     if (telefone && !telefone.startsWith('55') && telefone.length <= 11) {
                         telefone = '55' + telefone;
                     }

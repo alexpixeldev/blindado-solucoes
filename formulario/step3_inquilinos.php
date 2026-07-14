@@ -51,11 +51,21 @@
                 </div>
                 <div class="space-y-2 field-container">
                     <label class="block text-sm font-medium text-slate-700">Selfie do Hóspede</label>
-                    <div class="relative">
+                    <div class="space-y-3">
+                        <div class="flex flex-wrap gap-3">
+                            <button type="button" class="selfie-method-button inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-all" data-method="camera" data-input-target="selfie-input-0">
+                                <i class="fas fa-camera"></i>
+                                Tirar foto agora
+                            </button>
+                            <button type="button" class="selfie-method-button inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-all" data-method="file" data-input-target="selfie-input-0">
+                                <i class="fas fa-upload"></i>
+                                Enviar do aparelho
+                            </button>
+                        </div>
+                        <input type="file" id="selfie-input-0" name="inquilinos[0][selfie]" accept="image/*" class="hidden" data-preview-target="selfie-preview-0" />
                         <img id="selfie-preview-0" src="" alt="Prévia da selfie" class="hidden w-full h-40 rounded-2xl object-cover border border-slate-200 bg-slate-50 mb-3" />
-                        <input type="file" name="inquilinos[0][selfie]" accept="image/*" capture="user" data-preview-target="selfie-preview-0"
-                               class="block w-full text-sm text-slate-700 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary-600 file:text-white hover:file:bg-primary-700" />
                         <p class="text-xs text-slate-500 mt-2">Tire uma foto ou escolha uma selfie da galeria.</p>
+                        <p id="selfie-file-name-0" class="text-xs text-slate-500"></p>
                     </div>
                 </div>
             </div>
@@ -94,11 +104,21 @@
                 </div>
                 <div class="space-y-2 field-container mt-6">
                     <label class="block text-sm font-medium text-slate-700">Selfie do Hóspede</label>
-                    <div class="relative">
+                    <div class="space-y-3">
+                        <div class="flex flex-wrap gap-3">
+                            <button type="button" class="selfie-method-button inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-all" data-method="camera" data-input-target="selfie-input-__INDEX__">
+                                <i class="fas fa-camera"></i>
+                                Tirar foto agora
+                            </button>
+                            <button type="button" class="selfie-method-button inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-all" data-method="file" data-input-target="selfie-input-__INDEX__">
+                                <i class="fas fa-upload"></i>
+                                Enviar do aparelho
+                            </button>
+                        </div>
+                        <input type="file" id="selfie-input-__INDEX__" name="inquilinos[__INDEX__][selfie]" accept="image/*" class="hidden" data-preview-target="selfie-preview-__INDEX__" />
                         <img id="selfie-preview-__INDEX__" src="" alt="Prévia da selfie" class="hidden w-full h-40 rounded-2xl object-cover border border-slate-200 bg-slate-50 mb-3" />
-                        <input type="file" name="inquilinos[__INDEX__][selfie]" accept="image/*" capture="user" data-preview-target="selfie-preview-__INDEX__"
-                               class="block w-full text-sm text-slate-700 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary-600 file:text-white hover:file:bg-primary-700" />
                         <p class="text-xs text-slate-500 mt-2">Tire uma foto ou escolha uma selfie da galeria.</p>
+                        <p id="selfie-file-name-__INDEX__" class="text-xs text-slate-500"></p>
                     </div>
                 </div>
             </div>

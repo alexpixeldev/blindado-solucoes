@@ -5,8 +5,16 @@
  */
 
 // Detectar ambiente (local vs produção)
-$isLocalhost = in_array($_SERVER['HTTP_HOST'] ?? '', ['localhost', '127.0.0.1', '::1']) || 
-               strpos($_SERVER['HTTP_HOST'] ?? '', 'localhost') === 0;
+$serverHost = $_SERVER['HTTP_HOST'] ?? '';
+$serverName = $_SERVER['SERVER_NAME'] ?? '';
+$serverAddr = $_SERVER['SERVER_ADDR'] ?? '';
+$remoteAddr = $_SERVER['REMOTE_ADDR'] ?? '';
+
+$isLocalhost = in_array($serverHost, ['localhost', '127.0.0.1', '::1'], true)
+    || strpos($serverHost, 'localhost') === 0
+    || in_array($serverName, ['localhost', '127.0.0.1', '::1'], true)
+    || in_array($serverAddr, ['127.0.0.1', '::1', '::ffff:127.0.0.1'], true)
+    || in_array($remoteAddr, ['127.0.0.1', '::1', '::ffff:127.0.0.1'], true);
 
 if ($isLocalhost) {
     // Configurações para XAMPP local
