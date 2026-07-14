@@ -77,6 +77,22 @@ $stmt->execute();
 $result = $stmt->get_result();
 $locacoes = $result->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
+
+$locacaoIds = array_column($locacoes, 'id');
+$locacaoSelfies = [];
+if (!empty($locacaoIds)) {
+    $checkSelfieColumn = $conn->query("SHOW COLUMNS FROM locacoes_inquilinos LIKE 'selfie'");
+    if ($checkSelfieColumn && $checkSelfieColumn->num_rows > 0) {
+        $ids = implode(',', array_map('intval', $locacaoIds));
+        $selfieQuery = "SELECT locacao_id, nome, selfie FROM locacoes_inquilinos WHERE locacao_id IN ($ids) AND selfie IS NOT NULL AND selfie <> ''";
+        $selfieResult = $conn->query($selfieQuery);
+        if ($selfieResult) {
+            while ($row = $selfieResult->fetch_assoc()) {
+                $locacaoSelfies[$row['locacao_id']][] = $row;
+            }
+        }
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-br" class="h-full bg-slate-50">
@@ -235,16 +251,25 @@ $stmt->close();
                                                 </div>
                                             </td>
                                             <td>
-                                                <div class="flex flex-wrap gap-1">
-                                                    <?php if ($loc['nomes_inquilinos']): ?>
-                                                        <?php foreach(explode(', ', $loc['nomes_inquilinos']) as $inq): ?>
-                                                            <span class="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-700">
-                                                                <i class="fas fa-user text-[9px] text-slate-400"></i>
-                                                                <?= htmlspecialchars($inq) ?>
-                                                            </span>
-                                                        <?php endforeach; ?>
-                                                    <?php else: ?>
-                                                        <span class="text-slate-400">---</span>
+                                                <div class="flex flex-col gap-3">
+                                                    <div class="flex flex-wrap gap-1">
+                                                        <?php if ($loc['nomes_inquilinos']): ?>
+                                                            <?php foreach(explode(', ', $loc['nomes_inquilinos']) as $inq): ?>
+                                                                <span class="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-700">
+                                                                    <i class="fas fa-user text-[9px] text-slate-400"></i>
+                                                                    <?= htmlspecialchars($inq) ?>
+                                                                </span>
+                                                            <?php endforeach; ?>
+                                                        <?php else: ?>
+                                                            <span class="text-slate-400">---</span>
+                                                        <?php endif; ?>
+                                                    </div>
+                                                    <?php if (!empty($locacaoSelfies[$loc['id']])): ?>
+                                                        <div class="flex flex-wrap gap-2">
+                                                            <?php foreach ($locacaoSelfies[$loc['id']] as $selfieData): ?>
+                                                                <img src="<?= htmlspecialchars($selfieData['selfie']) ?>" alt="Selfie <?= htmlspecialchars($selfieData['nome']) ?>" class="h-14 w-14 rounded-xl object-cover border border-slate-200 shadow-sm" title="<?= htmlspecialchars($selfieData['nome']) ?>" />
+                                                            <?php endforeach; ?>
+                                                        </div>
                                                     <?php endif; ?>
                                                 </div>
                                             </td>

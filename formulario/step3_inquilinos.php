@@ -49,8 +49,60 @@
                         </div>
                     </div>
                 </div>
+                <div class="space-y-2 field-container">
+                    <label class="block text-sm font-medium text-slate-700">Selfie do Hóspede</label>
+                    <div class="relative">
+                        <img id="selfie-preview-0" src="" alt="Prévia da selfie" class="hidden w-full h-40 rounded-2xl object-cover border border-slate-200 bg-slate-50 mb-3" />
+                        <input type="file" name="inquilinos[0][selfie]" accept="image/*" capture="user" data-preview-target="selfie-preview-0"
+                               class="block w-full text-sm text-slate-700 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary-600 file:text-white hover:file:bg-primary-700" />
+                        <p class="text-xs text-slate-500 mt-2">Tire uma foto ou escolha uma selfie da galeria.</p>
+                    </div>
+                </div>
             </div>
         </div>
+
+        <template id="template-inquilino">
+            <div class="inquilino-item relative p-6 bg-white border border-slate-200 rounded-2xl shadow-sm animate-fade-in group" data-index="__INDEX__">
+                <button type="button" class="remove-item absolute -top-3 -right-3 w-8 h-8 bg-red-500 text-white rounded-full shadow-lg hover:bg-red-600 transition-colors flex items-center justify-center">
+                    <i class="fas fa-times text-xs"></i>
+                </button>
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="w-8 h-8 flex items-center justify-center bg-primary-100 text-primary-600 rounded-lg font-bold text-sm">__INDEX_NUMBER__</div>
+                    <h3 class="text-lg font-semibold text-slate-900">Hóspede Adicional</h3>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div class="space-y-2 field-container">
+                        <label class="block text-sm font-medium text-slate-700">Nome Completo</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <input type="text" name="inquilinos[__INDEX__][nome]" placeholder="Nome do hóspede" required data-label="nome"
+                                   class="block w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-200">
+                        </div>
+                    </div>
+                    <div class="space-y-2 field-container">
+                        <label class="block text-sm font-medium text-slate-700">Documento</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
+                                <i class="fas fa-id-card"></i>
+                            </div>
+                            <input type="text" name="inquilinos[__INDEX__][documento]" placeholder="Número do documento" required data-label="documento"
+                                   class="block w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-200">
+                        </div>
+                    </div>
+                </div>
+                <div class="space-y-2 field-container mt-6">
+                    <label class="block text-sm font-medium text-slate-700">Selfie do Hóspede</label>
+                    <div class="relative">
+                        <img id="selfie-preview-__INDEX__" src="" alt="Prévia da selfie" class="hidden w-full h-40 rounded-2xl object-cover border border-slate-200 bg-slate-50 mb-3" />
+                        <input type="file" name="inquilinos[__INDEX__][selfie]" accept="image/*" capture="user" data-preview-target="selfie-preview-__INDEX__"
+                               class="block w-full text-sm text-slate-700 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary-600 file:text-white hover:file:bg-primary-700" />
+                        <p class="text-xs text-slate-500 mt-2">Tire uma foto ou escolha uma selfie da galeria.</p>
+                    </div>
+                </div>
+            </div>
+        </template>
 
         <!-- Botão Adicionar Hóspede -->
         <button type="button" id="add-inquilino" 

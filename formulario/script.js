@@ -19,6 +19,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initDatePickers();
     initPhoneMask();
     initEdificiosSearch();
+    initSelfiePreview();
 
     // --- Navegação ---
     btnNext.addEventListener('click', () => {
@@ -117,6 +118,35 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    function initSelfiePreview() {
+        document.querySelectorAll('input[type="file"][data-preview-target]').forEach(input => {
+            input.addEventListener('change', handleSelfiePreview);
+        });
+    }
+
+    function handleSelfiePreview(event) {
+        const input = event.target;
+        const previewId = input.dataset.previewTarget;
+        const preview = document.getElementById(previewId);
+        if (!input.files || input.files.length === 0 || !preview) {
+            return;
+        }
+
+        const file = input.files[0];
+        if (!file.type.startsWith('image/')) {
+            preview.classList.add('hidden');
+            preview.src = '';
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = () => {
+            preview.src = reader.result;
+            preview.classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+    }
+
     // --- Edifícios (Busca e Seleção) ---
     function initEdificiosSearch() {
         const searchInput = document.getElementById('edificio_search');
@@ -206,43 +236,15 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    const inquilinoTemplate = document.getElementById('template-inquilino');
     if (addInquilinoBtn) {
         addInquilinoBtn.addEventListener('click', () => {
             const index = inquilinoCount++;
-            const html = `
-                <div class="inquilino-item relative p-6 bg-white border border-slate-200 rounded-2xl shadow-sm animate-fade-in group" data-index="${index}">
-                    <button type="button" class="remove-item absolute -top-3 -right-3 w-8 h-8 bg-red-500 text-white rounded-full shadow-lg hover:bg-red-600 transition-colors flex items-center justify-center">
-                        <i class="fas fa-times text-xs"></i>
-                    </button>
-                    <div class="flex items-center gap-3 mb-6">
-                        <div class="w-8 h-8 flex items-center justify-center bg-primary-100 text-primary-600 rounded-lg font-bold text-sm">${index + 1}</div>
-                        <h3 class="text-lg font-semibold text-slate-900">Hóspede Adicional</h3>
-                    </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                        <div class="space-y-2 field-container">
-                            <label class="block text-sm font-medium text-slate-700">Nome Completo</label>
-                            <div class="relative">
-                                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
-                                    <i class="fas fa-user"></i>
-                                </div>
-                                <input type="text" name="inquilinos[${index}][nome]" placeholder="Nome do hóspede" required data-label="nome"
-                                       class="block w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-200">
-                            </div>
-                        </div>
-                        <div class="space-y-2 field-container">
-                            <label class="block text-sm font-medium text-slate-700">Documento</label>
-                            <div class="relative">
-                                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
-                                    <i class="fas fa-id-card"></i>
-                                </div>
-                                <input type="text" name="inquilinos[${index}][documento]" placeholder="Número do documento" required data-label="documento"
-                                       class="block w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-200">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            inquilinosContainer.insertAdjacentHTML('beforeend', html);
+            let templateHtml = inquilinoTemplate.innerHTML;
+            templateHtml = templateHtml.replace(/__INDEX__/g, index);
+            templateHtml = templateHtml.replace(/__INDEX_NUMBER__/g, index + 1);
+
+            inquilinosContainer.insertAdjacentHTML('beforeend', templateHtml);
             
             // Adicionar event listener para trim nos campos de nome
             const nomeInput = document.querySelector(`input[name="inquilinos[${index}][nome]"]`);
@@ -250,6 +252,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 nomeInput.addEventListener('blur', function() {
                     this.value = this.value.trim();
                 });
+            }
+
+            // Configurar preview de selfie no novo item
+            const selfieInput = document.querySelector(`input[name="inquilinos[${index}][selfie]"]`);
+            if (selfieInput) {
+                selfieInput.addEventListener('change', handleSelfiePreview);
             }
         });
     }

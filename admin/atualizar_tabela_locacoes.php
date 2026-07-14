@@ -40,8 +40,16 @@ if ($executar) {
         locacao_id INT NOT NULL, 
         nome VARCHAR(255), 
         documento VARCHAR(50), 
+        telefone VARCHAR(50), 
+        selfie LONGTEXT, 
         FOREIGN KEY (locacao_id) REFERENCES locacoes(id) ON DELETE CASCADE
     )");
+
+    // Adiciona selfie em locacoes_inquilinos caso esteja faltando
+    $checkSelfie = $conn->query("SHOW COLUMNS FROM locacoes_inquilinos LIKE 'selfie'");
+    if ($checkSelfie && $checkSelfie->num_rows == 0) {
+        $conn->query("ALTER TABLE locacoes_inquilinos ADD COLUMN selfie LONGTEXT");
+    }
 
     $conn->query("CREATE TABLE IF NOT EXISTS locacoes_veiculos (
         id INT AUTO_INCREMENT PRIMARY KEY, 

@@ -57,12 +57,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $locacao_id = $stmt->insert_id;
 
         // 2. Inserir Inquilinos
+        $files_inquilinos = $_FILES['inquilinos'] ?? null;
         if (isset($_POST['inquilinos']) && is_array($_POST['inquilinos'])) {
-            $stmt_inq = $conn->prepare("INSERT INTO locacoes_inquilinos (locacao_id, nome, documento, telefone) VALUES (?, ?, ?, ?)");
-            foreach ($_POST['inquilinos'] as $inquilino) {
+            $stmt_inq = $conn->prepare("INSERT INTO locacoes_inquilinos (locacao_id, nome, documento, telefone, selfie) VALUES (?, ?, ?, ?, ?)");
+            foreach ($_POST['inquilinos'] as $index => $inquilino) {
                 if (!empty($inquilino['nome'])) {
                     $tel_inq = $inquilino['telefone'] ?? null;
-                    $stmt_inq->bind_param("isss", $locacao_id, $inquilino['nome'], $inquilino['documento'], $tel_inq);
+                    $selfieData = null;
+
+                    if ($files_inquilinos && isset($files_inquilinos['tmp_name'][$index]['selfie']) && $files_inquilinos['error'][$index]['selfie'] === UPLOAD_ERR_OK) {
+                        $tmpName = $files_inquilinos['tmp_name'][$index]['selfie'];
+                        $mimeType = mime_content_type($tmpName) ?: $files_inquilinos['type'][$index]['selfie'];
+                        $fileContents = file_get_contents($tmpName);
+                        if ($fileContents !== false) {
+                            $base64 = base64_encode($fileContents);
+                            $selfieData = "data:$mimeType;base64,$base64";
+                        }
+                    }
+
+                    $stmt_inq->bind_param("issss", $locacao_id, $inquilino['nome'], $inquilino['documento'], $tel_inq, $selfieData);
                     $stmt_inq->execute();
                 }
             }

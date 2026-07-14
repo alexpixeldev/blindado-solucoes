@@ -149,7 +149,7 @@ $edificios = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
                     <div class="text-sm text-red-700 font-medium"></div>
                 </div>
 
-                <form id="multi-step-form" action="salvar_locacao.php" method="POST" class="p-6 sm:p-10">
+                <form id="multi-step-form" action="salvar_locacao.php" method="POST" enctype="multipart/form-data" class="p-6 sm:p-10">
                     
                     <!-- Steps Container -->
                     <div id="steps-container">
@@ -194,6 +194,6 @@ $edificios = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
         const EDIFICIOS_DATA = <?php echo json_encode($edificios); ?>;
     </script>
     
-    <script src="script.js"></script>
+    <script src="script.js?v=<?php echo filemtime('script.js'); ?>"></script>
 </body>
 </html>
