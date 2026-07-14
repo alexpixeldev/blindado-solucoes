@@ -63,7 +63,11 @@ $where_clauses = [];
 $search = $_GET['search'] ?? '';
 
 if ($filtro_edificio) {
-    $where_clauses[] = "({$alias}.edificio_id = " . intval($filtro_edificio) . " OR {$alias}.base_id = " . intval($filtro_edificio) . ")";
+    if (in_array($tipo_dados, ['radio_fibra', 'dvr', 'ips', 'ramais'], true)) {
+        $where_clauses[] = "({$alias}.edificio_id = " . intval($filtro_edificio) . " OR {$alias}.base_id = " . intval($filtro_edificio) . ")";
+    } else {
+        $where_clauses[] = "{$alias}.edificio_id = " . intval($filtro_edificio);
+    }
 }
 
 if ($search) {

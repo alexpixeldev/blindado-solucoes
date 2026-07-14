@@ -2,8 +2,8 @@
 require_once 'verifica_login.php';
 require_once 'conexao.php';
 
-// Apenas usuários Administrativo e Gerente podem acessar
-if (!in_array($_SESSION['usuario_categoria'], ['administrativo', 'gerente'])) {
+// Apenas usuários Administrativo, Gerente e Supervisor podem acessar
+if (!in_array($_SESSION['usuario_categoria'], ['administrativo', 'gerente', 'supervisor'])) {
     header("Location: index.php");
     exit();
 }
@@ -123,7 +123,11 @@ $stmt->close();
                                         <tr class="group">
                                             <td class="font-bold text-slate-900"><?= htmlspecialchars(!empty($colab['nome_real']) ? $colab['nome_real'] : 'N/A') ?></td>
                                             <td class="text-slate-500"><?= htmlspecialchars($colab['nome']) ?></td>
-                                            <td class="text-right">
+                                            <td class="text-right flex justify-end gap-2">
+                                                <a href="visualizar_colaborador.php?id=<?= $colab['id'] ?>" class="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 rounded-xl font-bold text-xs hover:bg-slate-200 transition-all">
+                                                    <i class="fas fa-eye"></i>
+                                                    <span>Ver Detalhes</span>
+                                                </a>
                                                 <a href="registrar_acao_disciplinar.php?id=<?= $colab['id'] ?>" class="inline-flex items-center gap-2 px-4 py-2 bg-red-50 text-red-700 rounded-xl font-bold text-xs hover:bg-red-600 hover:text-white transition-all">
                                                     <i class="fas fa-gavel"></i>
                                                     <span>Registrar Disciplina</span>

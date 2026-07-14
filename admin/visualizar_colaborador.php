@@ -210,10 +210,12 @@ try {
                         </div>
                     </div>
                     <div class="flex gap-3">
-                        <a href="editar_colaborador.php?id=<?= $colaborador['id'] ?>" class="btn-primary">
-                            <i class="fas fa-edit"></i>
-                            <span>Editar Dados</span>
-                        </a>
+                        <?php if (in_array($_SESSION['usuario_categoria'] ?? '', ['administrativo', 'gerente'])): ?>
+                            <a href="editar_colaborador.php?id=<?= $colaborador['id'] ?>" class="btn-primary">
+                                <i class="fas fa-edit"></i>
+                                <span>Editar Dados</span>
+                            </a>
+                        <?php endif; ?>
                     </div>
                 </div>
 
