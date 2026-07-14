@@ -61,7 +61,7 @@ if (isset($_POST['add_edificio'])) {
     }
 }
 
-$bases = $conn->query("SELECT id, nome FROM bases ORDER BY nome ASC")->fetch_all(MYSQLI_ASSOC);
+$bases = $conn->query("SELECT id, nome FROM bases WHERE status = 'ativo' ORDER BY nome ASC")->fetch_all(MYSQLI_ASSOC);
 $administradoras = $conn->query("SELECT id, nome FROM administradoras ORDER BY nome ASC")->fetch_all(MYSQLI_ASSOC);
 
 $mensagem = '';

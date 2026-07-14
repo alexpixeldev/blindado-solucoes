@@ -11,8 +11,7 @@ if (!in_array($usuario_categoria, ['supervisor', 'gerente'])) {
 // Buscar edifícios para o select
 $edificios = $conn->query("SELECT e.id, e.nome, b.nome AS nome_base 
                            FROM edificios e 
-                           JOIN bases b ON e.base_id = b.id 
-                           ORDER BY b.nome, e.nome")->fetch_all(MYSQLI_ASSOC);
+                           JOIN bases b ON e.base_id = b.id                            WHERE b.status = 'ativo'                            ORDER BY b.nome, e.nome")->fetch_all(MYSQLI_ASSOC);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nome = $_POST['nome'] ?? '';

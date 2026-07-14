@@ -15,8 +15,8 @@ $mensagem = '';
 $mensagem_tipo = 'info';
 
 // Buscar edifícios e bases para seleção
-$edificios = $conn->query("SELECT e.id, e.nome, b.nome as base_nome FROM edificios e JOIN bases b ON e.base_id = b.id ORDER BY e.nome")->fetch_all(MYSQLI_ASSOC);
-$bases = $conn->query("SELECT id, nome FROM bases ORDER BY nome")->fetch_all(MYSQLI_ASSOC);
+$edificios = $conn->query("SELECT e.id, e.nome, b.nome as base_nome FROM edificios e JOIN bases b ON e.base_id = b.id WHERE b.status = 'ativo' ORDER BY e.nome")->fetch_all(MYSQLI_ASSOC);
+$bases = $conn->query("SELECT id, nome FROM bases WHERE status = 'ativo' ORDER BY nome")->fetch_all(MYSQLI_ASSOC);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['salvar_plantao'])) {
     $supervisor = trim($_POST['supervisor_nome']);
@@ -119,7 +119,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['salvar_plantao'])) {
                             </div>
                         </div>
                         <div class="meta-row"><span class="meta-label"><i class="fas fa-clock"></i> Turno</span><div class="meta-value"><select name="periodo_dia" id="periodo_dia" required onchange="updateTitle()"><option value="dia" selected>Diurno</option><option value="noite">Noturno</option></select></div></div>
-                        <div class="meta-row"><span class="meta-label"><i class="fas fa-map-marker-alt"></i> Local Principal</span><div class="meta-value"><select name="local_id" required><option value="">Selecione o Local</option><optgroup label="Bases"><?php foreach ($bases as $b): ?><option value="b_<?= $b['id'] ?>">Base: <?= htmlspecialchars($b['nome']) ?></option><?php endforeach; ?></optgroup><optgroup label="Edifícios"><?php foreach ($edificios as $ed): ?><option value="e_<?= $ed['id'] ?>"><?= htmlspecialchars($ed['nome']) ?></option><?php endforeach; ?></optgroup></select></div></div>
+                        <div class="meta-row"><span class="meta-label"><i class="fas fa-map-marker-alt"></i> Local</span><div class="meta-value"><select name="local_id" required><option value="">Selecione o Local</option><optgroup label="Bases"><?php foreach ($bases as $b): ?><option value="b_<?= $b['id'] ?>">Base: <?= htmlspecialchars($b['nome']) ?></option><?php endforeach; ?></optgroup><optgroup label="Edifícios"><?php foreach ($edificios as $ed): ?><option value="e_<?= $ed['id'] ?>"><?= htmlspecialchars($ed['nome']) ?></option><?php endforeach; ?></optgroup></select></div></div>
                     </div>
                     <div class="w-full">
                         <textarea id="descricao_rica" name="descricao_rica" placeholder="Comece a escrever seu relatório aqui... Arraste fotos ou vídeos para dentro."></textarea>

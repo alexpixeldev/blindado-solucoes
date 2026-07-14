@@ -77,7 +77,7 @@ if ($result->num_rows === 1) {
 $stmt->close();
 
 // Fetch all bases for the dropdown
-$bases = $conn->query("SELECT * FROM bases ORDER BY nome ASC")->fetch_all(MYSQLI_ASSOC);
+$bases = $conn->query("SELECT * FROM bases WHERE status = 'ativo' ORDER BY nome ASC")->fetch_all(MYSQLI_ASSOC);
 $administradoras = $conn->query("SELECT id, nome FROM administradoras ORDER BY nome ASC")->fetch_all(MYSQLI_ASSOC);
 ?>
 <!DOCTYPE html>

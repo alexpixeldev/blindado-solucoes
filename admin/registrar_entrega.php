@@ -63,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$edificios = $conn->query("SELECT e.id, e.nome, b.nome as base_nome FROM edificios e JOIN bases b ON e.base_id = b.id ORDER BY e.nome")->fetch_all(MYSQLI_ASSOC);
+$edificios = $conn->query("SELECT e.id, e.nome, b.nome as base_nome FROM edificios e JOIN bases b ON e.base_id = b.id WHERE b.status = 'ativo' ORDER BY e.nome")->fetch_all(MYSQLI_ASSOC);
 $transportadoras = $conn->query("SELECT nome FROM transportadoras ORDER BY nome")->fetch_all(MYSQLI_ASSOC);
 $situacoes = $conn->query("SELECT nome FROM situacoes_entrega ORDER BY nome")->fetch_all(MYSQLI_ASSOC);
 ?>
@@ -124,12 +124,12 @@ $situacoes = $conn->query("SELECT nome FROM situacoes_entrega ORDER BY nome")->f
                         <form method="POST" class="space-y-8">
                             <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                                 <div class="space-y-2 sm:col-span-1">
-                                    <label class="form-label">Edifício</label>
+                                    <label class="form-label">Edifício <span class="text-sm text-slate-500 font-normal">(somente bases ativas)</span></label>
                                     <div class="relative">
                                         <select name="edificio_id" class="form-input appearance-none pr-10" required>
                                             <option value="">-- Selecione o Edifício --</option>
                                             <?php foreach ($edificios as $ed): ?>
-                                                <option value="<?= $ed['id'] ?>"><?= htmlspecialchars($ed['nome']) ?></option>
+                                                <option value="<?= $ed['id'] ?>"><?= htmlspecialchars($ed['nome'] . ' — ' . $ed['base_nome']) ?></option>
                                             <?php endforeach; ?>
                                         </select>
                                         <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">

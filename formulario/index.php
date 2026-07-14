@@ -5,6 +5,7 @@ $result = $conn->query("
     SELECT e.id, e.nome AS nome_edificio, b.nome AS nome_base, b.telefone
     FROM edificios e
     JOIN bases b ON e.base_id = b.id
+    WHERE b.status = 'ativo'
     ORDER BY e.nome ASC
 ");
 $edificios = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];

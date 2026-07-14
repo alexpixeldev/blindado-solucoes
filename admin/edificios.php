@@ -44,6 +44,54 @@ if ($pode_editar && isset($_POST['delete_item'])) {
     exit();
 }
 
+if ($pode_editar && isset($_POST['deactivate_item'])) {
+    $id = intval($_POST['id_deactivate']);
+
+    $result = $conn->query("SHOW COLUMNS FROM bases LIKE 'status'");
+    if ($result && $result->num_rows === 0) {
+        $alter = $conn->query("ALTER TABLE bases ADD COLUMN status ENUM('ativo','inativo') NOT NULL DEFAULT 'ativo'");
+        if (!$alter) {
+            $_SESSION['mensagem'] = 'Erro ao criar coluna status: ' . $conn->error;
+            $_SESSION['mensagem_tipo'] = 'error';
+            header("Location: edificios.php?tab=" . $_POST['current_tab']);
+            exit();
+        }
+    }
+
+    $stmt = $conn->prepare("UPDATE bases SET status = CASE WHEN status = 'ativo' THEN 'inativo' ELSE 'ativo' END WHERE id = ?");
+    if ($stmt) {
+        $stmt->bind_param('i', $id);
+        if ($stmt->execute()) {
+            $stmt_status = $conn->prepare("SELECT status FROM bases WHERE id = ?");
+            if ($stmt_status) {
+                $stmt_status->bind_param('i', $id);
+                $stmt_status->execute();
+                $result_status = $stmt_status->get_result()->fetch_assoc();
+                $currentStatus = $result_status['status'] ?? 'inativo';
+                $stmt_status->close();
+            } else {
+                $currentStatus = 'inativo';
+            }
+            if ($currentStatus === 'ativo') {
+                $_SESSION['mensagem'] = 'Base ativada com sucesso!';
+            } else {
+                $_SESSION['mensagem'] = 'Base desativada com sucesso!';
+            }
+            $_SESSION['mensagem_tipo'] = 'success';
+        } else {
+            $_SESSION['mensagem'] = 'Erro ao alternar status da base: ' . $stmt->error;
+            $_SESSION['mensagem_tipo'] = 'error';
+        }
+        $stmt->close();
+    } else {
+        $_SESSION['mensagem'] = 'Erro ao preparar alteração de status: ' . $conn->error;
+        $_SESSION['mensagem_tipo'] = 'error';
+    }
+
+    header("Location: edificios.php?tab=" . $_POST['current_tab']);
+    exit();
+}
+
 $tab = $_GET['tab'] ?? 'edificios';
 $filtro_base = $_GET['base'] ?? '';
 $search = $_GET['search'] ?? '';
@@ -71,7 +119,7 @@ switch ($tab) {
         break;
         
     case 'bases':
-        $query = "SELECT b.id, b.nome, b.telefone, COUNT(e.id) as total_edificios
+        $query = "SELECT b.id, b.nome, b.telefone, b.status, COUNT(e.id) as total_edificios
                   FROM bases b
                   LEFT JOIN edificios e ON b.id = e.base_id";
         if ($search) {
@@ -79,7 +127,7 @@ switch ($tab) {
             $where_clauses[] = "(b.nome LIKE '%$s%' OR b.telefone LIKE '%$s%')";
         }
         if (!empty($where_clauses)) $query .= " WHERE " . implode(" AND ", $where_clauses);
-        $query .= " GROUP BY b.id, b.nome, b.telefone ORDER BY b.nome";
+        $query .= " GROUP BY b.id, b.nome, b.telefone, b.status ORDER BY b.nome";
         $data = $conn->query($query)->fetch_all(MYSQLI_ASSOC);
         break;
         
@@ -267,6 +315,7 @@ unset($_SESSION['mensagem'], $_SESSION['mensagem_tipo']);
                                     <?php elseif ($tab === 'bases'): ?>
                                         <th>Nome da Base</th>
                                         <th>Telefone</th>
+                                        <th>Status</th>
                                         <th>Total Edifícios</th>
                                     <?php elseif ($tab === 'administradoras' || $tab === 'sindicos'): ?>
                                         <th>Nome</th>
@@ -302,6 +351,11 @@ unset($_SESSION['mensagem'], $_SESSION['mensagem_tipo']);
                                             <?php elseif ($tab === 'bases'): ?>
                                                 <td class="font-bold text-slate-900"><?= htmlspecialchars($item['nome']) ?></td>
                                                 <td class="text-sm text-slate-600"><?= htmlspecialchars($item['telefone'] ?: 'N/A') ?></td>
+                                                <td>
+                                                    <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold <?= $item['status'] === 'inativo' ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700' ?>">
+                                                        <?= $item['status'] === 'inativo' ? 'Desativado' : 'Ativo' ?>
+                                                    </span>
+                                                </td>
                                                 <td><span class="badge-primary"><?= $item['total_edificios'] ?> edifícios</span></td>
                                             <?php elseif ($tab === 'administradoras' || $tab === 'sindicos'): ?>
                                                 <td class="font-bold text-slate-900"><?= htmlspecialchars($item['nome']) ?></td>
@@ -343,6 +397,20 @@ unset($_SESSION['mensagem'], $_SESSION['mensagem_tipo']);
                                                             <input type="hidden" name="current_tab" value="<?= $tab ?>">
                                                             <button type="submit" name="delete_item" class="h-8 w-8 flex items-center justify-center rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all" title="Excluir">
                                                                 <i class="fas fa-trash-alt"></i>
+                                                            </button>
+                                                        </form>
+                                                    <?php endif; ?>
+                                                    <?php if ($tab === 'bases' && $pode_editar): ?>
+                                                        <?php
+                                                            $isActive = $item['status'] === 'ativo';
+                                                            $buttonTitle = $isActive ? 'Desativar' : 'Ativar';
+                                                            $buttonClass = $isActive ? 'bg-amber-50 text-amber-600 hover:bg-amber-600 hover:text-white' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white';
+                                                        ?>
+                                                        <form method="POST" class="inline">
+                                                            <input type="hidden" name="id_deactivate" value="<?= $item['id'] ?>">
+                                                            <input type="hidden" name="current_tab" value="<?= $tab ?>">
+                                                            <button type="submit" name="deactivate_item" class="h-8 w-8 flex items-center justify-center rounded-lg <?= $buttonClass ?> transition-all" title="<?= $buttonTitle ?>">
+                                                                <i class="fas fa-power-off"></i>
                                                             </button>
                                                         </form>
                                                     <?php endif; ?>
