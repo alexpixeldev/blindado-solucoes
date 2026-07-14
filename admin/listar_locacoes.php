@@ -141,6 +141,59 @@ if (!empty($locacaoIds)) {
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style_modern.css">
+    <style>
+        .selfie-thumb {
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+        .selfie-thumb:hover {
+            transform: scale(1.12);
+            box-shadow: 0 20px 45px rgba(15, 23, 42, 0.18);
+        }
+        .photo-modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(15,23,42,0.75);
+            backdrop-filter: blur(6px);
+            display: none;
+            z-index: 50;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+        .photo-modal-backdrop.active {
+            display: flex;
+        }
+        .photo-modal-card {
+            max-width: 920px;
+            width: 100%;
+            background: #ffffff;
+            border-radius: 1.25rem;
+            overflow: hidden;
+            box-shadow: 0 32px 90px rgba(15,23,42,0.25);
+        }
+        .photo-modal-card img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        .photo-modal-footer {
+            padding: 1rem 1.25rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+        .photo-modal-footer .modal-actions {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+        .photo-modal-footer .modal-title {
+            font-size: 0.95rem;
+            color: #0f172a;
+            font-weight: 600;
+        }
+    </style>
 </head>
 <body class="h-full text-slate-800 antialiased">
     <div class="flex min-h-screen">
@@ -288,7 +341,7 @@ if (!empty($locacaoIds)) {
                                                                         <div class="text-xs text-slate-500">Telefone: <?= htmlspecialchars($inquilino['telefone'] ?: '---') ?></div>
                                                                     </div>
                                                                     <?php if (!empty($inquilino['selfie'])): ?>
-                                                                        <img src="<?= htmlspecialchars($inquilino['selfie']) ?>" alt="Selfie <?= htmlspecialchars($inquilino['nome']) ?>" class="h-16 w-16 rounded-2xl object-cover border border-slate-200 shadow-sm" />
+                                                                        <img src="<?= htmlspecialchars($inquilino['selfie']) ?>" alt="Selfie <?= htmlspecialchars($inquilino['nome']) ?>" class="h-16 w-16 rounded-2xl object-cover border border-slate-200 shadow-sm selfie-thumb" data-image-src="<?= htmlspecialchars($inquilino['selfie']) ?>" data-image-name="<?= htmlspecialchars($inquilino['nome']) ?>" />
                                                                     <?php endif; ?>
                                                                 </div>
                                                             </div>
@@ -345,6 +398,70 @@ if (!empty($locacaoIds)) {
             </main>
         </div>
     </div>
+
+    <div id="photoModal" class="photo-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="photoModalTitle">
+        <div class="photo-modal-card">
+            <div id="photoModalContent"></div>
+            <div class="photo-modal-footer">
+                <div>
+                    <div id="photoModalTitle" class="modal-title">Foto</div>
+                    <div id="photoModalSubtitle" class="text-sm text-slate-500">Clique no botão para salvar.</div>
+                </div>
+                <div class="modal-actions">
+                    <a id="photoModalSave" class="btn-primary inline-flex items-center gap-2" download="selfie.jpg" href="#">
+                        <i class="fas fa-download"></i>
+                        Salvar imagem
+                    </a>
+                    <button type="button" id="photoModalClose" class="btn-secondary inline-flex items-center gap-2">
+                        <i class="fas fa-times"></i>
+                        Fechar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <?php include 'components/footer.php'; ?>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const photoModal = document.getElementById('photoModal');
+            const photoModalContent = document.getElementById('photoModalContent');
+            const photoModalSave = document.getElementById('photoModalSave');
+            const photoModalClose = document.getElementById('photoModalClose');
+            const photoModalTitle = document.getElementById('photoModalTitle');
+            const photoModalSubtitle = document.getElementById('photoModalSubtitle');
+
+            function openPhotoModal(src, name) {
+                photoModalContent.innerHTML = `<img src="${src}" alt="Selfie ${name}" />`;
+                photoModalSave.href = src;
+                photoModalSave.download = `selfie-${name.replace(/\s+/g, '_').toLowerCase()}.jpg`;
+                photoModalTitle.textContent = `Selfie de ${name}`;
+                photoModalSubtitle.textContent = 'Clique em salvar para baixar a imagem.';
+                photoModal.classList.add('active');
+            }
+
+            function closePhotoModal() {
+                photoModal.classList.remove('active');
+            }
+
+            document.querySelectorAll('.selfie-thumb').forEach(img => {
+                img.addEventListener('click', function() {
+                    openPhotoModal(this.dataset.imageSrc, this.dataset.imageName || 'visualização');
+                });
+            });
+
+            photoModalClose.addEventListener('click', closePhotoModal);
+            photoModal.addEventListener('click', function(event) {
+                if (event.target === photoModal) {
+                    closePhotoModal();
+                }
+            });
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Escape' && photoModal.classList.contains('active')) {
+                    closePhotoModal();
+                }
+            });
+        });
+    </script>
 </body>
 </html>

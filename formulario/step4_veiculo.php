@@ -44,8 +44,8 @@
                             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
                                 <i class="fas fa-barcode"></i>
                             </div>
-                            <input type="text" name="veiculos[0][placa]" placeholder="ABC-1234" 
-                                   class="block w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-200 uppercase">
+                            <input type="text" name="veiculos[0][placa]" placeholder="ABC1D23" maxlength="7" 
+                                   class="block w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-200 uppercase" inputmode="text">
                         </div>
                     </div>
 

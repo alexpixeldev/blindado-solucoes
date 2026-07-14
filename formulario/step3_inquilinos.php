@@ -49,7 +49,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="space-y-2 field-container">
+                <div class="space-y-2 field-container mt-6">
                     <label class="block text-sm font-medium text-slate-700">Selfie do Hóspede</label>
                     <div class="space-y-3">
                         <div class="flex flex-wrap gap-3">
@@ -64,7 +64,19 @@
                         </div>
                         <input type="file" id="selfie-input-0" name="inquilinos[0][selfie]" accept="image/*" class="hidden" data-preview-target="selfie-preview-0" />
                         <img id="selfie-preview-0" src="" alt="Prévia da selfie" class="hidden w-full h-40 rounded-2xl object-cover border border-slate-200 bg-slate-50 mb-3" />
-                        <p class="text-xs text-slate-500 mt-2">Tire uma foto ou escolha uma selfie da galeria.</p>
+                        <div class="grid gap-4 md:grid-cols-[220px_1fr] items-stretch">
+                            <img src="../img/facial.png" alt="Exemplo de selfie" class="w-full max-w-[220px] h-auto rounded-3xl border border-slate-200 bg-slate-50" />
+                            <div class="rounded-3xl border border-primary-200 bg-primary-50 p-4 flex flex-col justify-center">
+                                <p class="text-sm font-semibold text-primary-900">Como deve ser a selfie:</p>
+                                <ul class="mt-3 space-y-2 text-sm text-slate-700">
+                                    <li>• Rosto inteiro e centralizado</li>
+                                    <li>• Local bem iluminado</li>
+                                    <li>• Olhar fixo na câmera</li>
+                                    <li>• Sem óculos escuros, boné ou máscara</li>
+                                </ul>
+                                <p class="mt-3 text-sm text-slate-600">Use o exemplo ao lado: estilo foto 3x4.</p>
+                            </div>
+                        </div>
                         <p id="selfie-file-name-0" class="text-xs text-slate-500"></p>
                     </div>
                 </div>
