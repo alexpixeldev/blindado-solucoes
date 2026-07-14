@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blindado Soluções</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.css" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root{--accent:#ef7d3a;--muted:#6b7280;--bg:#f4f6f9;--panel:#ffffff}
+    body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; background: var(--bg); color: #111827; -webkit-font-smoothing:antialiased }
+    a { color: inherit; text-decoration: none; }
+    header { background: var(--panel); border-bottom: 1px solid #eef2f6; padding: 18px 20px; }
+    .header-inner { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand img { height: 40px; width: auto; filter: drop-shadow(0 2px 6px rgba(14, 30, 37, 0.06)); }
+    .brand-text { font-size: 14px; color: var(--muted); letter-spacing: .02em; font-weight:600 }
+    .main { max-width: 1200px; margin: 28px auto; padding: 0 20px; }
+    .hero { margin-bottom: 18px; }
+    .hero h1 { font-size: clamp(26px, 4vw, 34px); line-height: 1.04; margin-bottom: 6px; color:#0f1724 }
+    .hero p { color: #475569; font-size: 15px; max-width: 760px; }
+    .map-panel { background: var(--panel); border: 1px solid #e6eef5; border-radius: 14px; box-shadow: 0 10px 30px rgba(16,24,40,0.06); overflow: hidden; }
+    .toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; border-bottom: 1px solid #f1f6fa; }
+    .toolbar .group { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .button { display: inline-flex; align-items: center; gap: 8px; border: 1px solid #e2e8f0; border-radius: 999px; padding: 9px 14px; background: #fff; color: #0f1724; font-size: 13px; cursor: pointer; transition: all .15s ease; box-shadow: 0 2px 6px rgba(15,23,36,0.04); }
+    .button.active, .button:hover { border-color: var(--accent); background: var(--accent); color: #fff; transform: translateY(-1px); }
+    .toolbar input { min-width: 220px; padding: 10px 14px 10px 40px; border: 1px solid #e6eef5; border-radius: 12px; background: #f8fbfc; color: #0b1220; font-size: 14px; outline: none; box-shadow: inset 0 1px 0 rgba(255,255,255,0.6); }
+    .toolbar input:focus { border-color: var(--accent); box-shadow: 0 4px 18px rgba(239,125,58,0.12); }
+    .toolbar .search-icon { position: relative; }
+    .toolbar .search-icon:before { content: '🔎'; position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #9aa4b2; font-size: 14px; pointer-events: none; }
+    #map { width: 100%; min-height: 560px; background: linear-gradient(180deg,#edf5fb 0%, #f6fafc 100%); position: relative; }
+    .map-controls { position: absolute; right: 14px; top: 14px; display:flex; flex-direction: column; gap:8px; z-index: 600; }
+    .mc-btn { background: #fff; border: 1px solid #e6eef5; border-radius: 10px; padding: 8px 10px; cursor: pointer; box-shadow: 0 6px 18px rgba(3,10,18,0.06); color:#0f1724 }
+    .mc-btn:hover{ transform: translateY(-2px); border-color: var(--accent) }
+    .map-legend { position: absolute; left: 14px; bottom: 14px; background: rgba(255,255,255,0.96); border-radius: 10px; padding: 10px 12px; box-shadow: 0 8px 24px rgba(3,10,18,0.06); font-size:13px; color:#475569; z-index:600; display:flex; gap:12px; align-items:center }
+    .legend-badge { width:12px; height:12px; border-radius:50%; display:inline-block; box-shadow:0 1px 0 rgba(0,0,0,0.06) }
+    .leaflet-control-attribution{ font-size:12px; opacity:0.9 }
+    .popup-custom { font-size:13px; line-height:1.25 }
+    .popup-custom { font-size:13px; line-height:1.25 }
+    footer { padding: 32px 20px; color: #7b8794; font-size: 13px; }
+    .footer-inner { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 24px; }
+    .footer-inner h3 { font-size: 13px; margin-bottom: 10px; color: var(--accent); }
+    @media (max-width: 860px) { .toolbar { flex-direction: column; align-items: stretch; } .toolbar input { width: 100%; } .map-controls{right:8px;top:8px} }
+
+    /* (restored) popup styling */
+    .leaflet-popup-content-wrapper { border-radius: 8px; padding: 8px 10px }
+    .leaflet-popup-tip { display:none }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <div class="brand">
+        <img src="https://blindadosolucoes.com.br/img/logo_horizontal.png" alt="Blindado Soluções">
+      </div>
+    </div>
+  </header>
+
+  <main class="main">
+    <section class="hero">
+      <h1>Mapa de Edifícios Monitorados</h1>
+      <p>Veja todas as localidades atendidas pelas nossas bases em Guarapari.</p>
+    </section>
+
+    <section class="map-panel">
+      <div class="toolbar">
+        <div class="group">
+          <button class="button active" id="allBtn" type="button">Todos edifícios</button>
+          <button class="button" id="base1Btn" type="button">Base Nova Guaraparí</button>
+          <button class="button" id="base2Btn" type="button">Base Praia do Morro</button>
+        </div>
+        <div class="group search-icon">
+          <input id="searchInput" type="search" placeholder="Buscar edifício..." aria-label="Buscar edifício">
+        </div>
+      </div>
+      <div id="map">
+        <div class="map-controls" aria-hidden="false">
+          <button id="locateBtn" class="mc-btn" title="Centralizar na minha localização">📍 Localizar</button>
+          <button id="resetViewBtn" class="mc-btn" title="Voltar para visão inicial">⟲ Reset</button>
+        </div>
+        <div class="map-legend" aria-hidden="false">
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div><span class="legend-badge" style="background:#28a745"></span> Base Nova Guaraparí</div>
+            <div><span class="legend-badge" style="background:#d85a30"></span> Base Praia do Morro</div>
+          </div>
+          <div style="margin-left:12px;color:#94a3b8;font-size:12px">Clique em um marcador para detalhes</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+      <div>
+        <h3>Sobre Blindado Soluções</h3>
+        <p>Soluções em segurança condominial com tecnologia de ponta e operadores qualificados 24/7.</p>
+      </div>
+      <div>
+        <h3>Contato</h3>
+        <p>📍 Av. Meaípe, 138<br>Enseada Azul, Guarapari</p>
+        <p><a href="tel:+5527998173386">(27) 99817-3386</a><br><a href="mailto:contato@blindadosolucoes.com">contato@blindadosolucoes.com</a></p>
+      </div>
+      <div>
+        <h3>Serviços</h3>
+        <p>Portaria Remota<br>Monitoramento<br>Controle Inteligente<br>Central de Alarme</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js"></script>
+  <script>
+
+    const buildings = [
+      { name: "Base Nova Guaraparí", lat: -20.7223204, lng: -40.5247914, base: "base1" },
+      { name: "ATOBÁ", lat: -20.7311165, lng: -40.5288981, base: "base1" },
+      { name: "BELLAGIO", lat: -20.6531744, lng: -40.4874702, base: "base1" },
+      { name: "CAIADO RODRIGUES", lat: -20.6732941, lng: -40.4995394, base: "base1" },
+      { name: "CALIFORNIA", lat: -20.6559159, lng: -40.4917609, base: "base1" },
+      { name: "CAROLINA", lat: -20.7374014, lng: -40.5415425, base: "base1" },
+      { name: "CORAIS DA ENSEADA", lat: -20.727465, lng: -40.524515, base: "base1" },
+      { name: "ENSEADA VIP", lat: -20.7298738, lng: -40.5290431, base: "base1" },
+      { name: "GRANITO", lat: -20.6744553, lng: -40.5015796, base: "base1" },
+      { name: "GUY VARTAN", lat: -20.6746766, lng: -40.5002891, base: "base1" },
+      { name: "ILHA DE COMANDATUBA", lat: -20.727978, lng: -40.525842, base: "base1" },
+      { name: "JEAN MARCEL", lat: -20.672139, lng: -40.5003917, base: "base1" },
+      { name: "JUIZ PEDRO", lat: -20.670668, lng: -40.4950058, base: "base1" },
+      { name: "LONG SUMMER", lat: -20.7319131, lng: -40.5291409, base: "base1" },
+      { name: "MAESTRO", lat: -20.6515291, lng: -40.482453, base: "base1" },
+      { name: "MAIS JK", lat: -20.6800904, lng: -40.5157479, base: "base1" },
+      { name: "MALIBÚ", lat: -20.675903, lng: -40.502066, base: "base1" },
+      { name: "MAR DE VENEZA", lat: -20.6485511, lng: -40.4854939, base: "base1" },
+      { name: "MAREK", lat: -20.7280531, lng: -40.5270102, base: "base1" },
+      { name: "MURANO", lat: -20.6529705, lng: -40.47449, base: "base1" },
+      { name: "PANORAMIC", lat: -20.7278721, lng: -40.5251807, base: "base1" },
+      { name: "PERACANGA", lat: -20.727858, lng: -40.5252852, base: "base1" },
+      { name: "PRAIA DE PERACANGA", lat: -20.728737, lng: -40.527293, base: "base1" },
+      { name: "PREDILETTO", lat: -20.6504621, lng: -40.4780854, base: "base1" },
+      { name: "RECANTO DA PRAIA", lat: -20.6516133, lng: -40.481742, base: "base1" },
+      { name: "SANTORINI", lat: -20.6565968, lng: -40.4918956, base: "base1" },
+      { name: "SERENATA", lat: -20.6710409, lng: -40.4954825, base: "base1" },
+      { name: "SEVEN", lat: -20.7324232, lng: -40.5320653, base: "base1" },
+      { name: "SOLAR MARIZ", lat: -20.6736949, lng: -40.4990798, base: "base1" },
+      { name: "SOLLARIUM", lat: -20.6717392, lng: -40.4991435, base: "base1" },
+      { name: "SPLENDIA", lat: -20.6513113, lng: -40.478735, base: "base1" },
+      { name: "VENETO", lat: -20.6513219, lng: -40.4804341, base: "base1" },
+      { name: "VERDES MARES", lat: -20.669934, lng: -40.4942552, base: "base1" },
+      { name: "Base Praia do Morro", lat: -20.647996, lng: -40.480389, base: "base2" },
+      { name: "Alessandro", lat: -20.6744333, lng: -40.5023512, base: "base2" },
+      { name: "Antônio Di Pietro", lat: -20.6546191, lng: -40.491048, base: "base2" },
+      { name: "Atrium Verona", lat: -20.6733392, lng: -40.4992964, base: "base2" },
+      { name: "Bolonha", lat: -20.6555754, lng: -40.4925425, base: "base2" },
+      { name: "Casa Blanca", lat: -20.6696256, lng: -40.4941128, base: "base2" },
+      { name: "Cordialle", lat: -20.6576127, lng: -40.4947878, base: "base2" },
+      { name: "Del Pietro", lat: -20.6564982, lng: -40.4944453, base: "base2" },
+      { name: "Dom Henrique", lat: -20.6691513, lng: -40.4938905, base: "base2" },
+      { name: "Gabriel", lat: -20.653949, lng: -40.490137, base: "base2" },
+      { name: "Graal", lat: -20.6527609, lng: -40.4865881, base: "base2" },
+      { name: "Ilha das garças", lat: -20.6691513, lng: -40.4938905, base: "base2" },
+      { name: "Lavínia", lat: -20.6559214, lng: -40.4939852, base: "base2" },
+      { name: "Mar e Sol", lat: -20.668387, lng: -40.4925176, base: "base2" },
+      { name: "Maria Bomfim", lat: -20.6523642, lng: -40.4760376, base: "base2" },
+      { name: "Ninive Almeida", lat: -20.6515747, lng: -40.4806386, base: "base2" },
+      { name: "Praia Bella", lat: -20.66036, lng: -40.4954395, base: "base2" },
+      { name: "Praia das Virtudes", lat: -20.6690809, lng: -40.4926422, base: "base2" },
+      { name: "Refinatto", lat: -20.6497416, lng: -40.4820782, base: "base2" },
+      { name: "Rubem Braga", lat: -20.6577004, lng: -40.4955759, base: "base2" },
+      { name: "Summer Hill", lat: -20.6690144, lng: -40.4933186, base: "base2" },
+      { name: "Tifany", lat: -20.6509253, lng: -40.482569, base: "base2" },
+      { name: "Varandas do mar", lat: -20.652542, lng: -40.483860, base: "base2" },
+      { name: "Viena", lat: -20.653424, lng: -40.4885525, base: "base2" }
+    ];
+
+    const map = L.map('map', { zoomControl: false }).setView([-20.695, -40.507], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors',
+      maxZoom: 19
+    }).addTo(map);
+    // adicionar controle de escala e controle de zoom personalizado
+    L.control.scale({imperial:false}).addTo(map);
+    L.control.zoom({position:'topright'}).addTo(map);
+
+    const icon = (color) => L.divIcon({
+      className: '',
+      html: `
+        <svg class="loc-pin" width="36" height="42" viewBox="0 0 30 40" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="display:block;transform:scaleY(0.78);transform-origin:15px 0px;">
+          <path d="M15 2C10 2 6 6.8 6 12.5 6 21.4 15 34 15 34s9-12.6 9-21.5C24 6.8 20 2 15 2z" fill="${color}" stroke="#ffffff" stroke-width="2" style="filter: drop-shadow(0 4px 10px rgba(2,6,23,0.12));"/>
+          <circle cx="15" cy="11.5" r="3" fill="#ffffff" />
+        </svg>
+      `,
+      iconSize: [36, 42],
+      iconAnchor: [18, 42],
+      popupAnchor: [0, -36]
+    });
+
+    const markers = buildings.map((item) => {
+      const marker = L.marker([item.lat, item.lng], { icon: icon(item.base === 'base1' ? '#28a745' : '#d85a30') }).addTo(map);
+      marker.bindPopup(`<div class="popup-custom"><strong>${item.name}</strong><div style="color:#6b7280;margin-top:4px;font-size:13px">${item.base === 'base1' ? 'Base Nova Guaraparí' : 'Base Praia do Morro'}</div><a href="https://www.google.com/maps/search/?api=1&query=${item.lat},${item.lng}" target="_blank" style="display:inline-block;margin-top:8px;color:var(--accent);font-weight:600;text-decoration:none">Abrir no Google Maps</a></div>`, {minWidth:180});
+      marker.item = item;
+      // hover apenas aplica escala no filho do ícone; mantém o transform de posicionamento do Leaflet
+      marker.on('mouseover', function(){
+        const child = this._icon && this._icon.firstElementChild;
+        if (child) child.style.transform = 'scale(1.06)';
+      });
+      marker.on('mouseout', function(){
+        const child = this._icon && this._icon.firstElementChild;
+        if (child) child.style.transform = '';
+      });
+      marker.on('click', function(){ this.openPopup(); });
+      return marker;
+    });
+
+    const zoomToMarkers = (filter) => {
+      const visible = markers.filter((marker) => filter(marker.item));
+      if (!visible.length) return;
+      const bounds = visible.reduce((bounds, marker) => bounds.extend(marker.getLatLng()), L.latLngBounds(visible[0].getLatLng(), visible[0].getLatLng()));
+      map.fitBounds(bounds, { padding: [50, 50], maxZoom: 16 });
+    };
+
+    const setActiveButton = (id) => {
+      document.querySelectorAll('.button').forEach((button) => button.classList.toggle('active', button.id === id));
+    };
+
+
+    const showBase = (base) => {
+      markers.forEach((marker) => {
+        const visible = base === 'all' || marker.item.base === base;
+        if (visible) marker.setOpacity(1); else marker.setOpacity(0.2);
+      });
+      zoomToMarkers((item) => base === 'all' || item.base === base);
+    };
+
+    document.getElementById('allBtn').addEventListener('click', () => { setActiveButton('allBtn'); showBase('all'); });
+    document.getElementById('base1Btn').addEventListener('click', () => { setActiveButton('base1Btn'); showBase('base1'); });
+    document.getElementById('base2Btn').addEventListener('click', () => { setActiveButton('base2Btn'); showBase('base2'); });
+    
+
+    document.getElementById('searchInput').addEventListener('input', (event) => {
+      const term = event.target.value.trim().toLowerCase();
+      let first = null;
+      markers.forEach((marker) => {
+        const match = marker.item.name.toLowerCase().includes(term);
+        marker.setOpacity(match || !term ? 1 : 0.2);
+        if (match && !first) first = marker;
+      });
+      if (first) {
+        map.flyTo(first.getLatLng(), 16, { duration: 0.7 });
+        first.openPopup();
+      } else if (!term) {
+        map.setView([-20.695, -40.507], 13);
+      }
+    });
+
+    // Localizar usuário
+    const locateBtn = document.getElementById('locateBtn');
+    locateBtn.addEventListener('click', () => {
+      if (!navigator.geolocation) return alert('Geolocalização não disponível');
+      locateBtn.disabled = true;
+      locateBtn.textContent = '⌛ Localizando...';
+      navigator.geolocation.getCurrentPosition((pos) => {
+        const latlng = [pos.coords.latitude, pos.coords.longitude];
+        map.flyTo(latlng, 14, {duration:0.8});
+        L.circle(latlng, {radius: Math.min(200, pos.coords.accuracy), color: '#2563eb', fillColor:'rgba(37,99,235,0.08)', weight:1}).addTo(map);
+        locateBtn.disabled = false; locateBtn.textContent = '📍 Localizar';
+      }, (err) => { locateBtn.disabled = false; locateBtn.textContent = '📍 Localizar'; alert('Não foi possível obter sua localização.'); });
+    });
+
+    // Reset view
+    document.getElementById('resetViewBtn').addEventListener('click', () => {
+      map.setView([-20.695, -40.507], 13);
+    });
+  </script>
+</body>
+</html>
