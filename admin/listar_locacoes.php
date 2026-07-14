@@ -27,29 +27,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_locacao'])) {
 }
 
 // Initialize filter variables
-$filtro_edificio = filter_input(INPUT_GET, 'edificio_id', FILTER_VALIDATE_INT);
+$selected_filter = filter_input(INPUT_GET, 'edificio_id', FILTER_DEFAULT);
+$filtro_edificio = null;
+$filtro_base = null;
+if ($selected_filter !== null && $selected_filter !== '') {
+    if (strpos($selected_filter, 'base_') === 0) {
+        $filtro_base = intval(substr($selected_filter, 5));
+    } else {
+        $filtro_edificio = filter_var($selected_filter, FILTER_VALIDATE_INT);
+    }
+}
+
 $data_inicio = filter_input(INPUT_GET, 'data_inicio');
 $data_fim = filter_input(INPUT_GET, 'data_fim');
 
-// Fetch buildings for the dropdown
-$edificios = $conn->query("SELECT id, nome FROM edificios ORDER BY nome ASC")->fetch_all(MYSQLI_ASSOC);
+// Fetch bases and buildings for the dropdowns
+$bases = $conn->query("SELECT id, nome FROM bases ORDER BY nome ASC")->fetch_all(MYSQLI_ASSOC);
+$edificios = $conn->query("SELECT id, nome, base_id FROM edificios ORDER BY nome ASC")->fetch_all(MYSQLI_ASSOC);
 
 // Main Query Construction
     $sql = "SELECT 
                 l.*, 
-                e.nome as nome_edificio,
-                GROUP_CONCAT(DISTINCT li.nome SEPARATOR ', ') as nomes_inquilinos,
-                GROUP_CONCAT(DISTINCT lv.placa SEPARATOR ', ') as placas_veiculos
+                e.nome as nome_edificio
             FROM locacoes l
         LEFT JOIN edificios e ON l.edificio_id = e.id
-        LEFT JOIN locacoes_inquilinos li ON l.id = li.locacao_id
-        LEFT JOIN locacoes_veiculos lv ON l.id = lv.locacao_id
         WHERE 1=1";
 
 $params = [];
 $types = "";
 
-if ($filtro_edificio) {
+if ($filtro_base) {
+    $sql .= " AND e.base_id = ?";
+    $params[] = $filtro_base;
+    $types .= "i";
+} elseif ($filtro_edificio) {
     $sql .= " AND l.edificio_id = ?";
     $params[] = $filtro_edificio;
     $types .= "i";
@@ -79,17 +90,24 @@ $locacoes = $result->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
 
 $locacaoIds = array_column($locacoes, 'id');
-$locacaoSelfies = [];
+$locacaoInquilinos = [];
+$locacaoVeiculos = [];
 if (!empty($locacaoIds)) {
-    $checkSelfieColumn = $conn->query("SHOW COLUMNS FROM locacoes_inquilinos LIKE 'selfie'");
-    if ($checkSelfieColumn && $checkSelfieColumn->num_rows > 0) {
-        $ids = implode(',', array_map('intval', $locacaoIds));
-        $selfieQuery = "SELECT locacao_id, nome, selfie FROM locacoes_inquilinos WHERE locacao_id IN ($ids) AND selfie IS NOT NULL AND selfie <> ''";
-        $selfieResult = $conn->query($selfieQuery);
-        if ($selfieResult) {
-            while ($row = $selfieResult->fetch_assoc()) {
-                $locacaoSelfies[$row['locacao_id']][] = $row;
-            }
+    $ids = implode(',', array_map('intval', $locacaoIds));
+
+    $inquilinoQuery = "SELECT locacao_id, nome, documento, telefone, selfie FROM locacoes_inquilinos WHERE locacao_id IN ($ids) ORDER BY locacao_id, id";
+    $inquilinoResult = $conn->query($inquilinoQuery);
+    if ($inquilinoResult) {
+        while ($row = $inquilinoResult->fetch_assoc()) {
+            $locacaoInquilinos[$row['locacao_id']][] = $row;
+        }
+    }
+
+    $veiculoQuery = "SELECT locacao_id, modelo, cor, placa, acesso_garagem FROM locacoes_veiculos WHERE locacao_id IN ($ids) ORDER BY locacao_id, id";
+    $veiculoResult = $conn->query($veiculoQuery);
+    if ($veiculoResult) {
+        while ($row = $veiculoResult->fetch_assoc()) {
+            $locacaoVeiculos[$row['locacao_id']][] = $row;
         }
     }
 }
@@ -154,6 +172,14 @@ if (!empty($locacaoIds)) {
                                 <div class="relative">
                                     <select name="edificio_id" id="edificio_id" class="form-input appearance-none pr-10">
                                         <option value="">Todos os Edifícios</option>
+                                        <?php foreach ($bases as $base): ?>
+                                            <option value="base_<?= $base['id'] ?>" <?= $filtro_base == $base['id'] ? 'selected' : '' ?>>
+                                                Base: <?= htmlspecialchars($base['nome']) ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                        <?php if (!empty($bases)): ?>
+                                            <option disabled>──────────</option>
+                                        <?php endif; ?>
                                         <?php foreach ($edificios as $ed): ?>
                                             <option value="<?= $ed['id'] ?>" <?= $filtro_edificio == $ed['id'] ? 'selected' : '' ?>>
                                                 <?= htmlspecialchars($ed['nome']) ?>
@@ -251,39 +277,42 @@ if (!empty($locacaoIds)) {
                                                 </div>
                                             </td>
                                             <td>
-                                                <div class="flex flex-col gap-3">
-                                                    <div class="flex flex-wrap gap-1">
-                                                        <?php if ($loc['nomes_inquilinos']): ?>
-                                                            <?php foreach(explode(', ', $loc['nomes_inquilinos']) as $inq): ?>
-                                                                <span class="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-700">
-                                                                    <i class="fas fa-user text-[9px] text-slate-400"></i>
-                                                                    <?= htmlspecialchars($inq) ?>
-                                                                </span>
-                                                            <?php endforeach; ?>
-                                                        <?php else: ?>
-                                                            <span class="text-slate-400">---</span>
-                                                        <?php endif; ?>
-                                                    </div>
-                                                    <?php if (!empty($locacaoSelfies[$loc['id']])): ?>
-                                                        <div class="flex flex-wrap gap-2">
-                                                            <?php foreach ($locacaoSelfies[$loc['id']] as $selfieData): ?>
-                                                                <img src="<?= htmlspecialchars($selfieData['selfie']) ?>" alt="Selfie <?= htmlspecialchars($selfieData['nome']) ?>" class="h-14 w-14 rounded-xl object-cover border border-slate-200 shadow-sm" title="<?= htmlspecialchars($selfieData['nome']) ?>" />
-                                                            <?php endforeach; ?>
-                                                        </div>
+                                                <div class="space-y-3">
+                                                    <?php if (!empty($locacaoInquilinos[$loc['id']])): ?>
+                                                        <?php foreach ($locacaoInquilinos[$loc['id']] as $inquilino): ?>
+                                                            <div class="rounded-3xl border border-slate-200 bg-white p-3 shadow-sm">
+                                                                <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                                                                    <div>
+                                                                        <div class="text-sm font-semibold text-slate-900"><?= htmlspecialchars($inquilino['nome']) ?></div>
+                                                                        <div class="text-xs text-slate-500">Documento: <?= htmlspecialchars($inquilino['documento'] ?: '---') ?></div>
+                                                                        <div class="text-xs text-slate-500">Telefone: <?= htmlspecialchars($inquilino['telefone'] ?: '---') ?></div>
+                                                                    </div>
+                                                                    <?php if (!empty($inquilino['selfie'])): ?>
+                                                                        <img src="<?= htmlspecialchars($inquilino['selfie']) ?>" alt="Selfie <?= htmlspecialchars($inquilino['nome']) ?>" class="h-16 w-16 rounded-2xl object-cover border border-slate-200 shadow-sm" />
+                                                                    <?php endif; ?>
+                                                                </div>
+                                                            </div>
+                                                        <?php endforeach; ?>
+                                                    <?php else: ?>
+                                                        <span class="text-slate-400">Nenhum ocupante cadastrado.</span>
                                                     <?php endif; ?>
                                                 </div>
                                             </td>
                                             <td>
-                                                <div class="flex flex-wrap gap-1">
-                                                    <?php if ($loc['placas_veiculos']): ?>
-                                                        <?php foreach(explode(', ', $loc['placas_veiculos']) as $placa): ?>
-                                                            <span class="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-700">
-                                                                <i class="fas fa-car text-[9px] text-slate-400"></i>
-                                                                <?= htmlspecialchars($placa) ?>
-                                                            </span>
+                                                <div class="space-y-3">
+                                                    <?php if (!empty($locacaoVeiculos[$loc['id']])): ?>
+                                                        <?php foreach ($locacaoVeiculos[$loc['id']] as $veiculo): ?>
+                                                            <div class="rounded-3xl border border-slate-200 bg-white p-3 shadow-sm">
+                                                                <div class="text-sm font-semibold text-slate-900"><?= htmlspecialchars($veiculo['modelo'] ?: 'Modelo não informado') ?></div>
+                                                                <div class="text-xs text-slate-500">Cor: <?= htmlspecialchars($veiculo['cor'] ?: '---') ?></div>
+                                                                <div class="text-xs text-slate-500">Placa: <?= htmlspecialchars($veiculo['placa'] ?: '---') ?></div>
+                                                                <?php if (!empty($veiculo['acesso_garagem'])): ?>
+                                                                    <div class="text-xs text-primary-700 font-medium">Acesso garagem: <?= htmlspecialchars($veiculo['acesso_garagem']) ?></div>
+                                                                <?php endif; ?>
+                                                            </div>
                                                         <?php endforeach; ?>
                                                     <?php else: ?>
-                                                        <span class="text-slate-400">---</span>
+                                                        <span class="text-slate-400">Nenhum veículo cadastrado.</span>
                                                     <?php endif; ?>
                                                 </div>
                                             </td>
