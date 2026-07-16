@@ -13,8 +13,11 @@
                         <div class="w-8 h-8 flex items-center justify-center bg-primary-100 text-primary-600 rounded-lg font-bold text-sm">1</div>
                         <h3 class="text-lg font-semibold text-slate-900">Hóspede Principal</h3>
                     </div>
+                    <button type="button" class="edit-inquilino-btn w-8 h-8 flex items-center justify-center rounded-lg bg-blue-100 text-blue-600 hover:bg-blue-600 hover:text-white transition-colors" title="Editar">
+                        <i class="fas fa-edit text-xs"></i>
+                    </button>
                 </div>
-                
+
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     <div class="space-y-2 field-container">
                         <label class="block text-sm font-medium text-slate-700">Nome Completo</label>

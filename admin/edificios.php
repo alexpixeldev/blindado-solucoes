@@ -166,10 +166,10 @@ switch ($tab) {
                          (SELECT cr.numero_ramal FROM controle_ramais cr WHERE cr.edificio_id = e.id ORDER BY cr.id DESC LIMIT 1) AS ramal_numero,
                          (SELECT cr.status FROM controle_ramais cr WHERE cr.edificio_id = e.id ORDER BY cr.id DESC LIMIT 1) AS ramal_status,
                          (SELECT cat.nome FROM controle_ramais cr LEFT JOIN categorias_ramais cat ON cr.categoria_id = cat.id WHERE cr.edificio_id = e.id ORDER BY cr.id DESC LIMIT 1) AS ramal_categoria
-                  FROM edificios e 
-                  JOIN bases b ON e.base_id = b.id 
+                  FROM edificios e
+                  JOIN bases b ON e.base_id = b.id
                   LEFT JOIN administradoras a ON e.administradora_id = a.id";
-        
+
         if ($filtro_base) $where_clauses[] = "e.base_id = " . intval($filtro_base);
         if ($search) {
             $s = $conn->real_escape_string($search);
@@ -177,7 +177,18 @@ switch ($tab) {
         }
         if (!empty($where_clauses)) $query .= " WHERE " . implode(" AND ", $where_clauses);
         $query .= " ORDER BY b.nome, e.nome";
-        $data = $conn->query($query)->fetch_all(MYSQLI_ASSOC);
+
+        $result = $conn->query($query);
+        $data = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+        break;
+
+    case 'faciais_locacao':
+        $query = "SELECT e.id, e.nome, e.requer_selfie, b.nome AS nome_base
+                  FROM edificios e
+                  JOIN bases b ON e.base_id = b.id
+                  ORDER BY b.nome, e.nome";
+        $result = $conn->query($query);
+        $data = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
         break;
         
     case 'bases':
@@ -279,11 +290,16 @@ unset($_SESSION['mensagem'], $_SESSION['mensagem_tipo']);
                 <!-- Page Header -->
                 <div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between animate-fade-in">
                     <div>
-                        <h1 class="text-2xl font-bold text-slate-900 sm:text-3xl">Gestão de Edifícios</h1>
-                        <p class="mt-1 text-slate-500">Gerencie edifícios, bases, administradoras e síndicos.</p>
+                        <?php if ($tab === 'faciais_locacao'): ?>
+                            <h1 class="text-2xl font-bold text-slate-900 sm:text-3xl">Envio de faciais</h1>
+                            <p class="mt-1 text-slate-500">Gerencie quais edifícios podem receber fotos de faciais pela ficha de locação.</p>
+                        <?php else: ?>
+                            <h1 class="text-2xl font-bold text-slate-900 sm:text-3xl">Gestão de Edifícios</h1>
+                            <p class="mt-1 text-slate-500">Gerencie edifícios, bases, administradoras e síndicos.</p>
+                        <?php endif; ?>
                     </div>
-                    <?php if ($pode_editar): ?>
-                        <?php 
+                    <?php if ($pode_editar && $tab !== 'faciais_locacao'): ?>
+                        <?php
                             $add_links = [
                                 'edificios' => ['url' => 'cadastrar_edificio.php', 'label' => 'Novo Edifício'],
                                 'bases' => ['url' => 'cadastrar_base.php', 'label' => 'Nova Base'],
@@ -308,8 +324,11 @@ unset($_SESSION['mensagem'], $_SESSION['mensagem_tipo']);
 
                 <!-- Tabs Navigation -->
                 <div class="mb-8 flex flex-wrap gap-2 border-b border-slate-200 animate-fade-in">
-                    <a href="?tab=edificios" class="px-6 py-3 text-sm font-bold transition-all border-b-2 border-primary-500 text-primary-600">
+                    <a href="?tab=edificios" class="px-6 py-3 text-sm font-bold transition-all border-b-2 <?= $tab === 'edificios' ? 'border-primary-500 text-primary-600' : 'border-transparent text-slate-500 hover:text-slate-700' ?>">
                         Edifícios
+                    </a>
+                    <a href="?tab=faciais_locacao" class="px-6 py-3 text-sm font-bold transition-all border-b-2 <?= $tab === 'faciais_locacao' ? 'border-primary-500 text-primary-600' : 'border-transparent text-slate-500 hover:text-slate-700' ?>">
+                        Faciais Locação
                     </a>
                 </div>
 
@@ -353,7 +372,32 @@ unset($_SESSION['mensagem'], $_SESSION['mensagem_tipo']);
 
                 <!-- Data Table -->
                 <div class="animate-slide-up" style="animation-delay: 0.1s;">
-                    <?php if (empty($data)): ?>
+                    <?php if ($tab === 'faciais_locacao'): ?>
+                        <div class="admin-card">
+                            <h2 class="text-lg font-bold text-slate-900 mb-4">Configuração de Faciais por Edifício</h2>
+                            <?php if (empty($data)): ?>
+                                <div class="text-center py-12 text-slate-500 italic">
+                                    Nenhum edifício encontrado.
+                                </div>
+                            <?php else: ?>
+                                <div class="space-y-2">
+                                    <?php foreach ($data as $item): ?>
+                                        <div class="flex items-center justify-between p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors">
+                                            <div>
+                                                <p class="font-semibold text-slate-900"><?= htmlspecialchars($item['nome']) ?></p>
+                                                <p class="text-sm text-slate-500"><?= htmlspecialchars($item['nome_base']) ?></p>
+                                            </div>
+                                            <label class="relative inline-flex items-center cursor-pointer">
+                                                <input type="checkbox" class="sr-only peer" onchange="toggleSelfie(<?= $item['id'] ?>, this)" <?= $item['requer_selfie'] ? 'checked' : '' ?>>
+                                                <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
+                                                <span class="ml-3 text-sm font-medium text-slate-900"><?= $item['requer_selfie'] ? 'Habilitado' : 'Desabilitado' ?></span>
+                                            </label>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    <?php elseif (empty($data)): ?>
                             <div class="admin-card text-center py-12 text-slate-500 italic">
                                 Nenhum edifício encontrado.
                             </div>
@@ -475,11 +519,38 @@ unset($_SESSION['mensagem'], $_SESSION['mensagem_tipo']);
     <?php include 'components/footer.php'; ?>
     
     <script>
+        function toggleSelfie(edificioId, checkbox) {
+            const newValue = checkbox.checked ? 1 : 0;
+            const statusText = checkbox.checked ? 'Habilitado' : 'Desabilitado';
+            
+            fetch('toggle_selfie.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'edificio_id=' + edificioId + '&valor=' + newValue
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    checkbox.nextElementSibling.nextElementSibling.textContent = statusText;
+                } else {
+                    alert('Erro ao atualizar: ' + data.message);
+                    checkbox.checked = !checkbox.checked;
+                }
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                alert('Erro ao atualizar configuração');
+                checkbox.checked = !checkbox.checked;
+            });
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             const searchInput = document.getElementById('searchInput');
             const baseSelect = document.querySelector('select[name="base"]');
             let searchTimeout;
-            
+
             function performSearch() {
                 clearTimeout(searchTimeout);
                 searchTimeout = setTimeout(() => {

@@ -34,13 +34,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         const edificioCard = edificioInput.closest('.edificio-card');
-        const edificioName = edificioCard ? edificioCard.dataset.name : '';
+        const edificioId = edificioInput.value;
 
-        // Edifícios que requerem selfie
-        const edificiosComSelfie = ['guy vartam', 'panoramic', 'atobá'];
-        const requiresSelfie = edificiosComSelfie.includes(edificioName);
+        // Buscar configuração de selfie dos dados do edifício
+        const edificioData = EDIFICIOS_DATA.find(e => e.id == edificioId);
+        const requiresSelfie = edificioData && edificioData.requer_selfie == 1;
 
-        console.log('Edifício selecionado:', edificioName, 'Requer selfie:', requiresSelfie);
+        console.log('Edifício selecionado ID:', edificioId, 'Requer selfie:', requiresSelfie);
 
         selfieFields.forEach(field => {
             field.classList.toggle('hidden', !requiresSelfie);
@@ -325,8 +325,35 @@ document.addEventListener('DOMContentLoaded', function() {
         // Usar tracking.js para detecção facial real
         return new Promise((resolve) => {
             if (!trackingLoaded) {
-                console.log('Tracking.js não carregado, usando fallback');
-                resolve({ hasFace: false, reason: 'Rosto não identificado. A foto deve mostrar claramente o rosto da pessoa.' });
+                console.log('Tracking.js não carregado, usando validação básica');
+                // Se tracking.js não carregar, fazer validação básica por cor
+                // Análise simples de tons de pele para verificar se há rosto
+                let skinPixels = 0;
+                for (let i = 0; i < data.length; i += 4) {
+                    const r = data[i];
+                    const g = data[i + 1];
+                    const b = data[i + 2];
+
+                    // Detecção simples de tons de pele (faixa aproximada)
+                    if (r > 95 && g > 40 && b > 20 &&
+                        r > g && r > b &&
+                        Math.abs(r - g) > 15 &&
+                        r - g < 100) {
+                        skinPixels++;
+                    }
+                }
+
+                const totalPixels = data.length / 4;
+                const skinRatio = skinPixels / totalPixels;
+
+                // Se tiver pelo menos 5% de pixels que parecem pele, considera válido
+                if (skinRatio > 0.05) {
+                    console.log('Validação por cor: rosto detectado (ratio:', skinRatio, ')');
+                    resolve({ hasFace: true });
+                } else {
+                    console.log('Validação por cor: rosto não detectado (ratio:', skinRatio, ')');
+                    resolve({ hasFace: false, reason: 'Rosto não identificado. A foto deve mostrar claramente o rosto da pessoa.' });
+                }
                 return;
             }
 
@@ -388,11 +415,17 @@ document.addEventListener('DOMContentLoaded', function() {
             existingValidation.remove();
         }
 
+        // Remover miniatura anterior se existir
+        const existingThumbnail = imgElement.parentElement.querySelector('.selfie-thumbnail-container');
+        if (existingThumbnail) {
+            existingThumbnail.remove();
+        }
+
         const validationDiv = document.createElement('div');
         validationDiv.className = 'selfie-validation mt-3 p-4 rounded-xl';
 
         if (issues.length === 0) {
-            // Foto aprovada
+            // Foto aprovada - mostrar apenas mensagem de sucesso
             validationDiv.className += ' bg-green-50 border border-green-200';
             validationDiv.innerHTML = `
                 <div class="flex items-center gap-2 text-green-700">
@@ -402,6 +435,37 @@ document.addEventListener('DOMContentLoaded', function() {
             `;
             imgElement.classList.remove('border-red-500');
             imgElement.classList.add('border-green-500');
+            
+            // Atualizar o preview para mostrar miniatura com nome
+            const inquilinoItem = inputElement.closest('.inquilino-item');
+            const nomeInput = inquilinoItem ? inquilinoItem.querySelector('input[name*="[nome]"]') : null;
+            const nomePessoa = nomeInput ? nomeInput.value : 'Hóspede';
+            
+            // Criar container para miniatura com nome
+            const thumbnailContainer = document.createElement('div');
+            thumbnailContainer.className = 'selfie-thumbnail-container mt-3 flex items-center gap-3 p-3 bg-green-50 rounded-xl border border-green-200';
+            thumbnailContainer.innerHTML = `
+                <img src="${imgElement.src}" alt="Selfie" class="w-16 h-16 rounded-xl object-cover border-2 border-green-500" />
+                <div>
+                    <p class="text-sm font-semibold text-slate-900">${nomePessoa}</p>
+                    <p class="text-xs text-green-600">Foto enviada</p>
+                </div>
+            `;
+            
+            // Substituir a imagem grande pela miniatura
+            imgElement.classList.add('hidden');
+            imgElement.parentElement.insertBefore(thumbnailContainer, imgElement);
+
+            // Atualizar foto no card do inquilino (se for hóspede adicional)
+            if (inquilinoItem) {
+                const photoImg = inquilinoItem.querySelector('.inquilino-photo');
+                const photoPlaceholder = inquilinoItem.querySelector('.inquilino-photo-placeholder');
+                if (photoImg && photoPlaceholder) {
+                    photoImg.src = imgElement.src;
+                    photoImg.classList.remove('hidden');
+                    photoPlaceholder.classList.add('hidden');
+                }
+            }
         } else {
             // Foto reprovada
             validationDiv.className += ' bg-red-50 border-2 border-red-300';
@@ -509,7 +573,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // --- Inquilinos (Dinâmico) ---
     const addInquilinoBtn = document.getElementById('add-inquilino');
     const inquilinosContainer = document.getElementById('inquilinos-container');
-    let inquilinoCount = 1;
 
     // Adicionar event listener para trim no campo do primeiro inquilino
     const primeiroNomeInput = document.querySelector('input[name="inquilinos[0][nome]"]');
@@ -522,10 +585,18 @@ document.addEventListener('DOMContentLoaded', function() {
     const inquilinoTemplate = document.getElementById('template-inquilino');
     if (addInquilinoBtn) {
         addInquilinoBtn.addEventListener('click', () => {
-            const index = inquilinoCount++;
+            // Calcular o próximo índice baseado nos hóspedes existentes
+            const existingItems = inquilinosContainer.querySelectorAll('.inquilino-item');
+            const existingIndexes = Array.from(existingItems).map(item => parseInt(item.dataset.index));
+            const maxIndex = existingIndexes.length > 0 ? Math.max(...existingIndexes) : 0;
+            const index = maxIndex + 1;
+
+            // Calcular o número de exibição (1 para hóspede principal, depois sequencial)
+            const displayNumber = existingItems.length + 1;
+
             let templateHtml = inquilinoTemplate.innerHTML;
             templateHtml = templateHtml.replace(/__INDEX__/g, index);
-            templateHtml = templateHtml.replace(/__INDEX_NUMBER__/g, index + 1);
+            templateHtml = templateHtml.replace(/__INDEX_NUMBER__/g, displayNumber);
 
             inquilinosContainer.insertAdjacentHTML('beforeend', templateHtml);
 
@@ -551,6 +622,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (selfieInput) {
                     selfieInput.addEventListener('change', handleSelfiePreview);
                 }
+
+                // Atualizar visibilidade do campo de selfie para o novo item
+                updateSelfieFieldVisibility();
             } else {
                 // Fallback para compatibilidade (document-wide)
                 const selfieInput = document.querySelector(`input[name="inquilinos[${index}][selfie]"]`);
@@ -621,10 +695,25 @@ document.addEventListener('DOMContentLoaded', function() {
             const item = e.target.closest('.inquilino-item, .veiculo-item');
             if (confirm('Deseja remover este item?')) {
                 item.classList.add('opacity-0', 'scale-95');
-                setTimeout(() => item.remove(), 300);
+                setTimeout(() => {
+                    item.remove();
+                    // Recalcular números de exibição após remover
+                    updateInquilinoNumbers();
+                }, 300);
             }
         }
     });
+
+    // Função para atualizar números de exibição dos inquilinos
+    function updateInquilinoNumbers() {
+        const items = inquilinosContainer.querySelectorAll('.inquilino-item');
+        items.forEach((item, index) => {
+            const numberBadge = item.querySelector('.w-8.h-8.flex.items-center.justify-center');
+            if (numberBadge) {
+                numberBadge.textContent = index + 1;
+            }
+        });
+    }
 
     // --- Validação ---
     function validateCurrentStep() {

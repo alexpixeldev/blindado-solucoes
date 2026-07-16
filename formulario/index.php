@@ -2,7 +2,7 @@
 require_once '../admin/conexao.php';
 
 $result = $conn->query("
-    SELECT e.id, e.nome AS nome_edificio, b.nome AS nome_base, b.telefone
+    SELECT e.id, e.nome AS nome_edificio, e.requer_selfie, b.nome AS nome_base, b.telefone
     FROM edificios e
     JOIN bases b ON e.base_id = b.id
     WHERE b.status = 'ativo'
