@@ -39,6 +39,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($tipo === 'faciais') {
         $marca = $_POST['marca_equipamento'];
+        $usuario_equipamento = $_POST['usuario_equipamento'] ?? '';
+        $senha_equipamento = $_POST['senha_equipamento'] ?? '';
         $ips = $_POST['ip'] ?? [];
         $obs = $_POST['obs'] ?? [];
         $acessos_array = [];
@@ -47,11 +49,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         $acessos_json = json_encode($acessos_array);
         if ($id) {
-            $stmt = $conn->prepare("UPDATE controle_faciais SET edificio_id=?, marca_equipamento=?, acessos=?, status=?, observacao=?, usuario_id=? WHERE id=?");
-            $stmt->bind_param("issssii", $edificio_id, $marca, $acessos_json, $status, $observacao, $usuario_id, $id);
+            $stmt = $conn->prepare("UPDATE controle_faciais SET edificio_id=?, marca_equipamento=?, login=?, senha=?, acessos=?, status=?, observacao=?, usuario_id=? WHERE id=?");
+            $stmt->bind_param("issssssii", $edificio_id, $marca, $usuario_equipamento, $senha_equipamento, $acessos_json, $status, $observacao, $usuario_id, $id);
         } else {
-            $stmt = $conn->prepare("INSERT INTO controle_faciais (edificio_id, marca_equipamento, acessos, status, observacao, usuario_id) VALUES (?, ?, ?, ?, ?, ?)");
-            $stmt->bind_param("issssi", $edificio_id, $marca, $acessos_json, $status, $observacao, $usuario_id);
+            $stmt = $conn->prepare("INSERT INTO controle_faciais (edificio_id, marca_equipamento, login, senha, acessos, status, observacao, usuario_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt->bind_param("issssssi", $edificio_id, $marca, $usuario_equipamento, $senha_equipamento, $acessos_json, $status, $observacao, $usuario_id);
         }
     } elseif ($tipo === 'ata') {
         $marcas = $_POST['marca_modelo'] ?? [];
@@ -274,15 +276,25 @@ if ($id) {
                                         <label class="form-label">Marca do Equipamento</label>
                                         <input type="text" name="marca_equipamento" class="form-input" value="<?= htmlspecialchars($dados['marca_equipamento'] ?? '') ?>">
                                     </div>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div class="space-y-2">
+                                            <label class="form-label">Usuário</label>
+                                            <input type="text" name="usuario_equipamento" class="form-input" value="<?= htmlspecialchars($dados['login'] ?? '') ?>">
+                                        </div>
+                                        <div class="space-y-2">
+                                            <label class="form-label">Senha</label>
+                                            <input type="text" name="senha_equipamento" class="form-input" value="<?= htmlspecialchars($dados['senha'] ?? '') ?>">
+                                        </div>
+                                    </div>
                                     <div class="space-y-2">
                                         <label class="form-label">Acessos (IP e Observação)</label>
                                         <div id="container-acessos" class="space-y-3">
-                                            <?php 
+                                            <?php
                                             $acessos = $dados['acessos_lista'] ?? [];
                                             if (empty($acessos)) {
                                                 $acessos = [['ip' => '', 'obs' => '']];
                                             }
-                                            foreach ($acessos as $idx => $ac): 
+                                            foreach ($acessos as $idx => $ac):
                                             ?>
                                                 <div class="flex gap-3">
                                                     <input type="text" name="ip[]" class="form-input flex-1" placeholder="IP" value="<?= htmlspecialchars($ac['ip']) ?>">

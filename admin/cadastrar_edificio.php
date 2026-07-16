@@ -6,10 +6,13 @@ if (isset($_POST['add_edificio'])) {
     $nome_edificio = trim($_POST['nome_edificio']);
     $base_id = $_POST['base_id'];
     $endereco = trim($_POST['endereco'] ?? '');
+    $localizacao = trim($_POST['localizacao'] ?? '');
     $sindico_nome = trim($_POST['sindico_nome'] ?? '');
     $sindico_contato = trim($_POST['sindico_contato'] ?? '');
     $administradora_id = !empty($_POST['administradora_id']) ? $_POST['administradora_id'] : null;
     $observacao_ficha_locacao = trim($_POST['observacao_ficha_locacao'] ?? '');
+    $elevador_empresa = trim($_POST['elevador_empresa'] ?? '');
+    $elevador_contato = trim($_POST['elevador_contato'] ?? '');
     $sindico_id = null;
     
     if (!empty($nome_edificio) && !empty($base_id)) {
@@ -46,8 +49,8 @@ if (isset($_POST['add_edificio'])) {
             }
         }
         
-        $stmt = $conn->prepare("INSERT INTO edificios (nome, base_id, endereco, sindico_nome, sindico_contato, administradora_id, observacao_ficha_locacao, sindico_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("sisssisi", $nome_edificio, $base_id, $endereco, $sindico_nome, $sindico_contato, $administradora_id, $observacao_ficha_locacao, $sindico_id);
+        $stmt = $conn->prepare("INSERT INTO edificios (nome, base_id, endereco, localizacao, sindico_nome, sindico_contato, administradora_id, observacao_ficha_locacao, sindico_id, elevador_empresa, elevador_contato) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("sissssissss", $nome_edificio, $base_id, $endereco, $localizacao, $sindico_nome, $sindico_contato, $administradora_id, $observacao_ficha_locacao, $sindico_id, $elevador_empresa, $elevador_contato);
         if ($stmt->execute()) {
             $_SESSION['mensagem'] = "Edifício '$nome_edificio' adicionado com sucesso!";
             $_SESSION['mensagem_tipo'] = "success";
@@ -209,6 +212,10 @@ if (isset($_SESSION['sindico_duplicado'])) {
                                     <label class="form-label">Endereço Completo</label>
                                     <input type="text" name="endereco" class="form-input" placeholder="Ex: Rua das Flores, 123 - Centro">
                                 </div>
+                                <div class="space-y-2 md:col-span-2">
+                                    <label class="form-label">Localização (Link do Google Maps)</label>
+                                    <input type="text" name="localizacao" class="form-input" placeholder="https://maps.google.com/...">
+                                </div>
                                 <div class="space-y-2">
                                     <label class="form-label">Nome do Síndico</label>
                                     <input type="text" name="sindico_nome" class="form-input" placeholder="Nome do síndico do edifício">
@@ -219,17 +226,30 @@ if (isset($_SESSION['sindico_duplicado'])) {
                                 </div>
                                 <div class="space-y-2 md:col-span-2">
                                     <label class="form-label">Administradora</label>
-                                    <div class="relative">
-                                        <select name="administradora_id" class="form-input appearance-none pr-10">
-                                            <option value="">-- Selecione a Administradora (Opcional) --</option>
-                                            <?php foreach ($administradoras as $adm): ?>
-                                                <option value="<?php echo $adm['id']; ?>"><?php echo htmlspecialchars($adm['nome']); ?></option>
-                                            <?php endforeach; ?>
-                                        </select>
-                                        <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
-                                            <i class="fas fa-chevron-down text-slate-400 text-xs"></i>
+                                    <div class="flex gap-2">
+                                        <div class="relative flex-1">
+                                            <select name="administradora_id" class="form-input appearance-none pr-10">
+                                                <option value="">-- Selecione a Administradora (Opcional) --</option>
+                                                <?php foreach ($administradoras as $adm): ?>
+                                                    <option value="<?php echo $adm['id']; ?>"><?php echo htmlspecialchars($adm['nome']); ?></option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                            <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+                                                <i class="fas fa-chevron-down text-slate-400 text-xs"></i>
+                                            </div>
                                         </div>
+                                        <a href="administradoras.php" class="h-10 w-10 flex items-center justify-center rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-600 hover:text-white transition-all" title="Ver Administradoras">
+                                            <i class="fas fa-search"></i>
+                                        </a>
                                     </div>
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="form-label">Empresa de Elevadores</label>
+                                    <input type="text" name="elevador_empresa" class="form-input" placeholder="Nome da empresa de elevadores">
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="form-label">Contato da Empresa de Elevadores</label>
+                                    <input type="text" name="elevador_contato" class="form-input" placeholder="WhatsApp ou Telefone">
                                 </div>
                                 <div class="space-y-2 md:col-span-2">
                                     <label class="form-label">Observação ficha locação</label>

@@ -20,10 +20,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nome = $_POST['nome'];
     $base_id = $_POST['base_id'];
     $endereco = $_POST['endereco'] ?? '';
+    $localizacao = $_POST['localizacao'] ?? '';
     $sindico_nome = $_POST['sindico_nome'] ?? '';
     $sindico_contato = $_POST['sindico_contato'] ?? '';
     $administradora_id = !empty($_POST['administradora_id']) ? $_POST['administradora_id'] : null;
     $observacao_ficha_locacao = trim($_POST['observacao_ficha_locacao'] ?? '');
+    $elevador_empresa = $_POST['elevador_empresa'] ?? '';
+    $elevador_contato = $_POST['elevador_contato'] ?? '';
     $id = $_POST['id'];
 
     if (empty($nome) || empty($base_id)) {
@@ -36,9 +39,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $old_edificio = $stmt_old->get_result()->fetch_assoc();
         $old_sindico_nome = $old_edificio['sindico_nome'];
         $stmt_old->close();
-        
-        $stmt = $conn->prepare("UPDATE edificios SET nome = ?, base_id = ?, endereco = ?, sindico_nome = ?, sindico_contato = ?, administradora_id = ?, observacao_ficha_locacao = ? WHERE id = ?");
-        $stmt->bind_param("sisssisi", $nome, $base_id, $endereco, $sindico_nome, $sindico_contato, $administradora_id, $observacao_ficha_locacao, $id);
+
+        $stmt = $conn->prepare("UPDATE edificios SET nome = ?, base_id = ?, endereco = ?, localizacao = ?, sindico_nome = ?, sindico_contato = ?, administradora_id = ?, observacao_ficha_locacao = ?, elevador_empresa = ?, elevador_contato = ? WHERE id = ?");
+        $stmt->bind_param("sissssisssi", $nome, $base_id, $endereco, $localizacao, $sindico_nome, $sindico_contato, $administradora_id, $observacao_ficha_locacao, $elevador_empresa, $elevador_contato, $id);
         
         if ($stmt->execute()) {
             // Sincronizar o nome do síndico na tabela sindicos se mudou
@@ -173,6 +176,10 @@ $administradoras = $conn->query("SELECT id, nome FROM administradoras ORDER BY n
                                     <label class="form-label">Endereço Completo</label>
                                     <input type="text" name="endereco" class="form-input" value="<?php echo htmlspecialchars($edificio['endereco'] ?? ''); ?>">
                                 </div>
+                                <div class="space-y-2 md:col-span-2">
+                                    <label class="form-label">Localização (Link do Google Maps)</label>
+                                    <input type="text" name="localizacao" class="form-input" value="<?php echo htmlspecialchars($edificio['localizacao'] ?? ''); ?>" placeholder="https://maps.google.com/...">
+                                </div>
                                 <div class="space-y-2">
                                     <label class="form-label">Nome do Síndico</label>
                                     <input type="text" name="sindico_nome" class="form-input" value="<?php echo htmlspecialchars($edificio['sindico_nome'] ?? ''); ?>">
@@ -183,17 +190,30 @@ $administradoras = $conn->query("SELECT id, nome FROM administradoras ORDER BY n
                                 </div>
                                 <div class="space-y-2 md:col-span-2">
                                     <label class="form-label">Administradora</label>
-                                    <div class="relative">
-                                        <select name="administradora_id" class="form-input appearance-none pr-10">
-                                            <option value="">-- Selecione a Administradora --</option>
-                                            <?php foreach ($administradoras as $adm): ?>
-                                                <option value="<?php echo $adm['id']; ?>" <?php echo (isset($edificio['administradora_id']) && $adm['id'] == $edificio['administradora_id']) ? 'selected' : ''; ?>><?php echo htmlspecialchars($adm['nome']); ?></option>
-                                            <?php endforeach; ?>
-                                        </select>
-                                        <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
-                                            <i class="fas fa-chevron-down text-slate-400 text-xs"></i>
+                                    <div class="flex gap-2">
+                                        <div class="relative flex-1">
+                                            <select name="administradora_id" class="form-input appearance-none pr-10">
+                                                <option value="">-- Selecione a Administradora --</option>
+                                                <?php foreach ($administradoras as $adm): ?>
+                                                    <option value="<?php echo $adm['id']; ?>" <?php echo (isset($edificio['administradora_id']) && $adm['id'] == $edificio['administradora_id']) ? 'selected' : ''; ?>><?php echo htmlspecialchars($adm['nome']); ?></option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                            <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+                                                <i class="fas fa-chevron-down text-slate-400 text-xs"></i>
+                                            </div>
                                         </div>
+                                        <a href="administradoras.php" class="h-10 w-10 flex items-center justify-center rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-600 hover:text-white transition-all" title="Ver Administradoras">
+                                            <i class="fas fa-search"></i>
+                                        </a>
                                     </div>
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="form-label">Empresa de Elevadores</label>
+                                    <input type="text" name="elevador_empresa" class="form-input" value="<?php echo htmlspecialchars($edificio['elevador_empresa'] ?? ''); ?>">
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="form-label">Contato da Empresa de Elevadores</label>
+                                    <input type="text" name="elevador_contato" class="form-input" value="<?php echo htmlspecialchars($edificio['elevador_contato'] ?? ''); ?>">
                                 </div>
                                 <div class="space-y-2 md:col-span-2">
                                     <label class="form-label">Observação ficha locação</label>

@@ -356,10 +356,12 @@ function render_data_field($content, $type) {
 
                                     <div class="space-y-4">
                                         <?php if ($tipo_dados === 'faciais'): ?>
-                                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                                                 <div class="space-y-1"><span class="text-[10px] font-bold uppercase text-slate-400">Marca Equipamento</span><p class="text-sm font-bold text-slate-700"><?= htmlspecialchars(format_legacy_text($row['marca_equipamento'])) ?></p></div>
-                                                <div class="space-y-1"><span class="text-[10px] font-bold uppercase text-slate-400">Detalhamento de Acessos</span><?= render_data_field($row['acessos'], 'faciais') ?></div>
+                                                <div class="space-y-1"><span class="text-[10px] font-bold uppercase text-slate-400">Usuário</span><p class="text-sm font-bold text-slate-700"><?= htmlspecialchars(format_legacy_text($row['login'] ?? '')) ?></p></div>
+                                                <div class="space-y-1"><span class="text-[10px] font-bold uppercase text-slate-400">Senha</span><p class="text-sm font-bold text-slate-700"><?= htmlspecialchars(format_legacy_text($row['senha'] ?? '')) ?></p></div>
                                             </div>
+                                            <div class="space-y-1"><span class="text-[10px] font-bold uppercase text-slate-400">Detalhamento de Acessos</span><?= render_data_field($row['acessos'], 'faciais') ?></div>
                                         <?php elseif ($tipo_dados === 'ata'): ?>
                                             <div class="space-y-1"><span class="text-[10px] font-bold uppercase text-slate-400">Configurações ATA</span><?= render_data_field($row['itens_ata'], 'ata') ?></div>
                                         <?php elseif ($tipo_dados === 'ips'): ?>
@@ -373,7 +375,8 @@ function render_data_field($content, $type) {
                                             <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
                                                 <div class="space-y-1"><span class="text-[10px] font-bold uppercase text-slate-400">IP</span><p class="text-sm font-bold text-primary-600"><?= htmlspecialchars($row['ip']) ?></p></div>
                                                 <div class="space-y-1"><span class="text-[10px] font-bold uppercase text-slate-400">Marca/Modelo</span><p class="text-sm font-bold text-slate-700"><?= htmlspecialchars(format_legacy_text($row['marca'] . ' ' . $row['modelo'])) ?></p></div>
-                                                <div class="space-y-1"><span class="text-[10px] font-bold uppercase text-slate-400">Login</span><p class="text-sm font-bold text-slate-700"><?= htmlspecialchars(format_legacy_text($row['login'])) ?></p></div>
+                                                <div class="space-y-1"><span class="text-[10px] font-bold uppercase text-slate-400">Usuário</span><p class="text-sm font-bold text-slate-700"><?= htmlspecialchars(format_legacy_text($row['login'])) ?></p></div>
+                                                <div class="space-y-1"><span class="text-[10px] font-bold uppercase text-slate-400">Senha</span><p class="text-sm font-bold text-slate-700"><?= htmlspecialchars(format_legacy_text($row['senha'])) ?></p></div>
                                                 <div class="space-y-1"><span class="text-[10px] font-bold uppercase text-slate-400">Local</span><p class="text-sm font-bold text-slate-700"><?= htmlspecialchars(format_legacy_text($row['local_detalhe'])) ?></p></div>
                                             </div>
                                         <?php elseif ($tipo_dados === 'dvr'): ?>
@@ -381,7 +384,8 @@ function render_data_field($content, $type) {
                                                 <div class="space-y-1"><span class="text-[10px] font-bold uppercase text-slate-400">IP/Domínio</span><p class="text-sm font-bold text-primary-600"><?= htmlspecialchars($row['ip_dominio']) ?></p></div>
                                                 <div class="space-y-1"><span class="text-[10px] font-bold uppercase text-slate-400">Cloud</span><p class="text-sm font-bold text-slate-700"><?= htmlspecialchars(format_legacy_text($row['cloud'])) ?></p></div>
                                                 <div class="space-y-1"><span class="text-[10px] font-bold uppercase text-slate-400">Modelo</span><p class="text-sm font-bold text-slate-700"><?= htmlspecialchars(format_legacy_text($row['modelo'])) ?></p></div>
-                                                <div class="space-y-1"><span class="text-[10px] font-bold uppercase text-slate-400">Login</span><p class="text-sm font-bold text-slate-700"><?= htmlspecialchars(format_legacy_text($row['login'])) ?></p></div>
+                                                <div class="space-y-1"><span class="text-[10px] font-bold uppercase text-slate-400">Usuário</span><p class="text-sm font-bold text-slate-700"><?= htmlspecialchars(format_legacy_text($row['login'])) ?></p></div>
+                                                <div class="space-y-1"><span class="text-[10px] font-bold uppercase text-slate-400">Senha</span><p class="text-sm font-bold text-slate-700"><?= htmlspecialchars(format_legacy_text($row['senha'])) ?></p></div>
                                             </div>
                                         <?php elseif ($tipo_dados === 'ramais'): ?>
                                             <div class="flex flex-wrap gap-2">

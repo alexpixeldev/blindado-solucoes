@@ -137,7 +137,8 @@ $where_clauses = [];
 
 switch ($tab) {
     case 'edificios':
-        $query = "SELECT e.id, e.nome AS nome_edificio, e.endereco, e.sindico_nome, e.sindico_contato, e.administradora_id, 
+        $query = "SELECT e.id, e.nome AS nome_edificio, e.endereco, e.localizacao, e.sindico_nome, e.sindico_contato, e.administradora_id,
+                         e.elevador_empresa, e.elevador_contato,
                          b.nome AS nome_base, b.status AS status, a.nome AS nome_administradora,
                          (SELECT cf.marca_equipamento FROM controle_faciais cf WHERE cf.edificio_id = e.id ORDER BY cf.id DESC LIMIT 1) AS facial_marca,
                          (SELECT cf.acessos FROM controle_faciais cf WHERE cf.edificio_id = e.id ORDER BY cf.id DESC LIMIT 1) AS facial_acessos,
@@ -307,28 +308,17 @@ unset($_SESSION['mensagem'], $_SESSION['mensagem_tipo']);
 
                 <!-- Tabs Navigation -->
                 <div class="mb-8 flex flex-wrap gap-2 border-b border-slate-200 animate-fade-in">
-                    <?php 
-                        $tabs_config = [
-                            'edificios' => 'Edifícios',
-                            'bases' => 'Bases',
-                            'administradoras' => 'Administradoras',
-                            'sindicos' => 'Síndicos'
-                        ];
-                        foreach ($tabs_config as $key => $label):
-                    ?>
-                        <a href="?tab=<?= $key ?>" class="px-6 py-3 text-sm font-bold transition-all border-b-2 <?= $tab === $key ? 'border-primary-500 text-primary-600' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300' ?>">
-                            <?= $label ?>
-                        </a>
-                    <?php endforeach; ?>
+                    <a href="?tab=edificios" class="px-6 py-3 text-sm font-bold transition-all border-b-2 border-primary-500 text-primary-600">
+                        Edifícios
+                    </a>
                 </div>
 
                 <!-- Filters & Search -->
                 <div class="mb-6 animate-slide-up">
                     <div class="admin-card">
                         <form method="GET" class="grid grid-cols-1 gap-4 sm:grid-cols-3 sm:items-end">
-                            <input type="hidden" name="tab" value="<?= $tab ?>">
-                            
-                            <?php if ($tab === 'edificios'): ?>
+                            <input type="hidden" name="tab" value="edificios">
+
                             <div class="space-y-2">
                                 <label class="form-label">Filtrar por Base</label>
                                 <div class="relative">
@@ -343,7 +333,6 @@ unset($_SESSION['mensagem'], $_SESSION['mensagem_tipo']);
                                     </div>
                                 </div>
                             </div>
-                            <?php endif; ?>
 
                             <div class="space-y-2">
                                 <label class="form-label">Buscar</label>
@@ -355,7 +344,7 @@ unset($_SESSION['mensagem'], $_SESSION['mensagem_tipo']);
                                 </div>
                             </div>
 
-                            <a href="?tab=<?= $tab ?>" class="btn-secondary" title="Limpar Filtros">
+                            <a href="?tab=edificios" class="btn-secondary" title="Limpar Filtros">
                                 <i class="fas fa-sync-alt"></i>
                             </a>
                         </form>
@@ -364,8 +353,7 @@ unset($_SESSION['mensagem'], $_SESSION['mensagem_tipo']);
 
                 <!-- Data Table -->
                 <div class="animate-slide-up" style="animation-delay: 0.1s;">
-                    <?php if ($tab === 'edificios'): ?>
-                        <?php if (empty($data)): ?>
+                    <?php if (empty($data)): ?>
                             <div class="admin-card text-center py-12 text-slate-500 italic">
                                 Nenhum edifício encontrado.
                             </div>
@@ -377,84 +365,95 @@ unset($_SESSION['mensagem'], $_SESSION['mensagem_tipo']);
                                             <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                                                 <div>
                                                     <p class="text-xs uppercase tracking-[0.3em] text-slate-400">Edifício</p>
-                                                    <h2 class="mt-2 text-2xl font-bold text-slate-900"><?= htmlspecialchars($item['nome_edificio']) ?></h2>
+                                                    <h2 class="mt-2 text-2xl font-bold text-slate-900"><?= htmlspecialchars($item['nome_edificio'] ?? $item['nome'] ?? 'Nome não informado') ?></h2>
                                                     <p class="mt-2 text-sm text-slate-500 max-w-xl"><?= htmlspecialchars($item['endereco'] ?: 'Endereço não informado') ?></p>
+                                                    <?php if (!empty($item['localizacao']) && $item['localizacao'] !== 'NULL'): ?>
+                                                        <a href="<?= htmlspecialchars($item['localizacao']) ?>" target="_blank" class="mt-1 inline-flex items-center text-xs text-primary-600 hover:text-primary-700">
+                                                            <i class="fas fa-map-marker-alt mr-1"></i>
+                                                            Ver no Google Maps
+                                                        </a>
+                                                    <?php else: ?>
+                                                        <p class="mt-1 text-xs text-slate-400 italic">Localização não informada</p>
+                                                    <?php endif; ?>
                                                 </div>
                                                 <div class="space-y-1 text-right">
                                                     <span class="text-xs uppercase tracking-[0.3em] text-slate-400">Base</span>
-                                                    <p class="text-sm font-semibold text-slate-900"><?= render_card_value($item['nome_base']) ?></p>
+                                                    <p class="text-sm font-semibold text-slate-900"><?= render_card_value($item['nome_base'] ?? 'Base não informada') ?></p>
                                                 </div>
                                             </div>
 
                                             <div class="grid gap-4 md:grid-cols-2">
                                                 <div class="rounded-3xl border border-slate-200 bg-slate-50 p-4">
                                                     <p class="text-[10px] uppercase tracking-[0.3em] text-slate-400">Administradora</p>
-                                                    <p class="text-sm font-semibold text-slate-900"><?= render_card_value($item['nome_administradora']) ?></p>
+                                                    <p class="text-sm font-semibold text-slate-900"><?= render_card_value($item['nome_administradora'] ?? 'Administradora não informada') ?></p>
                                                 </div>
                                                 <div class="rounded-3xl border border-slate-200 bg-slate-50 p-4">
                                                     <p class="text-[10px] uppercase tracking-[0.3em] text-slate-400">Síndico</p>
-                                                    <p class="mt-2 text-sm font-semibold text-slate-900"><?= render_card_value($item['sindico_nome']) ?></p>
-                                                    <p class="text-sm text-slate-500 mt-1"><?= render_card_value($item['sindico_contato']) ?></p>
+                                                    <p class="mt-2 text-sm font-semibold text-slate-900"><?= render_card_value($item['sindico_nome'] ?? 'Síndico não informado') ?></p>
+                                                    <p class="text-sm text-slate-500 mt-1"><?= render_card_value($item['sindico_contato'] ?? '') ?></p>
+                                                </div>
+                                            </div>
+
+                                            <div class="rounded-3xl border border-slate-200 bg-slate-50 p-4">
+                                                <p class="text-[10px] uppercase tracking-[0.3em] text-slate-400">Elevador</p>
+                                                <div class="grid gap-2 sm:grid-cols-2 mt-3 text-sm text-slate-500">
+                                                    <div>Empresa: <?= render_card_value($item['elevador_empresa'] ?? 'Não informada') ?></div>
+                                                    <div>Contato: <?= render_card_value($item['elevador_contato'] ?? 'Não informado') ?></div>
                                                 </div>
                                             </div>
 
                                             <div class="grid gap-4 sm:grid-cols-2">
                                                 <div class="rounded-3xl border border-slate-200 bg-slate-50 p-4 text-left">
                                                     <p class="text-[10px] uppercase tracking-[0.3em] text-slate-400">DVR</p>
-                                                    <p class="mt-3 text-sm text-slate-900 font-semibold">IP: <?= render_card_value($item['dvr_ip']) ?></p>
-                                                    <p class="text-sm text-slate-500">Cloud: <?= render_card_value($item['dvr_cloud']) ?></p>
-                                                    <p class="text-sm text-slate-500">Modelo: <?= render_card_value($item['dvr_modelo']) ?></p>
-                                                    <p class="text-sm text-slate-500">Porta TCP: <?= render_card_value($item['dvr_porta_tcp']) ?></p>
-                                                    <p class="text-sm text-slate-500">Status: <?= render_card_value($item['dvr_status']) ?></p>
+                                                    <p class="mt-3 text-sm text-slate-900 font-semibold">IP: <?= render_card_value($item['dvr_ip'] ?? 'Não informado') ?></p>
+                                                    <p class="text-sm text-slate-500">Cloud: <?= render_card_value($item['dvr_cloud'] ?? 'Não informado') ?></p>
+                                                    <p class="text-sm text-slate-500">Modelo: <?= render_card_value($item['dvr_modelo'] ?? 'Não informado') ?></p>
+                                                    <p class="text-sm text-slate-500">Porta TCP: <?= render_card_value($item['dvr_porta_tcp'] ?? 'Não informado') ?></p>
                                                 </div>
                                                 <div class="rounded-3xl border border-slate-200 bg-slate-50 p-4 text-left">
                                                     <p class="text-[10px] uppercase tracking-[0.3em] text-slate-400">Ramais</p>
-                                                    <p class="mt-3 text-sm text-slate-900 font-semibold">Último ramal: <?= render_card_value($item['ramal_numero']) ?></p>
-                                                    <p class="text-sm text-slate-500">Categoria: <?= render_card_value($item['ramal_categoria']) ?></p>
-                                                    <p class="text-sm text-slate-500">Status: <?= render_card_value($item['ramal_status']) ?></p>
+                                                    <p class="mt-3 text-sm text-slate-900 font-semibold">Último ramal: <?= render_card_value($item['ramal_numero'] ?? 'Não informado') ?></p>
+                                                    <p class="text-sm text-slate-500">Categoria: <?= render_card_value($item['ramal_categoria'] ?? 'Não informado') ?></p>
                                                 </div>
                                             </div>
 
                                             <div class="grid gap-4 sm:grid-cols-2">
                                                 <div class="rounded-3xl border border-slate-200 bg-slate-50 p-4 text-left">
                                                     <p class="text-[10px] uppercase tracking-[0.3em] text-slate-400">Facial</p>
-                                                    <p class="mt-3 text-sm text-slate-900 font-semibold">Marca: <?= render_card_value($item['facial_marca']) ?></p>
+                                                    <p class="mt-3 text-sm text-slate-900 font-semibold">Marca: <?= render_card_value($item['facial_marca'] ?? 'Não informado') ?></p>
                                                     <p class="text-sm text-slate-500">Acessos: <?= render_card_accessos($item['facial_acessos']) ?></p>
-                                                    <p class="text-sm text-slate-500">Status: <?= render_card_value($item['facial_status']) ?></p>
-                                                    <p class="text-sm text-slate-500">Obs: <?= render_card_value($item['facial_observacao']) ?></p>
+                                                    <p class="text-sm text-slate-500">Obs: <?= render_card_value($item['facial_observacao'] ?? 'Não informado') ?></p>
                                                 </div>
                                                 <div class="rounded-3xl border border-slate-200 bg-slate-50 p-4 text-left">
                                                     <p class="text-[10px] uppercase tracking-[0.3em] text-slate-400">ATA</p>
-                                                    <p class="mt-3 text-sm text-slate-900 font-semibold">Itens: <?= render_card_value($item['ata_itens']) ?></p>
-                                                    <p class="text-sm text-slate-500">Status: <?= render_card_value($item['ata_status']) ?></p>
-                                                    <p class="text-sm text-slate-500">Obs: <?= render_card_value($item['ata_observacao']) ?></p>
+                                                    <p class="mt-3 text-sm text-slate-900 font-semibold">Itens: <?= render_card_value($item['ata_itens'] ?? 'Não informado') ?></p>
+                                                    <p class="text-sm text-slate-500">Obs: <?= render_card_value($item['ata_observacao'] ?? 'Não informado') ?></p>
                                                 </div>
                                             </div>
 
                                             <div class="rounded-3xl border border-slate-200 bg-slate-50 p-4">
                                                 <p class="text-[10px] uppercase tracking-[0.3em] text-slate-400">Rádio / Fibra</p>
                                                 <div class="grid gap-2 sm:grid-cols-2 mt-3 text-sm text-slate-500">
-                                                    <div>IP: <?= render_card_value($item['radio_ip']) ?></div>
-                                                    <div>Local: <?= render_card_value($item['radio_local']) ?></div>
-                                                    <div>Modo: <?= render_card_value($item['radio_modo']) ?></div>
-                                                    <div>Marca: <?= render_card_value($item['radio_marca']) ?></div>
-                                                    <div>Modelo: <?= render_card_value($item['radio_modelo']) ?></div>
-                                                    <div>Login: <?= render_card_value($item['radio_login']) ?></div>
-                                                    <div>Status: <?= render_card_value($item['radio_status']) ?></div>
-                                                    <div>Obs: <?= render_card_value($item['radio_observacao']) ?></div>
+                                                    <div>IP: <?= render_card_value($item['radio_ip'] ?? 'Não informado') ?></div>
+                                                    <div>Local: <?= render_card_value($item['radio_local'] ?? 'Não informado') ?></div>
+                                                    <div>Modo: <?= render_card_value($item['radio_modo'] ?? 'Não informado') ?></div>
+                                                    <div>Marca: <?= render_card_value($item['radio_marca'] ?? 'Não informado') ?></div>
+                                                    <div>Modelo: <?= render_card_value($item['radio_modelo'] ?? 'Não informado') ?></div>
+                                                    <div>Login: <?= render_card_value($item['radio_login'] ?? 'Não informado') ?></div>
+                                                    <div>Obs: <?= render_card_value($item['radio_observacao'] ?? 'Não informado') ?></div>
                                                 </div>
                                             </div>
 
                                             <div class="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-slate-200">
-                                                <div class="text-sm text-slate-500">Base responsável: <span class="font-semibold text-slate-900"><?= render_card_value($item['nome_base']) ?></span></div>
+                                                <div class="text-sm text-slate-500">Base responsável: <span class="font-semibold text-slate-900"><?= render_card_value($item['nome_base'] ?? 'Base não informada') ?></span></div>
                                                 <div class="flex gap-2">
-                                                    <a href="editar_edificio.php?id=<?= $item['id'] ?>" class="btn-secondary text-xs">Editar</a>
+                                                    <a href="editar_edificio.php?id=<?= $item['id'] ?>" class="px-4 py-2 text-xs font-bold text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors">Editar</a>
                                                     <?php if ($pode_editar): ?>
-                                                        <form method="POST" class="inline">
+                                                        <form method="POST" class="inline" onsubmit="return confirm('Tem certeza que deseja excluir este edifício?');">
                                                             <input type="hidden" name="id_delete" value="<?= $item['id'] ?>">
                                                             <input type="hidden" name="tipo_delete" value="edificio">
                                                             <input type="hidden" name="current_tab" value="<?= $tab ?>">
-                                                            <button type="submit" name="delete_item" class="btn-danger text-xs">Excluir</button>
+                                                            <button type="submit" name="delete_item" class="px-4 py-2 text-xs font-bold text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors">Excluir</button>
                                                         </form>
                                                     <?php endif; ?>
                                                 </div>
@@ -464,103 +463,6 @@ unset($_SESSION['mensagem'], $_SESSION['mensagem_tipo']);
                                 <?php endforeach; ?>
                             </div>
                         <?php endif; ?>
-                    <?php else: ?>
-                        <div class="overflow-x-auto">
-                            <table class="admin-table">
-                                <thead>
-                                    <tr>
-                                        <?php if ($tab === 'bases'): ?>
-                                            <th>Nome da Base</th>
-                                            <th>Telefone</th>
-                                            <th>Status</th>
-                                            <th>Total Edifícios</th>
-                                        <?php elseif ($tab === 'administradoras' || $tab === 'sindicos'): ?>
-                                            <th>Nome</th>
-                                            <th>Contato</th>
-                                            <th>Edifícios Vinculados</th>
-                                        <?php endif; ?>
-                                        <th class="text-right">Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php if (empty($data)): ?>
-                                        <tr>
-                                            <td colspan="5" class="text-center py-12 text-slate-500 italic">Nenhum registro encontrado.</td>
-                                        </tr>
-                                    <?php else: ?>
-                                        <?php foreach ($data as $item): ?>
-                                            <tr class="group">
-                                                <?php if ($tab === 'bases'): ?>
-                                                    <td class="font-bold text-slate-900"><?= htmlspecialchars($item['nome']) ?></td>
-                                                    <td class="text-sm text-slate-600"><?= htmlspecialchars($item['telefone'] ?: 'N/A') ?></td>
-                                                    <td>
-                                                        <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold <?= $item['status'] === 'inativo' ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700' ?>">
-                                                            <?= $item['status'] === 'inativo' ? 'Desativado' : 'Ativo' ?>
-                                                        </span>
-                                                    </td>
-                                                    <td><span class="badge-primary"><?= $item['total_edificios'] ?> edifícios</span></td>
-                                                <?php else: ?>
-                                                    <td class="font-bold text-slate-900"><?= htmlspecialchars($item['nome']) ?></td>
-                                                    <td>
-                                                        <div class="flex flex-col">
-                                                            <span class="text-sm text-slate-700"><?= htmlspecialchars($item['telefone'] ?: '') ?></span>
-                                                            <span class="text-xs text-slate-400"><?= htmlspecialchars($item['email'] ?: '') ?></span>
-                                                        </div>
-                                                    </td>
-                                                    <td class="max-w-xs">
-                                                        <span class="text-xs text-slate-500 line-clamp-2"><?= htmlspecialchars($item['edificios_administrados'] ?: 'Nenhum') ?></span>
-                                                    </td>
-                                                <?php endif; ?>
-                                                <td class="text-right">
-                                                    <div class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        <?php 
-                                                            $edit_url = [
-                                                                'bases' => "editar_base.php?id=" . $item['id'],
-                                                                'administradoras' => "editar_administradora.php?id=" . $item['id'],
-                                                                'sindicos' => "editar_sindico.php?id=" . $item['id']
-                                                            ][$tab];
-                                                            $tipo_delete = [
-                                                                'bases' => 'base',
-                                                                'administradoras' => 'administradora',
-                                                                'sindicos' => 'sindico'
-                                                            ][$tab];
-                                                        ?>
-                                                        <a href="<?= $edit_url ?>" class="h-8 w-8 flex items-center justify-center rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-600 hover:text-white transition-all" title="Editar">
-                                                            <i class="fas fa-edit"></i>
-                                                        </a>
-                                                        <?php if ($pode_editar): ?>
-                                                            <form method="POST" onsubmit="return confirm('Tem certeza que deseja excluir este item?');" class="inline">
-                                                                <input type="hidden" name="id_delete" value="<?= $item['id'] ?>">
-                                                                <input type="hidden" name="tipo_delete" value="<?= $tipo_delete ?>">
-                                                                <input type="hidden" name="current_tab" value="<?= $tab ?>">
-                                                                <button type="submit" name="delete_item" class="h-8 w-8 flex items-center justify-center rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all" title="Excluir">
-                                                                    <i class="fas fa-trash-alt"></i>
-                                                                </button>
-                                                            </form>
-                                                        <?php endif; ?>
-                                                        <?php if ($tab === 'bases' && $pode_editar): ?>
-                                                            <?php
-                                                                $isActive = $item['status'] === 'ativo';
-                                                                $buttonTitle = $isActive ? 'Desativar' : 'Ativar';
-                                                                $buttonClass = $isActive ? 'bg-amber-50 text-amber-600 hover:bg-amber-600 hover:text-white' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white';
-                                                            ?>
-                                                            <form method="POST" class="inline">
-                                                                <input type="hidden" name="id_deactivate" value="<?= $item['id'] ?>">
-                                                                <input type="hidden" name="current_tab" value="<?= $tab ?>">
-                                                                <button type="submit" name="deactivate_item" class="h-8 w-8 flex items-center justify-center rounded-lg <?= $buttonClass ?> transition-all" title="<?= $buttonTitle ?>">
-                                                                    <i class="fas fa-power-off"></i>
-                                                                </button>
-                                                            </form>
-                                                        <?php endif; ?>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        <?php endforeach; ?>
-                                    <?php endif; ?>
-                                </tbody>
-                            </table>
-                        </div>
-                    <?php endif; ?>
                 </div>
             </main>
             
