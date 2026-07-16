@@ -28,21 +28,22 @@ if ($file_field && isset($_FILES[$file_field])) {
     $new_filename = uniqid() . '_' . preg_replace("/[^a-zA-Z0-9.]/", "_", $name);
     $target_file = $upload_dir . $new_filename;
 
-    // Extensões permitidas (Imagens e Vídeos)
+    // Extensões permitidas (Imagens, Vídeos e Áudio)
     $allowed_images = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
     $allowed_videos = ['mp4', 'webm', 'ogg', 'mov'];
-    
-    if (in_array($extension, array_merge($allowed_images, $allowed_videos))) {
+    $allowed_audio = ['mp3', 'wav', 'ogg', 'm4a', 'aac'];
+
+    if (in_array($extension, array_merge($allowed_images, $allowed_videos, $allowed_audio))) {
         if (move_uploaded_file($temp, $target_file)) {
             $file_url = '../uploads/ocorrencias/' . $new_filename;
-            
+
             // Retorno compatível com TinyMCE e outros editores
             echo json_encode([
                 'location' => $file_url,
                 'success' => 1,
                 'file' => [
                     'url' => $file_url,
-                    'type' => in_array($extension, $allowed_videos) ? 'video' : 'image'
+                    'type' => in_array($extension, $allowed_videos) ? 'video' : (in_array($extension, $allowed_audio) ? 'audio' : 'image')
                 ]
             ]);
         } else {
