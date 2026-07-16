@@ -270,11 +270,11 @@ unset($_SESSION['mensagem'], $_SESSION['mensagem_tipo']);
 <body class="h-full text-slate-800 antialiased">
     <div class="flex min-h-screen">
         <?php include 'components/sidebar.php'; ?>
-        
-        <div class="flex flex-1 flex-col overflow-hidden">
+
+        <div class="flex flex-1 flex-col">
             <?php include 'components/header.php'; ?>
-            
-            <main class="flex-1 overflow-y-auto p-4 sm:p-8 custom-scrollbar">
+
+            <main class="flex-1 p-4 sm:p-8 custom-scrollbar">
                 <!-- Page Header -->
                 <div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between animate-fade-in">
                     <div>

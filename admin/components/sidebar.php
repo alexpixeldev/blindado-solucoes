@@ -37,7 +37,7 @@ $categoria_labels = [
 $categoria_label = $categoria_labels[$usuario_categoria] ?? 'Usuário';
 ?>
 
-<aside id="admin-sidebar" class="fixed inset-y-0 left-0 z-40 w-72 -translate-x-full flex flex-col bg-slate-900 text-white transition-transform duration-300 ease-in-out lg:static lg:flex lg:translate-x-0 h-screen">
+<aside id="admin-sidebar" class="fixed inset-y-0 left-0 z-40 w-72 -translate-x-full flex flex-col bg-slate-900 text-white transition-transform duration-300 ease-in-out lg:static lg:flex lg:translate-x-0 min-h-screen">
     <!-- Sidebar Header -->
     <div class="flex h-20 items-center justify-between border-b border-white/10 px-6">
         <a href="index.php" class="flex items-center justify-center w-full">
