@@ -4,14 +4,47 @@ document.addEventListener('DOMContentLoaded', function() {
     const btnNext = document.getElementById('btn-next');
     const btnPrev = document.getElementById('btn-prev');
     const errorAlert = document.getElementById('global-error-message');
-    
+
     let currentStep = 0;
     const totalSteps = steps.length;
+    let trackingLoaded = false;
 
     // --- Helper Functions ---
     function formatText(text) {
         if (!text) return "";
         return text.toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+    }
+
+    // --- Verificar se tracking.js está carregado ---
+    function checkTrackingJs() {
+        trackingLoaded = typeof tracking !== 'undefined' && typeof tracking.ObjectTracker !== 'undefined';
+        console.log('Tracking.js loaded:', trackingLoaded);
+        return trackingLoaded;
+    }
+
+    // --- Atualizar visibilidade do campo de selfie baseado no edifício ---
+    function updateSelfieFieldVisibility() {
+        const edificioInput = document.querySelector('input[name="edificio_id"]:checked');
+        const selfieFields = document.querySelectorAll('.selfie-field-container');
+
+        if (!edificioInput) {
+            // Se nenhum edifício selecionado, esconder selfie
+            selfieFields.forEach(field => field.classList.add('hidden'));
+            return;
+        }
+
+        const edificioCard = edificioInput.closest('.edificio-card');
+        const edificioName = edificioCard ? edificioCard.dataset.name : '';
+
+        // Edifícios que requerem selfie
+        const edificiosComSelfie = ['guy vartam', 'panoramic', 'atobá'];
+        const requiresSelfie = edificiosComSelfie.includes(edificioName);
+
+        console.log('Edifício selecionado:', edificioName, 'Requer selfie:', requiresSelfie);
+
+        selfieFields.forEach(field => {
+            field.classList.toggle('hidden', !requiresSelfie);
+        });
     }
 
     // --- Inicialização ---
@@ -20,6 +53,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initPhoneMask();
     initEdificiosSearch();
     initSelfiePreview();
+    checkTrackingJs();
 
     // --- Navegação ---
     btnNext.addEventListener('click', () => {
@@ -33,6 +67,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 updateStepUI();
                 if (currentStep === totalSteps - 1) {
                     populateReviewPage();
+                }
+                // Verificar se deve mostrar campo de selfie baseado no edifício selecionado
+                if (currentStep === 2) {
+                    updateSelfieFieldVisibility();
                 }
             } else {
                 submitForm();
@@ -99,17 +137,38 @@ document.addEventListener('DOMContentLoaded', function() {
     // --- Lógica de Tipo de Usuário ---
     const userTypeRadios = document.querySelectorAll('input[name="user_type"]');
     const locadorFields = document.getElementById('locadorFields');
-    
+
     userTypeRadios.forEach(radio => {
         radio.addEventListener('change', () => {
             const isLocatario = document.getElementById('radio_locatario').checked;
             locadorFields.classList.toggle('hidden', !isLocatario);
-            
+
+            // Atualizar cor da bolinha
+            updateRadioBolinha();
+
             // Atualizar visibilidade do campo de acesso de garagem no passo 4
             updateAcessoGaragemVisibility();
             clearAllErrors();
         });
     });
+
+    function updateRadioBolinha() {
+        userTypeRadios.forEach(radio => {
+            const bolinha = radio.closest('label').querySelector('.w-6.h-6');
+            const bolinhaInterna = bolinha.querySelector('.w-2.h-2');
+            if (radio.checked) {
+                bolinha.classList.add('border-primary-600', 'bg-primary-600');
+                bolinha.classList.remove('border-slate-200');
+                bolinhaInterna.classList.remove('opacity-0');
+                bolinhaInterna.classList.add('opacity-100');
+            } else {
+                bolinha.classList.remove('border-primary-600', 'bg-primary-600');
+                bolinha.classList.add('border-slate-200');
+                bolinhaInterna.classList.add('opacity-0');
+                bolinhaInterna.classList.remove('opacity-100');
+            }
+        });
+    }
 
     function updateAcessoGaragemVisibility() {
         const isLocador = document.getElementById('radio_locador').checked;
@@ -177,8 +236,195 @@ document.addEventListener('DOMContentLoaded', function() {
             if (fileNameElement) {
                 fileNameElement.textContent = `Arquivo selecionado: ${file.name}`;
             }
+
+            // Validar qualidade da selfie
+            validateSelfie(preview, input);
         };
         reader.readAsDataURL(file);
+    }
+
+    async function validateSelfie(imgElement, inputElement) {
+        const canvas = document.createElement('canvas');
+        canvas.id = 'temp-canvas';
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+
+        img.onload = async function() {
+            canvas.width = img.width;
+            canvas.height = img.height;
+            ctx.drawImage(img, 0, 0);
+
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+
+            // Análise de brilho (iluminação)
+            let totalBrightness = 0;
+            for (let i = 0; i < data.length; i += 4) {
+                const r = data[i];
+                const g = data[i + 1];
+                const b = data[i + 2];
+                const brightness = (r + g + b) / 3;
+                totalBrightness += brightness;
+            }
+            const avgBrightness = totalBrightness / (data.length / 4);
+
+            // Análise de contraste
+            let minBrightness = 255;
+            let maxBrightness = 0;
+            for (let i = 0; i < data.length; i += 4) {
+                const r = data[i];
+                const g = data[i + 1];
+                const b = data[i + 2];
+                const brightness = (r + g + b) / 3;
+                if (brightness < minBrightness) minBrightness = brightness;
+                if (brightness > maxBrightness) maxBrightness = brightness;
+            }
+            const contrast = maxBrightness - minBrightness;
+
+            // Validações
+            const issues = [];
+
+            // Iluminação muito baixa
+            if (avgBrightness < 50) {
+                issues.push('A foto está muito escura. Use um local bem iluminado.');
+            }
+            // Iluminação muito alta (superexposta)
+            else if (avgBrightness > 220) {
+                issues.push('A foto está muito clara. Evite luz direto na câmera.');
+            }
+
+            // Contraste muito baixo (possível máscara ou pouca definição)
+            if (contrast < 80) {
+                issues.push('A foto tem pouco contraste. Certifique-se de que o rosto esteja bem visível.');
+            }
+
+            // Resolução muito baixa
+            if (canvas.width < 300 || canvas.height < 300) {
+                issues.push('A resolução da foto é muito baixa. Use uma foto de melhor qualidade.');
+            }
+
+            // Detecção facial com tracking.js
+            const faceDetection = await detectFaceByColorAnalysis(canvas, ctx, data);
+            if (!faceDetection.hasFace) {
+                issues.push(faceDetection.reason || 'Rosto não identificado. A foto deve mostrar claramente o rosto da pessoa.');
+            }
+
+            console.log('Issues encontradas:', issues);
+
+            // Limpar canvas temporário
+            canvas.remove();
+
+            // Mostrar resultado da validação
+            showSelfieValidation(imgElement, issues, inputElement);
+        };
+
+        img.src = imgElement.src;
+    }
+
+    function detectFaceByColorAnalysis(canvas, ctx, data) {
+        // Usar tracking.js para detecção facial real
+        return new Promise((resolve) => {
+            if (!trackingLoaded) {
+                console.log('Tracking.js não carregado, usando fallback');
+                resolve({ hasFace: false, reason: 'Rosto não identificado. A foto deve mostrar claramente o rosto da pessoa.' });
+                return;
+            }
+
+            const tracker = new tracking.ObjectTracker('face');
+            tracker.setInitialScale(4);
+            tracker.setStepSize(2);
+            tracker.setEdgesDensity(0.1);
+
+            tracking.track('#temp-canvas', tracker);
+
+            tracker.on('track', function(event) {
+                if (event.data.length === 0) {
+                    console.log('Nenhum rosto detectado');
+                    resolve({ hasFace: false, reason: 'Rosto não identificado. A foto deve mostrar claramente o rosto da pessoa.' });
+                } else if (event.data.length > 1) {
+                    console.log('Múltiplos rostos detectados:', event.data.length);
+                    resolve({ hasFace: false, reason: 'Múltiplos rostos identificados. A foto deve mostrar apenas uma pessoa.' });
+                } else {
+                    console.log('Rosto detectado:', event.data[0]);
+                    const face = event.data[0];
+
+                    // Validar tamanho do rosto
+                    const faceArea = face.width * face.height;
+                    const imageArea = canvas.width * canvas.height;
+                    const faceRatio = faceArea / imageArea;
+
+                    if (faceRatio < 0.10) {
+                        resolve({ hasFace: false, reason: 'Rosto muito pequeno. Aproxime-se da câmera.' });
+                    }
+
+                    // Validar centralização
+                    const faceCenterX = face.x + face.width / 2;
+                    const faceCenterY = face.y + face.height / 2;
+                    const imageCenterX = canvas.width / 2;
+                    const imageCenterY = canvas.height / 2;
+
+                    const offsetX = Math.abs(faceCenterX - imageCenterX) / canvas.width;
+                    const offsetY = Math.abs(faceCenterY - imageCenterY) / canvas.height;
+
+                    if (offsetX > 0.3 || offsetY > 0.3) {
+                        resolve({ hasFace: false, reason: 'Rosto não centralizado. Centralize o rosto na imagem.' });
+                    }
+
+                    resolve({ hasFace: true });
+                }
+            });
+
+            // Timeout caso não detecte nada
+            setTimeout(() => {
+                resolve({ hasFace: false, reason: 'Rosto não identificado. A foto deve mostrar claramente o rosto da pessoa.' });
+            }, 5000);
+        });
+    }
+
+    function showSelfieValidation(imgElement, issues, inputElement) {
+        // Remover validação anterior se existir
+        const existingValidation = imgElement.parentElement.querySelector('.selfie-validation');
+        if (existingValidation) {
+            existingValidation.remove();
+        }
+
+        const validationDiv = document.createElement('div');
+        validationDiv.className = 'selfie-validation mt-3 p-4 rounded-xl';
+
+        if (issues.length === 0) {
+            // Foto aprovada
+            validationDiv.className += ' bg-green-50 border border-green-200';
+            validationDiv.innerHTML = `
+                <div class="flex items-center gap-2 text-green-700">
+                    <i class="fas fa-check-circle text-lg"></i>
+                    <span class="font-semibold">Foto aprovada! A selfie está adequada.</span>
+                </div>
+            `;
+            imgElement.classList.remove('border-red-500');
+            imgElement.classList.add('border-green-500');
+        } else {
+            // Foto reprovada
+            validationDiv.className += ' bg-red-50 border-2 border-red-300';
+            const issuesList = issues.map(issue => `<li class="flex items-start gap-2 text-red-700 font-medium"><i class="fas fa-times-circle mt-0.5 text-red-500"></i><span>${issue}</span></li>`).join('');
+            validationDiv.innerHTML = `
+                <div class="flex items-center gap-2 text-red-800 mb-3">
+                    <i class="fas fa-exclamation-triangle text-xl"></i>
+                    <span class="font-bold text-base">A foto não atende aos requisitos. Corrija os seguintes pontos:</span>
+                </div>
+                <ul class="space-y-2 text-sm">${issuesList}</ul>
+                <div class="mt-3 pt-3 border-t border-red-200">
+                    <p class="text-xs text-red-600 italic">Por favor, tire uma nova foto seguindo as orientações acima.</p>
+                </div>
+            `;
+            imgElement.classList.remove('border-green-500');
+            imgElement.classList.add('border-red-500');
+
+            // Limpar o input para forçar nova seleção
+            inputElement.value = '';
+            imgElement.classList.add('hidden');
+        }
+
+        imgElement.parentElement.appendChild(validationDiv);
     }
 
     // --- Edifícios (Busca e Seleção) ---
@@ -225,7 +471,7 @@ document.addEventListener('DOMContentLoaded', function() {
     window.confirmApartment = function() {
         const aptInput = document.getElementById('modal_apt_input');
         const aptValue = aptInput.value.trim();
-        
+
         if (!aptValue) {
             document.getElementById('modal_apt_error').classList.remove('hidden');
             aptInput.classList.add('border-red-500');
@@ -234,23 +480,26 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Salvar valor
         document.getElementById('numero_apartamento').value = aptValue;
-        
+
         // Atualizar UI do card
         const cards = document.querySelectorAll('.edificio-card');
         cards.forEach(c => {
             c.classList.remove('selected');
             c.querySelector('.apt-display').classList.add('hidden');
         });
-        
+
         selectedEdificioCard.classList.add('selected');
         selectedEdificioCard.querySelector('input[type="radio"]').checked = true;
         const aptDisplay = selectedEdificioCard.querySelector('.apt-display');
         aptDisplay.querySelector('.apt-number').textContent = aptValue;
         aptDisplay.classList.remove('hidden');
-        
+
         closeApartmentModal();
         clearAllErrors();
-        
+
+        // Atualizar visibilidade do campo de selfie se já estiver no passo 3
+        updateSelfieFieldVisibility();
+
         // Avançar automaticamente para o próximo passo
         setTimeout(() => {
             goToNextStep();

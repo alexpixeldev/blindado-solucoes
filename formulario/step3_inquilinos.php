@@ -49,7 +49,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="space-y-2 field-container mt-6">
+                <div class="space-y-2 field-container mt-6 selfie-field-container hidden">
                     <label class="block text-sm font-medium text-slate-700">Selfie do Hóspede</label>
                     <div class="space-y-3">
                         <div class="flex flex-wrap gap-3">
@@ -114,7 +114,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="space-y-2 field-container mt-6">
+                <div class="space-y-2 field-container mt-6 selfie-field-container hidden">
                     <label class="block text-sm font-medium text-slate-700">Selfie do Hóspede</label>
                     <div class="space-y-3">
                         <div class="flex flex-wrap gap-3">

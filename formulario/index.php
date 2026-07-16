@@ -189,6 +189,9 @@ $edificios = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
+    <!-- tracking.js para detecção facial -->
+    <script src="https://trackingjs.com/bower/tracking.js/build/tracking-min.js"></script>
+    <script src="https://trackingjs.com/bower/tracking.js/build/data/face-min.js"></script>
     
     <!-- Passando dados do PHP para o JS -->
     <script>
