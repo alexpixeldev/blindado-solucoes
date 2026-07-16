@@ -37,7 +37,7 @@ $categoria_labels = [
 $categoria_label = $categoria_labels[$usuario_categoria] ?? 'Usuário';
 ?>
 
-<aside id="admin-sidebar" class="fixed inset-y-0 left-0 z-40 w-72 -translate-x-full flex-col bg-slate-900 text-white transition-transform duration-300 ease-in-out lg:static lg:flex lg:translate-x-0">
+<aside id="admin-sidebar" class="fixed inset-y-0 left-0 z-40 w-72 -translate-x-full flex flex-col bg-slate-900 text-white transition-transform duration-300 ease-in-out lg:static lg:flex lg:translate-x-0 h-screen">
     <!-- Sidebar Header -->
     <div class="flex h-20 items-center justify-between border-b border-white/10 px-6">
         <a href="index.php" class="flex items-center justify-center w-full">
@@ -51,7 +51,7 @@ $categoria_label = $categoria_labels[$usuario_categoria] ?? 'Usuário';
     </div>
 
     <!-- Sidebar Navigation -->
-    <nav class="flex-1 space-y-1 overflow-y-auto px-4 py-6 custom-scrollbar">
+    <nav class="flex-1 space-y-1 overflow-y-auto px-4 py-6 custom-scrollbar sidebar-scroll" style="max-height: calc(100vh - 180px);">
         <!-- Dashboard -->
         <a href="index.php" class="group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all <?php echo isActive('index.php', $current_page); ?>">
             <i class="fas fa-th-large text-lg"></i>
@@ -212,6 +212,16 @@ $categoria_label = $categoria_labels[$usuario_categoria] ?? 'Usuário';
 
 <!-- Overlay for mobile -->
 <div id="sidebar-overlay" class="fixed inset-0 z-30 hidden bg-slate-900/50 backdrop-blur-sm lg:hidden"></div>
+
+<style>
+    .sidebar-scroll::-webkit-scrollbar {
+        display: none;
+    }
+    .sidebar-scroll {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+</style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
