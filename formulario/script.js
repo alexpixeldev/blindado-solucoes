@@ -1045,7 +1045,8 @@ document.addEventListener('DOMContentLoaded', function() {
             dateFormat: "d/m/Y",
             minDate: "today",
             locale: "pt",
-            disableMobile: "true"
+            disableMobile: "true",
+            animate: true
         });
     }
 
