@@ -1,8 +1,8 @@
 <div class="step-content" id="step-5">
     <div class="space-y-8">
         <div class="text-center">
-            <h2 class="text-2xl font-bold text-slate-900">Check-in</h2>
-            <p class="mt-2 text-slate-600">Quase lá! Informe o período da sua estadia.</p>
+            <h2 class="text-xl sm:text-2xl font-bold text-slate-900">Check-in</h2>
+            <p class="mt-2 text-sm sm:text-base text-slate-600">Quase lá! Informe o período da sua estadia.</p>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">

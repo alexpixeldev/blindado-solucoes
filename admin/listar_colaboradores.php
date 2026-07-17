@@ -128,10 +128,12 @@ $stmt->close();
                                                     <i class="fas fa-eye"></i>
                                                     <span>Ver Detalhes</span>
                                                 </a>
+                                                <?php if ($_SESSION['usuario_categoria'] === 'administrativo'): ?>
                                                 <a href="registrar_acao_disciplinar.php?id=<?= $colab['id'] ?>" class="inline-flex items-center gap-2 px-4 py-2 bg-red-50 text-red-700 rounded-xl font-bold text-xs hover:bg-red-600 hover:text-white transition-all">
                                                     <i class="fas fa-gavel"></i>
                                                     <span>Registrar Disciplina</span>
                                                 </a>
+                                                <?php endif; ?>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>

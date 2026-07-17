@@ -1,8 +1,8 @@
 <div class="step-content" id="step-4">
     <div class="space-y-8">
         <div class="text-center">
-            <h2 class="text-2xl font-bold text-slate-900">Veículos</h2>
-            <p class="mt-2 text-slate-600">Informe os dados dos veículos que utilizarão a garagem.</p>
+            <h2 class="text-xl sm:text-2xl font-bold text-slate-900">Veículos</h2>
+            <p class="mt-2 text-sm sm:text-base text-slate-600">Informe os dados dos veículos que utilizarão a garagem.</p>
         </div>
 
         <div id="veiculos-container" class="space-y-6">

@@ -1,8 +1,14 @@
 <?php
 require_once '../admin/conexao.php';
 
-$result = $conn->query("
-    SELECT e.id, e.nome AS nome_edificio, e.requer_selfie, b.nome AS nome_base, b.telefone
+$has_selfie_col = false;
+$check = @$conn->query("SHOW COLUMNS FROM edificios LIKE 'requer_selfie'");
+if ($check && $check->num_rows > 0) $has_selfie_col = true;
+
+$selfie_field = $has_selfie_col ? 'e.requer_selfie,' : '0 AS requer_selfie,';
+
+$result = @$conn->query("
+    SELECT e.id, e.nome AS nome_edificio, e.localizacao, $selfie_field b.nome AS nome_base, b.telefone
     FROM edificios e
     JOIN bases b ON e.base_id = b.id
     WHERE b.status = 'ativo'
@@ -67,7 +73,8 @@ $edificios = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_green.css">
     
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        *, *::before, *::after { box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; margin: 0; }
         .glass {
             background: rgba(255, 255, 255, 0.9);
             backdrop-filter: blur(10px);
@@ -88,6 +95,25 @@ $edificios = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
             border-color: #22c55e;
         }
 
+        /* ===== MOBILE RESPONSIVE ===== */
+        @media (max-width: 480px) {
+            /* Stepper: smaller circles, tighter spacing */
+            .step-circle { width: 28px !important; height: 28px !important; min-width: 28px !important; font-size: 10px !important; }
+            ol[role="list"] > li { padding-right: 2px !important; }
+            ol[role="list"] > li > div > .ml-4 { margin-left: 4px !important; }
+
+            /* Form padding tighter on mobile */
+            #multi-step-form { padding: 1rem !important; }
+
+            /* Navigation buttons stack better */
+            #btn-prev, #btn-next { padding: 0.625rem 1rem !important; font-size: 13px !important; }
+
+            /* Flatpickr day cells smaller */
+            .flatpickr-day { width: 30px !important; max-width: 30px !important; height: 30px !important; line-height: 30px !important; font-size: 12px !important; margin: 0 !important; }
+            .flatpickr-days { max-width: 100% !important; }
+            .dayContainer { max-width: 100% !important; }
+        }
+
         /* ===== FLATPICKR CALENDAR CUSTOM ===== */
         .flatpickr-calendar {
             font-family: 'Inter', sans-serif;
@@ -95,6 +121,7 @@ $edificios = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
             border-radius: 16px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12), 0 8px 20px rgba(22, 163, 74, 0.08);
             width: 320px;
+            max-width: calc(100vw - 2rem);
             overflow: hidden;
             border: 1px solid rgba(22, 163, 74, 0.1);
         }
@@ -335,21 +362,21 @@ $edificios = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
         <div class="absolute top-[60%] -right-[5%] w-[30%] h-[30%] rounded-full bg-green-300/20 blur-3xl animate-pulse-slow" style="animation-delay: 1s;"></div>
     </div>
 
-    <div class="min-h-full flex flex-col py-6 sm:py-12 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto">
+    <div class="min-h-full flex flex-col py-4 sm:py-12 px-3 sm:px-6 lg:px-8 max-w-4xl mx-auto overflow-hidden">
         
         <!-- Header -->
         <header class="text-center mb-8 animate-fade-in">
-            <div class="inline-flex items-center justify-center p-3 bg-white rounded-2xl shadow-sm mb-4">
-                <img src="../img/logo_horizontal.png" alt="Blindado Soluções" class="h-12 w-auto object-contain">
+            <div class="inline-flex items-center justify-center p-3 bg-white rounded-2xl shadow-sm mb-4 max-w-full">
+                <img src="../img/logo_horizontal.png" alt="Blindado Soluções" class="h-10 sm:h-12 w-auto max-w-full object-contain">
             </div>
-            <h1 class="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+            <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
                 Formulário de Locação
             </h1>
-            <p class="mt-2 text-lg text-slate-600">Preencha os dados abaixo para registrar sua locação.</p>
+            <p class="mt-2 text-base sm:text-lg text-slate-600">Preencha os dados abaixo para registrar sua locação.</p>
         </header>
 
         <!-- Progress Stepper -->
-        <nav aria-label="Progress" class="mb-10 animate-fade-in" style="animation-delay: 0.1s;">
+        <nav aria-label="Progress" class="mb-8 sm:mb-10 animate-fade-in px-1" style="animation-delay: 0.1s;">
             <ol role="list" class="flex items-center justify-between w-full">
                 <?php for($i=1; $i<=6; $i++): ?>
                 <li class="relative flex-1 <?php echo $i < 6 ? 'pr-4' : ''; ?>">
@@ -401,15 +428,15 @@ $edificios = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
                     </div>
 
                     <!-- Navigation Buttons -->
-                    <div class="mt-12 flex items-center justify-between gap-4 border-t border-slate-100 pt-8">
-                        <button type="button" id="btn-prev" class="inline-flex items-center px-6 py-3 text-sm font-semibold text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 hover:text-slate-900 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
-                            <i class="fas fa-arrow-left mr-2"></i>
+                    <div class="mt-8 sm:mt-12 flex items-center justify-between gap-3 border-t border-slate-100 pt-6 sm:pt-8">
+                        <button type="button" id="btn-prev" class="inline-flex items-center px-4 sm:px-6 py-2.5 sm:py-3 text-xs sm:text-sm font-semibold text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 hover:text-slate-900 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                            <i class="fas fa-arrow-left mr-1 sm:mr-2"></i>
                             Anterior
                         </button>
                         
-                        <button type="button" id="btn-next" class="inline-flex items-center px-8 py-3 text-sm font-semibold text-white bg-primary-600 rounded-xl hover:bg-primary-700 shadow-lg shadow-primary-600/20 hover:shadow-primary-600/30 transition-all duration-200 transform hover:-translate-y-0.5 active:translate-y-0">
+                        <button type="button" id="btn-next" class="inline-flex items-center px-6 sm:px-8 py-2.5 sm:py-3 text-xs sm:text-sm font-semibold text-white bg-primary-600 rounded-xl hover:bg-primary-700 shadow-lg shadow-primary-600/20 hover:shadow-primary-600/30 transition-all duration-200 transform hover:-translate-y-0.5 active:translate-y-0">
                             <span>Próxima</span>
-                            <i class="fas fa-arrow-right ml-2"></i>
+                            <i class="fas fa-arrow-right ml-1 sm:ml-2"></i>
                         </button>
                     </div>
                 </form>

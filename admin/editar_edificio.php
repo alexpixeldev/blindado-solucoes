@@ -2,6 +2,12 @@
 require_once 'verifica_login.php';
 require_once 'conexao.php';
 
+$usuario_categoria = $_SESSION['usuario_categoria'] ?? '';
+if (!in_array($usuario_categoria, ['supervisor', 'gerente'])) {
+    header("Location: edificios.php");
+    exit();
+}
+
 $mensagem = '';
 $edificio = null;
 $bases = [];
@@ -80,8 +86,15 @@ if ($result->num_rows === 1) {
 $stmt->close();
 
 // Fetch all bases for the dropdown
-$bases = $conn->query("SELECT * FROM bases WHERE status = 'ativo' ORDER BY nome ASC")->fetch_all(MYSQLI_ASSOC);
-$administradoras = $conn->query("SELECT id, nome FROM administradoras ORDER BY nome ASC")->fetch_all(MYSQLI_ASSOC);
+$bases_result = @$conn->query("SELECT * FROM bases WHERE status = 'ativo' ORDER BY nome ASC");
+$bases = $bases_result ? $bases_result->fetch_all(MYSQLI_ASSOC) : [];
+
+$administradoras = [];
+$check_adm = @$conn->query("SHOW TABLES LIKE 'administradoras'");
+if ($check_adm && $check_adm->num_rows > 0) {
+    $adm_result = @$conn->query("SELECT id, nome FROM administradoras ORDER BY nome ASC");
+    $administradoras = $adm_result ? $adm_result->fetch_all(MYSQLI_ASSOC) : [];
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-br" class="h-full bg-slate-50">

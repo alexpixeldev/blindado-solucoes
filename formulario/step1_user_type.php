@@ -1,8 +1,8 @@
 <div class="step-content active" id="step-1">
     <div class="space-y-8">
         <div class="text-center">
-            <h2 class="text-2xl font-bold text-slate-900">Quem é você?</h2>
-            <p class="mt-2 text-slate-600">Selecione o seu perfil para continuarmos o cadastro.</p>
+            <h2 class="text-xl sm:text-2xl font-bold text-slate-900">Quem é você?</h2>
+            <p class="mt-2 text-sm sm:text-base text-slate-600">Selecione o seu perfil para continuarmos o cadastro.</p>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 field-container">

@@ -1,8 +1,8 @@
 <div class="step-content" id="step-2">
     <div class="space-y-8">
         <div class="text-center">
-            <h2 class="text-2xl font-bold text-slate-900">Localização</h2>
-            <p class="mt-2 text-slate-600">Onde você ficará hospedado?</p>
+            <h2 class="text-xl sm:text-2xl font-bold text-slate-900">Localização</h2>
+            <p class="mt-2 text-sm sm:text-base text-slate-600">Onde você ficará hospedado?</p>
         </div>
 
         <div class="space-y-6">

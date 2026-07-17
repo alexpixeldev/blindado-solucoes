@@ -18,3 +18,19 @@ post_max_size=40M upload_max_filesize=40M
 POST keys: user_type, locador_nome, locador_ddi, locador_telefone, edificio_id, numero_apartamento, inquilinos, veiculos, data_entrada, data_saida
 FILES summary: inquilinos: nested file array
 post_max_size=40M upload_max_filesize=40M
+[2026-07-16 20:09:42] Início de request POST
+POST keys: user_type, locador_nome, locador_ddi, locador_telefone, edificio_id, numero_apartamento, inquilinos, veiculos, data_entrada, data_saida
+FILES summary: inquilinos: nested file array
+post_max_size=40M upload_max_filesize=40M
+[2026-07-16 20:21:32] Início de request POST
+POST keys: user_type, locador_nome, locador_ddi, locador_telefone, edificio_id, numero_apartamento, inquilinos, veiculos, data_entrada, data_saida
+FILES summary: inquilinos: nested file array
+post_max_size=40M upload_max_filesize=40M
+[2026-07-17 20:26:15] Início de request POST
+POST keys: user_type, locador_nome, locador_ddi, locador_telefone, edificio_id, numero_apartamento, inquilinos, veiculos, data_entrada, data_saida
+FILES summary: inquilinos: nested file array
+post_max_size=40M upload_max_filesize=40M
+[2026-07-17 20:28:54] Início de request POST
+POST keys: user_type, locador_nome, locador_ddi, locador_telefone, edificio_id, numero_apartamento, inquilinos, veiculos, data_entrada, data_saida
+FILES summary: inquilinos: nested file array
+post_max_size=40M upload_max_filesize=40M

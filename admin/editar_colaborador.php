@@ -2,7 +2,7 @@
 require_once 'verifica_login.php';
 require_once 'conexao.php';
 
-if (!in_array($_SESSION['usuario_categoria'], ['administrativo', 'gerente', 'supervisor'])) {
+if ($_SESSION['usuario_categoria'] !== 'administrativo') {
     header("Location: index.php");
     exit();
 }

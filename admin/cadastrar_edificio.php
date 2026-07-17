@@ -2,6 +2,12 @@
 require_once 'verifica_login.php';
 require_once 'conexao.php';
 
+$usuario_categoria = $_SESSION['usuario_categoria'] ?? '';
+if (!in_array($usuario_categoria, ['supervisor', 'gerente'])) {
+    header("Location: edificios.php");
+    exit();
+}
+
 if (isset($_POST['add_edificio'])) {
     $nome_edificio = trim($_POST['nome_edificio']);
     $base_id = $_POST['base_id'];

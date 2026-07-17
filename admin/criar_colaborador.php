@@ -2,8 +2,8 @@
 require_once 'verifica_login.php';
 require_once 'conexao.php';
 
-// Verifica permissão (Administrativo ou Gerente)
-if (!in_array($_SESSION['usuario_categoria'], ['administrativo', 'gerente', 'supervisor'])) {
+// Verifica permissão (apenas Administrativo pode cadastrar)
+if ($_SESSION['usuario_categoria'] !== 'administrativo') {
     header("Location: index.php");
     exit();
 }

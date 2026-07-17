@@ -7,11 +7,21 @@ $usuario_categoria = $_SESSION['usuario_categoria'] ?? '';
 $mensagem = '';
 $mensagem_tipo = '';
 
-// Process deletion (Manager only)
+// Process single deletion (Manager only)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_locacao'])) {
     if ($usuario_categoria === 'gerente') {
         $id_delete = filter_input(INPUT_POST, 'id_delete', FILTER_VALIDATE_INT);
         if ($id_delete) {
+            $stmt = $conn->prepare("DELETE FROM locacoes_inquilinos WHERE locacao_id = ?");
+            $stmt->bind_param("i", $id_delete);
+            $stmt->execute();
+            $stmt->close();
+
+            $stmt = $conn->prepare("DELETE FROM locacoes_veiculos WHERE locacao_id = ?");
+            $stmt->bind_param("i", $id_delete);
+            $stmt->execute();
+            $stmt->close();
+
             $stmt = $conn->prepare("DELETE FROM locacoes WHERE id = ?");
             $stmt->bind_param("i", $id_delete);
             if ($stmt->execute()) {
@@ -19,6 +29,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_locacao'])) {
                 $mensagem_tipo = "success";
             } else {
                 $mensagem = "Erro ao excluir locação: " . $conn->error;
+                $mensagem_tipo = "error";
+            }
+            $stmt->close();
+        }
+    }
+}
+
+// Process bulk deletion (Manager only)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_delete_locacoes'])) {
+    if ($usuario_categoria === 'gerente') {
+        $ids_raw = $_POST['locacao_ids'] ?? [];
+        $ids = array_filter(array_map('intval', $ids_raw));
+        if (!empty($ids)) {
+            $placeholders = implode(',', array_fill(0, count($ids), '?'));
+            $types = str_repeat('i', count($ids));
+
+            $stmt = $conn->prepare("DELETE FROM locacoes_inquilinos WHERE locacao_id IN ($placeholders)");
+            $stmt->bind_param($types, ...$ids);
+            $stmt->execute();
+            $stmt->close();
+
+            $stmt = $conn->prepare("DELETE FROM locacoes_veiculos WHERE locacao_id IN ($placeholders)");
+            $stmt->bind_param($types, ...$ids);
+            $stmt->execute();
+            $stmt->close();
+
+            $stmt = $conn->prepare("DELETE FROM locacoes WHERE id IN ($placeholders)");
+            $stmt->bind_param($types, ...$ids);
+            if ($stmt->execute()) {
+                $mensagem = count($ids) . " locação(ões) excluída(s) com sucesso!";
+                $mensagem_tipo = "success";
+            } else {
+                $mensagem = "Erro ao excluir locações: " . $conn->error;
                 $mensagem_tipo = "error";
             }
             $stmt->close();
@@ -275,7 +318,7 @@ if (!empty($locacaoIds)) {
                             }
                             
                             // Adiciona evento de change nos campos
-                            const inputs = form.querySelectorAll('select, input');
+                            const inputs = form.querySelectorAll('select, input:not([type="checkbox"])');
                             inputs.forEach(input => {
                                 input.addEventListener('change', function() {
                                     form.submit();
@@ -288,12 +331,45 @@ if (!empty($locacaoIds)) {
                     document.addEventListener('DOMContentLoaded', autoSubmit);
                 </script>
 
+                <!-- Bulk Action Bar (only for gerente) -->
+                <?php if ($usuario_categoria === 'gerente'): ?>
+                <div id="bulkActionBar" class="mb-4 hidden animate-fade-in">
+                    <div class="flex flex-wrap items-center gap-4 rounded-xl border border-red-200 bg-red-50 p-4 shadow-sm">
+                        <div class="flex items-center gap-3">
+                            <div class="flex h-10 w-10 items-center justify-center rounded-full bg-red-100 text-red-600">
+                                <i class="fas fa-trash-alt text-sm"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-bold text-red-800"><span id="selectedCount">0</span> locação(ões) selecionada(s)</p>
+                                <p class="text-xs text-red-500">Selecione os registros que deseja excluir</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-2 ml-auto">
+                            <button type="button" onclick="clearSelection()" class="px-4 py-2 text-xs font-bold text-red-700 bg-white border border-red-300 rounded-lg hover:bg-red-100 transition-colors">
+                                <i class="fas fa-times mr-1"></i> Limpar
+                            </button>
+                            <button type="button" onclick="bulkDelete()" class="px-4 py-2 text-xs font-bold text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors shadow-sm">
+                                <i class="fas fa-trash-alt mr-1"></i> Excluir Selecionadas
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <form id="bulkDeleteForm" method="POST" class="hidden">
+                    <input type="hidden" name="bulk_delete_locacoes" value="1">
+                </form>
+                <?php endif; ?>
+
                 <!-- Table Container -->
                 <div class="animate-slide-up" style="animation-delay: 0.1s;">
                     <div class="overflow-x-auto">
                         <table class="admin-table">
                             <thead>
                                 <tr>
+                                    <?php if ($usuario_categoria === 'gerente'): ?>
+                                        <th class="w-10">
+                                            <input type="checkbox" id="selectAll" class="rounded border-slate-300 text-primary-600 focus:ring-primary-500">
+                                        </th>
+                                    <?php endif; ?>
                                     <th>Data de Registro</th>
                                     <th>Localização</th>
                                     <th>Ocupantes</th>
@@ -305,9 +381,9 @@ if (!empty($locacaoIds)) {
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php if (empty($locacoes)): ?>
-                                    <tr>
-                                        <td colspan="6" class="text-center py-12 text-slate-500">
+                                    <?php if (empty($locacoes)): ?>
+                                        <tr>
+                                            <td colspan="<?= $usuario_categoria === 'gerente' ? 7 : 6 ?>" class="text-center py-12 text-slate-500">
                                             <div class="flex flex-col items-center gap-2">
                                                 <i class="fas fa-key text-4xl text-slate-200"></i>
                                                 <p>Nenhum registro de locação encontrado.</p>
@@ -317,6 +393,11 @@ if (!empty($locacaoIds)) {
                                 <?php else: ?>
                                     <?php foreach ($locacoes as $loc): ?>
                                         <tr class="group">
+                                            <?php if ($usuario_categoria === 'gerente'): ?>
+                                                <td class="w-10">
+                                                    <input type="checkbox" name="locacao_select[]" value="<?= $loc['id'] ?>" class="locacao-checkbox rounded border-slate-300 text-primary-600 focus:ring-primary-500">
+                                                </td>
+                                            <?php endif; ?>
                                             <td class="whitespace-nowrap">
                                                 <div class="flex flex-col">
                                                     <span class="font-bold text-slate-900"><?= date('d/m/Y', strtotime($loc['data_registro'] ?? $loc['data_locacao'] ?? 'now')) ?></span>
@@ -461,7 +542,63 @@ if (!empty($locacaoIds)) {
                     closePhotoModal();
                 }
             });
+
+            // Bulk delete functionality
+            const selectAll = document.getElementById('selectAll');
+            const bulkActionBar = document.getElementById('bulkActionBar');
+            const selectedCountEl = document.getElementById('selectedCount');
+            const checkboxes = document.querySelectorAll('.locacao-checkbox');
+
+            if (selectAll) {
+                selectAll.addEventListener('change', function() {
+                    checkboxes.forEach(cb => cb.checked = this.checked);
+                    updateBulkBar();
+                });
+
+                checkboxes.forEach(cb => {
+                    cb.addEventListener('change', function() {
+                        const total = checkboxes.length;
+                        const checked = document.querySelectorAll('.locacao-checkbox:checked').length;
+                        selectAll.checked = total > 0 && checked === total;
+                        selectAll.indeterminate = checked > 0 && checked < total;
+                        updateBulkBar();
+                    });
+                });
+            }
+
+            function updateBulkBar() {
+                const checked = document.querySelectorAll('.locacao-checkbox:checked').length;
+                if (bulkActionBar) {
+                    bulkActionBar.classList.toggle('hidden', checked === 0);
+                    if (selectedCountEl) selectedCountEl.textContent = checked;
+                }
+            }
         });
+
+        function clearSelection() {
+            document.querySelectorAll('.locacao-checkbox').forEach(cb => cb.checked = false);
+            const selectAll = document.getElementById('selectAll');
+            if (selectAll) { selectAll.checked = false; selectAll.indeterminate = false; }
+            const bar = document.getElementById('bulkActionBar');
+            if (bar) bar.classList.add('hidden');
+        }
+
+        function bulkDelete() {
+            const checked = document.querySelectorAll('.locacao-checkbox:checked');
+            if (checked.length === 0) return;
+
+            if (!confirm('Tem certeza que deseja excluir ' + checked.length + ' locação(ões)? Esta ação não pode ser desfeita.')) return;
+
+            const form = document.getElementById('bulkDeleteForm');
+            checked.forEach(cb => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'locacao_ids[]';
+                input.value = cb.value;
+                form.appendChild(input);
+            });
+            form.submit();
+        }
     </script>
 </body>
 </html>

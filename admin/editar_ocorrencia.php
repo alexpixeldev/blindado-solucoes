@@ -91,7 +91,7 @@ $midias = $conn->query("SELECT * FROM ocorrencias_midia WHERE ocorrencia_id = $i
 <!DOCTYPE html>
 <html lang="pt-br" class="h-full bg-slate-50">
 <head>
-    <link rel="icon" type="image/png" href="img/escudo.png">
+    <link rel="icon" type="image/png" href="../img/escudo.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Editar Ocorrência | Blindado Soluções</title>

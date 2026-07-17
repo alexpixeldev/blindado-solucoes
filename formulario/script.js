@@ -862,48 +862,48 @@ document.addEventListener('DOMContentLoaded', function() {
         const nomeEdificio = edificio ? edificio.nome_edificio : 'Não informado';
 
         let html = `
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="p-6 bg-white border border-slate-100 rounded-2xl shadow-sm">
-                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4">Localização</h4>
-                    <p class="text-lg font-bold text-slate-900">${nomeEdificio}</p>
-                    <p class="text-slate-600">Apartamento ${data.numero_apartamento}</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                <div class="p-4 sm:p-6 bg-white border border-slate-100 rounded-2xl shadow-sm">
+                    <h4 class="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 sm:mb-4">Localização</h4>
+                    <p class="text-base sm:text-lg font-bold text-slate-900 break-words">${nomeEdificio}</p>
+                    <p class="text-sm sm:text-base text-slate-600">Apartamento ${data.numero_apartamento}</p>
                 </div>
-                <div class="p-6 bg-white border border-slate-100 rounded-2xl shadow-sm">
-                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4">Período</h4>
-                    <p class="text-lg font-bold text-slate-900">${data.data_entrada} até ${data.data_saida}</p>
-                    <p class="text-slate-600">Check-in registrado</p>
+                <div class="p-4 sm:p-6 bg-white border border-slate-100 rounded-2xl shadow-sm">
+                    <h4 class="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 sm:mb-4">Período</h4>
+                    <p class="text-base sm:text-lg font-bold text-slate-900 break-words">${data.data_entrada} até ${data.data_saida}</p>
+                    <p class="text-sm sm:text-base text-slate-600">Check-in registrado</p>
                 </div>
             </div>
 
             ${data.user_type === 'locatario' ? `
-                <div class="p-6 bg-white border border-slate-100 rounded-2xl shadow-sm">
-                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4">Dados do Locador</h4>
-                    <p class="text-lg font-bold text-slate-900">${data.locador_nome}</p>
-                    <p class="text-slate-600">WhatsApp: ${data.locador_telefone}</p>
+                <div class="p-4 sm:p-6 bg-white border border-slate-100 rounded-2xl shadow-sm">
+                    <h4 class="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 sm:mb-4">Dados do Locador</h4>
+                    <p class="text-base sm:text-lg font-bold text-slate-900 break-words">${data.locador_nome}</p>
+                    <p class="text-sm sm:text-base text-slate-600 break-all">WhatsApp: ${data.locador_telefone}</p>
                 </div>
             ` : ''}
 
-            <div class="p-6 bg-white border border-slate-100 rounded-2xl shadow-sm">
-                <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4">Hóspedes</h4>
-                <div class="space-y-3">
+            <div class="p-4 sm:p-6 bg-white border border-slate-100 rounded-2xl shadow-sm">
+                <h4 class="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 sm:mb-4">Hóspedes</h4>
+                <div class="space-y-2 sm:space-y-3">
                     ${inquilinos.filter(i => i && i.nome).map(i => `
-                        <div class="flex items-center justify-between py-2 border-b border-slate-50 last:border-0">
-                            <span class="font-medium text-slate-900">${i.nome}</span>
-                            <span class="text-sm text-slate-500">${i.documento}</span>
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between py-2 border-b border-slate-50 last:border-0 gap-1">
+                            <span class="font-medium text-slate-900 text-sm sm:text-base break-words">${i.nome}</span>
+                            <span class="text-xs sm:text-sm text-slate-500">${i.documento}</span>
                         </div>
                     `).join('')}
                 </div>
             </div>
 
             ${veiculos.some(v => v && v.modelo) ? `
-                <div class="p-6 bg-white border border-slate-100 rounded-2xl shadow-sm">
-                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4">Veículos</h4>
-                    <div class="space-y-4">
+                <div class="p-4 sm:p-6 bg-white border border-slate-100 rounded-2xl shadow-sm">
+                    <h4 class="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 sm:mb-4">Veículos</h4>
+                    <div class="space-y-3 sm:space-y-4">
                         ${veiculos.filter(v => v && v.modelo).map(v => `
                             <div class="flex flex-col py-2 border-b border-slate-50 last:border-0">
-                                <div class="flex justify-between">
-                                    <span class="font-medium text-slate-900">${v.modelo} (${v.cor})</span>
-                                    <span class="font-mono text-sm bg-slate-100 px-2 py-0.5 rounded text-slate-700">${v.placa}</span>
+                                <div class="flex flex-col sm:flex-row sm:justify-between gap-1">
+                                    <span class="font-medium text-slate-900 text-sm sm:text-base">${v.modelo} (${v.cor})</span>
+                                    <span class="font-mono text-xs sm:text-sm bg-slate-100 px-2 py-0.5 rounded text-slate-700 self-start">${v.placa}</span>
                                 </div>
                                 ${v.acesso_garagem ? `<p class="text-xs text-primary-600 mt-1 font-medium italic">Acesso de garagem: ${v.acesso_garagem}</p>` : ''}
                             </div>
@@ -992,6 +992,10 @@ document.addEventListener('DOMContentLoaded', function() {
         msg += `*Apartamento:* ${data.numero_apartamento}\n\n`;
         msg += `*Data de Chegada:* ${data.data_entrada}\n`;
         msg += `*Data de Saída:* ${data.data_saida}\n\n`;
+
+        if (edificio && edificio.localizacao) {
+            msg += `*Localização do edifício:*\n${edificio.localizacao}\n\n`;
+        }
         
         if (data.user_type === 'locatario') {
             msg += `*Locador:* ${formatText(data.locador_nome)}\n`;
@@ -1009,9 +1013,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 inquilinos[idx][field] = value;
             }
         }
+        const requiresSelfie = edificio && edificio.requer_selfie == 1;
         inquilinos.filter(i => i && i.nome).forEach(i => {
             let telInfo = i.telefone ? `\nTelefone: ${i.telefone}` : '';
-            msg += `*${formatText(i.nome)}*\nDocumento: ${i.documento}${telInfo}\n\n`;
+            let selfieInfo = (requiresSelfie && i.selfie && i.selfie.size > 0) ? `\n📷 Cadastro de facial` : '';
+            msg += `*${formatText(i.nome)}*\nDocumento: ${i.documento}${telInfo}${selfieInfo}\n\n`;
         });
         
         msg += `*Veículos:*\n`;

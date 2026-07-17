@@ -1,20 +1,20 @@
 <div class="step-content" id="step-3">
     <div class="space-y-8">
         <div class="text-center">
-            <h2 class="text-2xl font-bold text-slate-900">Hóspedes / Inquilinos</h2>
-            <p class="mt-2 text-slate-600">Quem ficará no imóvel? Adicione todos os ocupantes.</p>
+            <h2 class="text-xl sm:text-2xl font-bold text-slate-900">Hóspedes / Inquilinos</h2>
+            <p class="mt-2 text-sm sm:text-base text-slate-600">Quem ficará no imóvel? Adicione todos os ocupantes.</p>
         </div>
 
         <div id="inquilinos-container" class="space-y-6">
             <!-- Primeiro Inquilino (Sempre Visível) -->
-            <div class="inquilino-item relative p-6 bg-white border border-slate-200 rounded-2xl shadow-sm animate-fade-in group" data-index="0">
-                <div class="flex items-center justify-between mb-6">
-                    <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 flex items-center justify-center bg-primary-100 text-primary-600 rounded-lg font-bold text-sm">1</div>
-                        <h3 class="text-lg font-semibold text-slate-900">Hóspede Principal</h3>
+            <div class="inquilino-item relative p-4 sm:p-6 bg-white border border-slate-200 rounded-2xl shadow-sm animate-fade-in group" data-index="0">
+                <div class="flex items-center justify-between mb-4 sm:mb-6">
+                    <div class="flex items-center gap-2 sm:gap-3">
+                        <div class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center bg-primary-100 text-primary-600 rounded-lg font-bold text-xs sm:text-sm">1</div>
+                        <h3 class="text-base sm:text-lg font-semibold text-slate-900">Hóspede Principal</h3>
                     </div>
-                    <button type="button" class="edit-inquilino-btn w-8 h-8 flex items-center justify-center rounded-lg bg-blue-100 text-blue-600 hover:bg-blue-600 hover:text-white transition-colors" title="Editar">
-                        <i class="fas fa-edit text-xs"></i>
+                    <button type="button" class="edit-inquilino-btn w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg bg-blue-100 text-blue-600 hover:bg-blue-600 hover:text-white transition-colors" title="Editar">
+                        <i class="fas fa-edit text-[10px] sm:text-xs"></i>
                     </button>
                 </div>
 
@@ -55,29 +55,29 @@
                 <div class="space-y-2 field-container mt-6 selfie-field-container hidden">
                     <label class="block text-sm font-medium text-slate-700">Selfie do Hóspede</label>
                     <div class="space-y-3">
-                        <div class="flex flex-wrap gap-3">
-                            <button type="button" class="selfie-method-button inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-all" data-method="camera" data-input-target="selfie-input-0">
+                        <div class="flex flex-wrap gap-2 sm:gap-3">
+                            <button type="button" class="selfie-method-button inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-all" data-method="camera" data-input-target="selfie-input-0">
                                 <i class="fas fa-camera"></i>
                                 Tirar foto agora
                             </button>
-                            <button type="button" class="selfie-method-button inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-all" data-method="file" data-input-target="selfie-input-0">
+                            <button type="button" class="selfie-method-button inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-all" data-method="file" data-input-target="selfie-input-0">
                                 <i class="fas fa-upload"></i>
                                 Enviar do aparelho
                             </button>
                         </div>
                         <input type="file" id="selfie-input-0" name="inquilinos[0][selfie]" accept="image/*" class="hidden" data-preview-target="selfie-preview-0" />
                         <img id="selfie-preview-0" src="" alt="Prévia da selfie" class="hidden w-full h-40 rounded-2xl object-cover border border-slate-200 bg-slate-50 mb-3" />
-                        <div class="grid gap-4 md:grid-cols-[220px_1fr] items-stretch">
-                            <img src="../img/facial.png" alt="Exemplo de selfie" class="w-full max-w-[220px] h-auto rounded-3xl border border-slate-200 bg-slate-50" />
-                            <div class="rounded-3xl border border-primary-200 bg-primary-50 p-4 flex flex-col justify-center">
+                        <div class="grid gap-4 grid-cols-1 sm:grid-cols-[220px_1fr] items-stretch">
+                            <img src="../img/facial.png" alt="Exemplo de selfie" class="w-40 sm:w-full sm:max-w-[220px] h-auto rounded-3xl border border-slate-200 bg-slate-50 mx-auto sm:mx-0" />
+                            <div class="rounded-3xl border border-primary-200 bg-primary-50 p-3 sm:p-4 flex flex-col justify-center">
                                 <p class="text-sm font-semibold text-primary-900">Como deve ser a selfie:</p>
-                                <ul class="mt-3 space-y-2 text-sm text-slate-700">
+                                <ul class="mt-2 sm:mt-3 space-y-1.5 sm:space-y-2 text-xs sm:text-sm text-slate-700">
                                     <li>• Rosto inteiro e centralizado</li>
                                     <li>• Local bem iluminado</li>
                                     <li>• Olhar fixo na câmera</li>
                                     <li>• Sem óculos escuros, boné ou máscara</li>
                                 </ul>
-                                <p class="mt-3 text-sm text-slate-600">Use o exemplo ao lado: estilo foto 3x4.</p>
+                                <p class="mt-2 sm:mt-3 text-xs sm:text-sm text-slate-600">Use o exemplo ao lado: estilo foto 3x4.</p>
                             </div>
                         </div>
                         <p id="selfie-file-name-0" class="text-xs text-slate-500"></p>

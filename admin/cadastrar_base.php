@@ -2,6 +2,12 @@
 require_once 'verifica_login.php';
 require_once 'conexao.php';
 
+$usuario_categoria = $_SESSION['usuario_categoria'] ?? '';
+if (!in_array($usuario_categoria, ['supervisor', 'gerente'])) {
+    header("Location: edificios.php");
+    exit();
+}
+
 $mensagem = '';
 $mensagem_tipo = 'info';
 

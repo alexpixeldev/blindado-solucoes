@@ -13,7 +13,12 @@ if (isset($_SESSION['mensagem'])) {
 }
 
 // Buscar todas as administradoras
-$administradoras = $conn->query("SELECT * FROM administradoras ORDER BY nome ASC")->fetch_all(MYSQLI_ASSOC);
+$administradoras = [];
+$check = @$conn->query("SHOW TABLES LIKE 'administradoras'");
+if ($check && $check->num_rows > 0) {
+    $result = @$conn->query("SELECT * FROM administradoras ORDER BY nome ASC");
+    $administradoras = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-br" class="h-full bg-slate-50">

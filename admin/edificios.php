@@ -135,37 +135,78 @@ $search = $_GET['search'] ?? '';
 $data = [];
 $where_clauses = [];
 
+function table_exists($conn, $table) {
+    $r = $conn->query("SHOW TABLES LIKE '$table'");
+    return $r && $r->num_rows > 0;
+}
+
+function column_exists($conn, $table, $column) {
+    $r = $conn->query("SHOW COLUMNS FROM `$table` LIKE '$column'");
+    return $r && $r->num_rows > 0;
+}
+
+$has_localizacao = column_exists($conn, 'edificios', 'localizacao');
+$has_elevador = column_exists($conn, 'edificios', 'elevador_empresa');
+$has_selfie_col = column_exists($conn, 'edificios', 'requer_selfie');
+
+$has_controle_faciais = table_exists($conn, 'controle_faciais');
+$has_controle_ata = table_exists($conn, 'controle_ata');
+$has_controle_radio = table_exists($conn, 'controle_radio_fibra');
+$has_controle_dvr = table_exists($conn, 'controle_dvr');
+$has_controle_ramais = table_exists($conn, 'controle_ramais');
+$has_categorias_ramais = table_exists($conn, 'categorias_ramais');
+
 switch ($tab) {
     case 'edificios':
-        $query = "SELECT e.id, e.nome AS nome_edificio, e.endereco, e.localizacao, e.sindico_nome, e.sindico_contato, e.administradora_id,
-                         e.elevador_empresa, e.elevador_contato,
-                         b.nome AS nome_base, b.status AS status, a.nome AS nome_administradora,
-                         (SELECT cf.marca_equipamento FROM controle_faciais cf WHERE cf.edificio_id = e.id ORDER BY cf.id DESC LIMIT 1) AS facial_marca,
-                         (SELECT cf.acessos FROM controle_faciais cf WHERE cf.edificio_id = e.id ORDER BY cf.id DESC LIMIT 1) AS facial_acessos,
-                         (SELECT cf.status FROM controle_faciais cf WHERE cf.edificio_id = e.id ORDER BY cf.id DESC LIMIT 1) AS facial_status,
-                         (SELECT cf.observacao FROM controle_faciais cf WHERE cf.edificio_id = e.id ORDER BY cf.id DESC LIMIT 1) AS facial_observacao,
-                         (SELECT ca.itens_ata FROM controle_ata ca WHERE ca.edificio_id = e.id ORDER BY ca.id DESC LIMIT 1) AS ata_itens,
-                         (SELECT ca.status FROM controle_ata ca WHERE ca.edificio_id = e.id ORDER BY ca.id DESC LIMIT 1) AS ata_status,
-                         (SELECT ca.observacao FROM controle_ata ca WHERE ca.edificio_id = e.id ORDER BY ca.id DESC LIMIT 1) AS ata_observacao,
-                         (SELECT crf.ip FROM controle_radio_fibra crf WHERE crf.edificio_id = e.id ORDER BY crf.id DESC LIMIT 1) AS radio_ip,
-                         (SELECT crf.local_detalhe FROM controle_radio_fibra crf WHERE crf.edificio_id = e.id ORDER BY crf.id DESC LIMIT 1) AS radio_local,
-                         (SELECT crf.modo FROM controle_radio_fibra crf WHERE crf.edificio_id = e.id ORDER BY crf.id DESC LIMIT 1) AS radio_modo,
-                         (SELECT crf.marca FROM controle_radio_fibra crf WHERE crf.edificio_id = e.id ORDER BY crf.id DESC LIMIT 1) AS radio_marca,
-                         (SELECT crf.modelo FROM controle_radio_fibra crf WHERE crf.edificio_id = e.id ORDER BY crf.id DESC LIMIT 1) AS radio_modelo,
-                         (SELECT crf.login FROM controle_radio_fibra crf WHERE crf.edificio_id = e.id ORDER BY crf.id DESC LIMIT 1) AS radio_login,
-                         (SELECT crf.status FROM controle_radio_fibra crf WHERE crf.edificio_id = e.id ORDER BY crf.id DESC LIMIT 1) AS radio_status,
-                         (SELECT crf.observacao FROM controle_radio_fibra crf WHERE crf.edificio_id = e.id ORDER BY crf.id DESC LIMIT 1) AS radio_observacao,
-                         (SELECT cd.ip_dominio FROM controle_dvr cd WHERE cd.edificio_id = e.id ORDER BY cd.id DESC LIMIT 1) AS dvr_ip,
-                         (SELECT cd.cloud FROM controle_dvr cd WHERE cd.edificio_id = e.id ORDER BY cd.id DESC LIMIT 1) AS dvr_cloud,
-                         (SELECT cd.porta_tcp FROM controle_dvr cd WHERE cd.edificio_id = e.id ORDER BY cd.id DESC LIMIT 1) AS dvr_porta_tcp,
-                         (SELECT cd.porta_http FROM controle_dvr cd WHERE cd.edificio_id = e.id ORDER BY cd.id DESC LIMIT 1) AS dvr_porta_http,
-                         (SELECT cd.login FROM controle_dvr cd WHERE cd.edificio_id = e.id ORDER BY cd.id DESC LIMIT 1) AS dvr_login,
-                         (SELECT cd.modelo FROM controle_dvr cd WHERE cd.edificio_id = e.id ORDER BY cd.id DESC LIMIT 1) AS dvr_modelo,
-                         (SELECT cd.status FROM controle_dvr cd WHERE cd.edificio_id = e.id ORDER BY cd.id DESC LIMIT 1) AS dvr_status,
-                         (SELECT cd.observacao FROM controle_dvr cd WHERE cd.edificio_id = e.id ORDER BY cd.id DESC LIMIT 1) AS dvr_observacao,
-                         (SELECT cr.numero_ramal FROM controle_ramais cr WHERE cr.edificio_id = e.id ORDER BY cr.id DESC LIMIT 1) AS ramal_numero,
-                         (SELECT cr.status FROM controle_ramais cr WHERE cr.edificio_id = e.id ORDER BY cr.id DESC LIMIT 1) AS ramal_status,
-                         (SELECT cat.nome FROM controle_ramais cr LEFT JOIN categorias_ramais cat ON cr.categoria_id = cat.id WHERE cr.edificio_id = e.id ORDER BY cr.id DESC LIMIT 1) AS ramal_categoria
+        $extra_cols = '';
+        if ($has_localizacao) $extra_cols .= "e.localizacao,";
+        if ($has_elevador) $extra_cols .= "e.elevador_empresa, e.elevador_contato,";
+
+        $sub_facial = $has_controle_faciais ? "
+            (SELECT cf.marca_equipamento FROM controle_faciais cf WHERE cf.edificio_id = e.id ORDER BY cf.id DESC LIMIT 1) AS facial_marca,
+            (SELECT cf.acessos FROM controle_faciais cf WHERE cf.edificio_id = e.id ORDER BY cf.id DESC LIMIT 1) AS facial_acessos,
+            (SELECT cf.status FROM controle_faciais cf WHERE cf.edificio_id = e.id ORDER BY cf.id DESC LIMIT 1) AS facial_status,
+            (SELECT cf.observacao FROM controle_faciais cf WHERE cf.edificio_id = e.id ORDER BY cf.id DESC LIMIT 1) AS facial_observacao" : '';
+
+        $sub_ata = $has_controle_ata ? "
+            (SELECT ca.itens_ata FROM controle_ata ca WHERE ca.edificio_id = e.id ORDER BY ca.id DESC LIMIT 1) AS ata_itens,
+            (SELECT ca.status FROM controle_ata ca WHERE ca.edificio_id = e.id ORDER BY ca.id DESC LIMIT 1) AS ata_status,
+            (SELECT ca.observacao FROM controle_ata ca WHERE ca.edificio_id = e.id ORDER BY ca.id DESC LIMIT 1) AS ata_observacao" : '';
+
+        $sub_radio = $has_controle_radio ? "
+            (SELECT crf.ip FROM controle_radio_fibra crf WHERE crf.edificio_id = e.id ORDER BY crf.id DESC LIMIT 1) AS radio_ip,
+            (SELECT crf.local_detalhe FROM controle_radio_fibra crf WHERE crf.edificio_id = e.id ORDER BY crf.id DESC LIMIT 1) AS radio_local,
+            (SELECT crf.modo FROM controle_radio_fibra crf WHERE crf.edificio_id = e.id ORDER BY crf.id DESC LIMIT 1) AS radio_modo,
+            (SELECT crf.marca FROM controle_radio_fibra crf WHERE crf.edificio_id = e.id ORDER BY crf.id DESC LIMIT 1) AS radio_marca,
+            (SELECT crf.modelo FROM controle_radio_fibra crf WHERE crf.edificio_id = e.id ORDER BY crf.id DESC LIMIT 1) AS radio_modelo,
+            (SELECT crf.login FROM controle_radio_fibra crf WHERE crf.edificio_id = e.id ORDER BY crf.id DESC LIMIT 1) AS radio_login,
+            (SELECT crf.status FROM controle_radio_fibra crf WHERE crf.edificio_id = e.id ORDER BY crf.id DESC LIMIT 1) AS radio_status,
+            (SELECT crf.observacao FROM controle_radio_fibra crf WHERE crf.edificio_id = e.id ORDER BY crf.id DESC LIMIT 1) AS radio_observacao" : '';
+
+        $sub_dvr = $has_controle_dvr ? "
+            (SELECT cd.ip_dominio FROM controle_dvr cd WHERE cd.edificio_id = e.id ORDER BY cd.id DESC LIMIT 1) AS dvr_ip,
+            (SELECT cd.cloud FROM controle_dvr cd WHERE cd.edificio_id = e.id ORDER BY cd.id DESC LIMIT 1) AS dvr_cloud,
+            (SELECT cd.porta_tcp FROM controle_dvr cd WHERE cd.edificio_id = e.id ORDER BY cd.id DESC LIMIT 1) AS dvr_porta_tcp,
+            (SELECT cd.porta_http FROM controle_dvr cd WHERE cd.edificio_id = e.id ORDER BY cd.id DESC LIMIT 1) AS dvr_porta_http,
+            (SELECT cd.login FROM controle_dvr cd WHERE cd.edificio_id = e.id ORDER BY cd.id DESC LIMIT 1) AS dvr_login,
+            (SELECT cd.modelo FROM controle_dvr cd WHERE cd.edificio_id = e.id ORDER BY cd.id DESC LIMIT 1) AS dvr_modelo,
+            (SELECT cd.status FROM controle_dvr cd WHERE cd.edificio_id = e.id ORDER BY cd.id DESC LIMIT 1) AS dvr_status,
+            (SELECT cd.observacao FROM controle_dvr cd WHERE cd.edificio_id = e.id ORDER BY cd.id DESC LIMIT 1) AS dvr_observacao" : '';
+
+        $sub_ramais = $has_controle_ramais ? "
+            (SELECT cr.numero_ramal FROM controle_ramais cr WHERE cr.edificio_id = e.id ORDER BY cr.id DESC LIMIT 1) AS ramal_numero,
+            (SELECT cr.status FROM controle_ramais cr WHERE cr.edificio_id = e.id ORDER BY cr.id DESC LIMIT 1) AS ramal_status" : '';
+
+        $sub_ramal_cat = ($has_controle_ramais && $has_categorias_ramais) ? "
+            (SELECT cat.nome FROM controle_ramais cr LEFT JOIN categorias_ramais cat ON cr.categoria_id = cat.id WHERE cr.edificio_id = e.id ORDER BY cr.id DESC LIMIT 1) AS ramal_categoria" : '';
+
+        $all_subs = array_filter([$sub_facial, $sub_ata, $sub_radio, $sub_dvr, $sub_ramais, $sub_ramal_cat]);
+        $subquery_block = $all_subs ? ',' . implode(',', $all_subs) : '';
+
+        $query = "SELECT e.id, e.nome AS nome_edificio, e.endereco, e.sindico_nome, e.sindico_contato, e.administradora_id,
+                         $extra_cols
+                         b.nome AS nome_base, b.status AS status, a.nome AS nome_administradora
+                         $subquery_block
                   FROM edificios e
                   JOIN bases b ON e.base_id = b.id
                   LEFT JOIN administradoras a ON e.administradora_id = a.id";
@@ -183,7 +224,8 @@ switch ($tab) {
         break;
 
     case 'faciais_locacao':
-        $query = "SELECT e.id, e.nome, e.requer_selfie, b.nome AS nome_base
+        $selfie_col = $has_selfie_col ? 'e.requer_selfie' : '0 AS requer_selfie';
+        $query = "SELECT e.id, e.nome, $selfie_col, b.nome AS nome_base
                   FROM edificios e
                   JOIN bases b ON e.base_id = b.id
                   ORDER BY b.nome, e.nome";
@@ -216,7 +258,8 @@ switch ($tab) {
         }
         if (!empty($where_clauses)) $query .= " WHERE " . implode(" AND ", $where_clauses);
         $query .= " GROUP BY a.id, a.nome, a.telefone, a.email, a.created_at ORDER BY a.nome";
-        $data = $conn->query($query)->fetch_all(MYSQLI_ASSOC);
+        $result = $conn->query($query);
+        $data = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
         break;
         
     case 'sindicos':
@@ -231,11 +274,17 @@ switch ($tab) {
         }
         if (!empty($where_clauses)) $query .= " WHERE " . implode(" AND ", $where_clauses);
         $query .= " GROUP BY s.id, s.nome, s.telefone, s.email, s.created_at ORDER BY s.nome";
-        $data = $conn->query($query)->fetch_all(MYSQLI_ASSOC);
+        $result = $conn->query($query);
+        $data = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
         break;
 }
 
-$bases = $conn->query("SELECT id, nome FROM bases ORDER BY nome")->fetch_all(MYSQLI_ASSOC);
+try {
+    $bases_result = $conn->query("SELECT id, nome FROM bases ORDER BY nome");
+    $bases = $bases_result ? $bases_result->fetch_all(MYSQLI_ASSOC) : [];
+} catch (Exception $e) {
+    $bases = [];
+}
 
 $mensagem = $_SESSION['mensagem'] ?? '';
 $mensagem_tipo = $_SESSION['mensagem_tipo'] ?? 'info';
@@ -387,11 +436,15 @@ unset($_SESSION['mensagem'], $_SESSION['mensagem_tipo']);
                                                 <p class="font-semibold text-slate-900"><?= htmlspecialchars($item['nome']) ?></p>
                                                 <p class="text-sm text-slate-500"><?= htmlspecialchars($item['nome_base']) ?></p>
                                             </div>
+                                            <?php if ($pode_editar): ?>
                                             <label class="relative inline-flex items-center cursor-pointer">
                                                 <input type="checkbox" class="sr-only peer" onchange="toggleSelfie(<?= $item['id'] ?>, this)" <?= $item['requer_selfie'] ? 'checked' : '' ?>>
                                                 <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
                                                 <span class="ml-3 text-sm font-medium text-slate-900"><?= $item['requer_selfie'] ? 'Habilitado' : 'Desabilitado' ?></span>
                                             </label>
+                                            <?php else: ?>
+                                            <span class="text-sm font-medium <?= $item['requer_selfie'] ? 'text-green-600' : 'text-slate-400' ?>"><?= $item['requer_selfie'] ? 'Habilitado' : 'Desabilitado' ?></span>
+                                            <?php endif; ?>
                                         </div>
                                     <?php endforeach; ?>
                                 </div>
@@ -491,8 +544,8 @@ unset($_SESSION['mensagem'], $_SESSION['mensagem_tipo']);
                                             <div class="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-slate-200">
                                                 <div class="text-sm text-slate-500">Base responsável: <span class="font-semibold text-slate-900"><?= render_card_value($item['nome_base'] ?? 'Base não informada') ?></span></div>
                                                 <div class="flex gap-2">
-                                                    <a href="editar_edificio.php?id=<?= $item['id'] ?>" class="px-4 py-2 text-xs font-bold text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors">Editar</a>
                                                     <?php if ($pode_editar): ?>
+                                                    <a href="editar_edificio.php?id=<?= $item['id'] ?>" class="px-4 py-2 text-xs font-bold text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors">Editar</a>
                                                         <form method="POST" class="inline" onsubmit="return confirm('Tem certeza que deseja excluir este edifício?');">
                                                             <input type="hidden" name="id_delete" value="<?= $item['id'] ?>">
                                                             <input type="hidden" name="tipo_delete" value="edificio">
