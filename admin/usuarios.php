@@ -9,10 +9,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['nome'], $_POST['categ
     $nome = trim($_POST['nome']);
     $nome_real = trim($_POST['nome_real'] ?? '');
     $categoria = $_POST['categoria'];
+    $base_id = !empty($_POST['base_id']) ? intval($_POST['base_id']) : null;
     $senha = password_hash($_POST['senha'], PASSWORD_DEFAULT);
 
-    $stmt = $conn->prepare("INSERT INTO usuarios (nome, nome_real, categoria, senha) VALUES (?, ?, ?, ?)");
-    $stmt->bind_param("ssss", $nome, $nome_real, $categoria, $senha);
+    $stmt = $conn->prepare("INSERT INTO usuarios (nome, nome_real, categoria, base_id, senha) VALUES (?, ?, ?, ?, ?)");
+    $stmt->bind_param("sssis", $nome, $nome_real, $categoria, $base_id, $senha);
     if ($stmt->execute()) {
         $mensagem = "Usuário '$nome' criado com sucesso!";
         $mensagem_tipo = "success";
@@ -39,7 +40,14 @@ if (isset($_POST['delete_usuario'])) {
     exit();
 }
 
-$usuarios = $conn->query("SELECT * FROM usuarios WHERE categoria != 'colaborador' ORDER BY categoria, nome")->fetch_all(MYSQLI_ASSOC);
+$bases = $conn->query("SELECT id, nome FROM bases WHERE status = 'ativo' ORDER BY nome")->fetch_all(MYSQLI_ASSOC);
+$check = $conn->query("SHOW COLUMNS FROM usuarios LIKE 'base_id'");
+$hasBaseId = $check && $check->num_rows > 0;
+if ($hasBaseId) {
+    $usuarios = $conn->query("SELECT u.*, b.nome as base_nome FROM usuarios u LEFT JOIN bases b ON u.base_id = b.id WHERE u.categoria != 'colaborador' ORDER BY u.categoria, u.nome")->fetch_all(MYSQLI_ASSOC);
+} else {
+    $usuarios = $conn->query("SELECT * FROM usuarios WHERE categoria != 'colaborador' ORDER BY categoria, nome")->fetch_all(MYSQLI_ASSOC);
+}
 
 if (isset($_SESSION['mensagem'])) {
     $mensagem = $_SESSION['mensagem'];
@@ -142,32 +150,41 @@ if (isset($_SESSION['mensagem'])) {
                                         </div>
                                     </div>
                                 </div>
-                                <button type="submit" class="btn-primary w-full mt-4">
-                                    <i class="fas fa-user-plus"></i>
-                                    <span>Criar Usuário</span>
-                                </button>
+                                <div id="base-field" class="space-y-2" style="display:none">
+                                    <label class="form-label">Base Vinculada</label>
+                                    <select name="base_id" class="form-input">
+                                        <option value="">Selecione a base</option>
+                                        <?php foreach ($bases as $b): ?>
+                                            <option value="<?= $b['id'] ?>"><?= htmlspecialchars($b['nome']) ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                <button type="submit" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#22c55e;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Criar Usuário"><i class="fas fa-user-plus" style="font-size:10px"></i></button>
                             </form>
                         </div>
                     </div>
 
+                    <script>
+                        document.querySelector('select[name="categoria"]').addEventListener('change', function() {
+                            document.getElementById('base-field').style.display = this.value === 'operador' ? 'block' : 'none';
+                        });
+                    </script>
+
                     <!-- Users List -->
                     <div class="lg:col-span-2 animate-slide-up" style="animation-delay: 0.1s;">
                         <div class="overflow-x-auto">
-                            <table class="admin-table">
+                            <table class="admin-table" data-no-cell-copy>
                                 <thead>
                                     <tr>
-                                        <th>ID</th>
                                         <th>Nome / Login</th>
                                         <th>Categoria</th>
+                                        <th>Base</th>
                                         <th class="text-right">Ações</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <?php foreach ($usuarios as $usuario): ?>
                                         <tr class="group">
-                                            <td>
-                                                <span class="text-xs font-bold text-slate-400">#<?= $usuario['id'] ?></span>
-                                            </td>
                                             <td>
                                                 <div class="flex flex-col">
                                                     <span class="font-bold text-slate-900"><?= htmlspecialchars($usuario['nome_real'] ?: $usuario['nome']) ?></span>
@@ -191,21 +208,24 @@ if (isset($_SESSION['mensagem'])) {
                                                     <?= ucfirst($usuario['categoria']) ?>
                                                 </span>
                                             </td>
+                                            <td>
+                                                <?php if ($usuario['categoria'] === 'operador' && !empty($usuario['base_nome'])): ?>
+                                                    <span class="text-xs text-slate-500"><?= htmlspecialchars($usuario['base_nome']) ?></span>
+                                                <?php else: ?>
+                                                    <span class="text-xs text-slate-300">—</span>
+                                                <?php endif; ?>
+                                            </td>
                                             <td class="text-right">
                                                 <div class="flex justify-end gap-2 opacity-0 transition-opacity group-hover:opacity-100">
-                                                    <a href="editar_usuario.php?id=<?= $usuario['id'] ?>" class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-600 hover:text-white transition-all" title="Editar">
-                                                        <i class="fas fa-edit"></i>
-                                                    </a>
+                                                    <a href="editar_usuario.php?id=<?= $usuario['id'] ?>" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Editar"><i class="fas fa-edit" style="font-size:10px"></i></a>
                                                     <form method="POST" onsubmit="return confirm('Deseja realmente excluir este usuário?');" class="inline">
                                                         <input type="hidden" name="id" value="<?= $usuario['id'] ?>">
-                                                        <button type="submit" name="delete_usuario" class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all" title="Excluir">
-                                                            <i class="fas fa-trash-alt"></i>
-                                                        </button>
+                                                        <button type="submit" name="delete_usuario" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#ef4444;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Excluir"><i class="fas fa-trash-alt" style="font-size:10px"></i></button>
                                                     </form>
                                                 </div>
                                                 <!-- Mobile actions -->
                                                 <div class="flex justify-end gap-2 sm:hidden">
-                                                    <a href="editar_usuario.php?id=<?= $usuario['id'] ?>" class="text-slate-600 p-2"><i class="fas fa-edit"></i></a>
+                                                    <a href="editar_usuario.php?id=<?= $usuario['id'] ?>" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Editar"><i class="fas fa-edit" style="font-size:10px"></i></a>
                                                 </div>
                                             </td>
                                         </tr>

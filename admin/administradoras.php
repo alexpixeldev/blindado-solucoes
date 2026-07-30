@@ -69,9 +69,7 @@ if ($check && $check->num_rows > 0) {
                 <!-- Page Header -->
                 <div class="mb-8 animate-fade-in">
                     <div class="flex items-center gap-4">
-                        <a href="edificios.php?tab=edificios" class="h-10 w-10 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-primary-600 hover:border-primary-200 transition-all">
-                            <i class="fas fa-arrow-left"></i>
-                        </a>
+                        <a href="edificios.php?tab=edificios" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Voltar"><i class="fas fa-arrow-left" style="font-size:10px"></i></a>
                         <div>
                             <h1 class="text-2xl font-bold text-slate-900 sm:text-3xl">Administradoras</h1>
                             <p class="mt-1 text-slate-500">Gerencie as administradoras dos edifícios.</p>
@@ -90,10 +88,7 @@ if ($check && $check->num_rows > 0) {
                     <div class="admin-card">
                         <div class="mb-4 flex justify-between items-center">
                             <h2 class="text-lg font-bold text-slate-900">Lista de Administradoras</h2>
-                            <a href="cadastrar_administradora.php" class="btn-primary text-sm">
-                                <i class="fas fa-plus mr-2"></i>
-                                Nova Administradora
-                            </a>
+                            <a href="cadastrar_administradora.php" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#22c55e;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Nova Administradora"><i class="fas fa-plus" style="font-size:10px"></i></a>
                         </div>
                         
                         <?php if (empty($administradoras)): ?>
@@ -119,9 +114,7 @@ if ($check && $check->num_rows > 0) {
                                                 <td class="text-sm text-slate-600"><?= htmlspecialchars($adm['email'] ?? 'N/A') ?></td>
                                                 <td class="text-right">
                                                     <div class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        <a href="editar_administradora.php?id=<?= $adm['id'] ?>" class="h-8 w-8 flex items-center justify-center rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-600 hover:text-white transition-all" title="Editar">
-                                                            <i class="fas fa-edit"></i>
-                                                        </a>
+                                                        <a href="editar_administradora.php?id=<?= $adm['id'] ?>" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Editar"><i class="fas fa-edit" style="font-size:10px"></i></a>
                                                     </div>
                                                 </td>
                                             </tr>

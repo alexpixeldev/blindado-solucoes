@@ -135,10 +135,7 @@ $situacoes = $result_sit ? fetch_all_assoc($result_sit) : [];
                             <form method="POST" class="flex gap-2 mb-6">
                                 <input type="hidden" name="tipo" value="transportadora">
                                 <input type="text" name="nome" class="form-input" placeholder="Nova Transportadora" required>
-                                <button type="submit" name="add_item" class="btn-primary whitespace-nowrap">
-                                    <i class="fas fa-plus"></i>
-                                    <span>Adicionar</span>
-                                </button>
+                                <button type="submit" name="add_item" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#22c55e;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Adicionar"><i class="fas fa-plus" style="font-size:10px"></i></button>
                             </form>
                             
                             <div class="max-h-[400px] overflow-y-auto custom-scrollbar border border-slate-100 rounded-xl">
@@ -158,12 +155,8 @@ $situacoes = $result_sit ? fetch_all_assoc($result_sit) : [];
                                                             <input type="text" name="nome" value="<?= htmlspecialchars($t['nome']) ?>" class="flex-1 bg-transparent border-none focus:ring-2 focus:ring-primary-500 rounded-lg px-2 py-1 text-sm font-medium text-slate-700 transition-all">
                                                             
                                                             <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                                <button type="submit" name="edit_item" class="h-8 w-8 flex items-center justify-center rounded-lg bg-green-50 text-green-600 hover:bg-green-600 hover:text-white transition-all" title="Salvar">
-                                                                    <i class="fas fa-check text-xs"></i>
-                                                                </button>
-                                                                <button type="submit" name="delete_item" class="h-8 w-8 flex items-center justify-center rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all" title="Excluir" onclick="return confirm('Excluir este item?')">
-                                                                    <i class="fas fa-trash-alt text-xs"></i>
-                                                                </button>
+                                                                <button type="submit" name="edit_item" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#22c55e;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Salvar"><i class="fas fa-check" style="font-size:10px"></i></button>
+                                                                <button type="submit" name="delete_item" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#ef4444;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Excluir" onclick="return confirm('Excluir este item?')"><i class="fas fa-trash-alt" style="font-size:10px"></i></button>
                                                             </div>
                                                         </form>
                                                     </td>
@@ -187,10 +180,7 @@ $situacoes = $result_sit ? fetch_all_assoc($result_sit) : [];
                             <form method="POST" class="flex gap-2 mb-6">
                                 <input type="hidden" name="tipo" value="situacao">
                                 <input type="text" name="nome" class="form-input" placeholder="Nova Situação" required>
-                                <button type="submit" name="add_item" class="btn-primary whitespace-nowrap">
-                                    <i class="fas fa-plus"></i>
-                                    <span>Adicionar</span>
-                                </button>
+                                <button type="submit" name="add_item" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#22c55e;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Adicionar"><i class="fas fa-plus" style="font-size:10px"></i></button>
                             </form>
                             
                             <div class="max-h-[400px] overflow-y-auto custom-scrollbar border border-slate-100 rounded-xl">
@@ -210,12 +200,8 @@ $situacoes = $result_sit ? fetch_all_assoc($result_sit) : [];
                                                             <input type="text" name="nome" value="<?= htmlspecialchars($s['nome']) ?>" class="flex-1 bg-transparent border-none focus:ring-2 focus:ring-primary-500 rounded-lg px-2 py-1 text-sm font-medium text-slate-700 transition-all">
                                                             
                                                             <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                                <button type="submit" name="edit_item" class="h-8 w-8 flex items-center justify-center rounded-lg bg-green-50 text-green-600 hover:bg-green-600 hover:text-white transition-all" title="Salvar">
-                                                                    <i class="fas fa-check text-xs"></i>
-                                                                </button>
-                                                                <button type="submit" name="delete_item" class="h-8 w-8 flex items-center justify-center rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all" title="Excluir" onclick="return confirm('Excluir este item?')">
-                                                                    <i class="fas fa-trash-alt text-xs"></i>
-                                                                </button>
+                                                                <button type="submit" name="edit_item" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#22c55e;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Salvar"><i class="fas fa-check" style="font-size:10px"></i></button>
+                                                                <button type="submit" name="delete_item" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#ef4444;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Excluir" onclick="return confirm('Excluir este item?')"><i class="fas fa-trash-alt" style="font-size:10px"></i></button>
                                                             </div>
                                                         </form>
                                                     </td>

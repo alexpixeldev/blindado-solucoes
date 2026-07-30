@@ -133,13 +133,8 @@ $edificios = $conn->query("SELECT e.id, e.nome, b.nome as base_nome FROM edifici
                             </div>
 
                             <div class="flex gap-2">
-                                <button type="submit" class="btn-primary flex-1">
-                                    <i class="fas fa-filter"></i>
-                                    <span>Filtrar</span>
-                                </button>
-                                <a href="locacoes.php" class="btn-secondary" title="Limpar Filtros">
-                                    <i class="fas fa-sync-alt"></i>
-                                </a>
+                                <button type="submit" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Filtrar"><i class="fas fa-filter" style="font-size:10px"></i></button>
+                                <a href="locacoes.php" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;text-decoration:none" title="Limpar Filtros"><i class="fas fa-sync-alt" style="font-size:10px"></i></a>
                             </div>
                         </form>
                     </div>

@@ -143,9 +143,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <!-- Page Header -->
                 <div class="mb-8 animate-fade-in max-w-3xl mx-auto">
                     <div class="flex items-center gap-4">
-                        <a href="visualizar_colaborador.php?id=<?= $id ?>" class="h-10 w-10 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-primary-600 hover:border-primary-200 transition-all">
-                            <i class="fas fa-arrow-left"></i>
-                        </a>
+                        <a href="visualizar_colaborador.php?id=<?= $id ?>" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;text-decoration:none" title="Voltar"><i class="fas fa-arrow-left" style="font-size:10px"></i></a>
                         <div>
                             <h1 class="text-2xl font-bold text-slate-900 sm:text-3xl">Registrar Falta</h1>
                             <p class="mt-1 text-slate-500">Colaborador: <span class="font-bold text-slate-900"><?= htmlspecialchars($colaborador['nome_real']) ?></span></p>

@@ -435,10 +435,10 @@ function render_data_field($content, $type) {
                                         </div>
                                         <?php if ($pode_editar): ?>
                                             <div class="flex gap-1 shrink-0">
-                                                <a href="editar_dados.php?tipo=<?= $tipo_dados ?>&id=<?= $row['id'] ?>" class="h-8 w-8 flex items-center justify-center rounded-lg bg-white border border-slate-200 text-slate-400 hover:text-primary-600 hover:border-primary-200 transition-all shadow-sm"><i class="fas fa-edit"></i></a>
+                                                <a href="editar_dados.php?tipo=<?= $tipo_dados ?>&id=<?= $row['id'] ?>" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;text-decoration:none" title="Editar"><i class="fas fa-edit" style="font-size:10px"></i></a>
                                                 <form method="POST" onsubmit="return confirm('Excluir este registro?');" class="inline">
                                                     <input type="hidden" name="id_delete" value="<?= $row['id'] ?>"><input type="hidden" name="tipo_delete" value="<?= $tipo_dados ?>">
-                                                    <button type="submit" name="delete_item" class="h-8 w-8 flex items-center justify-center rounded-lg bg-white border border-slate-200 text-slate-400 hover:text-red-600 hover:border-red-200 transition-all shadow-sm"><i class="fas fa-trash-alt"></i></button>
+                                                    <button type="submit" name="delete_item" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#ef4444;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Excluir"><i class="fas fa-trash-alt" style="font-size:10px"></i></button>
                                                 </form>
                                             </div>
                                         <?php endif; ?>

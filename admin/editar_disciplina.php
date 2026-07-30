@@ -121,9 +121,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <!-- Page Header -->
                 <div class="mb-8 animate-fade-in max-w-3xl mx-auto">
                     <div class="flex items-center gap-4">
-                        <a href="ver_disciplina.php?id=<?= $acao['usuario_id'] ?>" class="h-10 w-10 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-primary-600 hover:border-primary-200 transition-all shadow-sm">
-                            <i class="fas fa-arrow-left"></i>
-                        </a>
+                        <a href="ver_disciplina.php?id=<?= $acao['usuario_id'] ?>" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;text-decoration:none" title="Voltar"><i class="fas fa-arrow-left" style="font-size:10px"></i></a>
                         <div>
                             <h1 class="text-2xl font-bold text-slate-900 sm:text-3xl">Editar Disciplina</h1>
                             <p class="mt-1 text-slate-500">Colaborador: <span class="font-bold text-slate-900"><?= htmlspecialchars($acao['nome_real']) ?></span></p>
@@ -191,9 +189,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                             <div class="pt-6 border-t border-slate-100 flex flex-col sm:flex-row gap-3">
                                 <button type="submit" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#22c55e;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Salvar"><i class="fas fa-save" style="font-size:10px"></i></button>
-                                <a href="ver_disciplina.php?id=<?= $acao['usuario_id'] ?>" class="btn-secondary text-center">
-                                    <span>Cancelar</span>
-                                </a>
+                                <a href="ver_disciplina.php?id=<?= $acao['usuario_id'] ?>" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;text-decoration:none" title="Cancelar"><i class="fas fa-times" style="font-size:10px"></i></a>
                             </div>
                         </form>
                     </div>

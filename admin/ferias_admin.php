@@ -220,17 +220,11 @@ $lista_ferias = $conn->query("
                                                     <td class="text-xs text-slate-400"><?php echo date('d/m/Y H:i', strtotime($f['criado_em'])); ?></td>
                                                     <td class="text-right">
                                                         <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                                                            <a href="../uploads/ferias/<?php echo htmlspecialchars($f['arquivo']); ?>" target="_blank" class="h-8 w-8 flex items-center justify-center rounded-lg bg-white border border-slate-200 text-slate-400 hover:text-primary-600 hover:border-primary-200 transition-all" title="Ver Documento">
-                                                                <i class="fas fa-file-pdf"></i>
-                                                            </a>
-                                                            <a href="editar_ferias.php?id=<?php echo $f['id']; ?>" class="h-8 w-8 flex items-center justify-center rounded-lg bg-white border border-slate-200 text-slate-400 hover:text-amber-600 hover:border-amber-200 transition-all" title="Editar">
-                                                                <i class="fas fa-edit"></i>
-                                                            </a>
+                                                            <a href="../uploads/ferias/<?php echo htmlspecialchars($f['arquivo']); ?>" target="_blank" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#3b82f6;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;text-decoration:none" title="Ver Documento"><i class="fas fa-file-pdf" style="font-size:10px"></i></a>
+                                                            <a href="editar_ferias.php?id=<?php echo $f['id']; ?>" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;text-decoration:none" title="Editar"><i class="fas fa-edit" style="font-size:10px"></i></a>
                                                             <form method="POST" class="inline" onsubmit="return confirm('Tem certeza que deseja excluir este registro de férias?');">
                                                                 <input type="hidden" name="ferias_id" value="<?php echo $f['id']; ?>">
-                                                                <button type="submit" name="deletar_ferias" class="h-8 w-8 flex items-center justify-center rounded-lg bg-white border border-slate-200 text-slate-400 hover:text-red-600 hover:border-red-200 transition-all" title="Excluir">
-                                                                    <i class="fas fa-trash"></i>
-                                                                </button>
+                                                                <button type="submit" name="deletar_ferias" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#ef4444;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Excluir"><i class="fas fa-trash-alt" style="font-size:10px"></i></button>
                                                             </form>
                                                         </div>
                                                     </td>

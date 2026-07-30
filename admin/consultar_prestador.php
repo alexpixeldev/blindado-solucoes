@@ -107,10 +107,7 @@ $edificios = $result_edificios ? fetch_all_assoc($result_edificios) : [];
                         <h1 class="text-2xl font-bold text-slate-900 sm:text-3xl">Consultar Prestadores</h1>
                         <p class="mt-1 text-slate-500">Visualize todos os prestadores de serviço registrados no sistema.</p>
                     </div>
-                    <a href="registrar_prestador.php" class="btn-primary">
-                        <i class="fas fa-plus"></i>
-                        <span>Registrar Prestador</span>
-                    </a>
+                    <a href="registrar_prestador.php" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#22c55e;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;text-decoration:none" title="Registrar Prestador"><i class="fas fa-plus" style="font-size:10px"></i></a>
                 </div>
 
                 <?php if ($mensagem): ?>
@@ -149,9 +146,7 @@ $edificios = $result_edificios ? fetch_all_assoc($result_edificios) : [];
                             </div>
 
                             <div>
-                                <a href="consultar_prestador.php" class="btn-secondary" title="Limpar Filtros">
-                                    <i class="fas fa-sync-alt"></i>
-                                </a>
+                                <a href="consultar_prestador.php" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;text-decoration:none" title="Limpar Filtros"><i class="fas fa-sync-alt" style="font-size:10px"></i></a>
                             </div>
                         </form>
                     </div>
@@ -214,19 +209,15 @@ $edificios = $result_edificios ? fetch_all_assoc($result_edificios) : [];
                                             </td>
                                             <td class="text-right">
                                                 <div class="flex justify-end gap-2 opacity-0 transition-opacity group-hover:opacity-100">
-                                                    <a href="editar_prestador.php?id=<?= $prest['id'] ?>" class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-600 hover:text-white transition-all" title="Editar">
-                                                        <i class="fas fa-edit text-xs"></i>
-                                                    </a>
+                                                    <a href="editar_prestador.php?id=<?= $prest['id'] ?>" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;text-decoration:none" title="Editar"><i class="fas fa-edit" style="font-size:10px"></i></a>
                                                     <form method="POST" onsubmit="return confirm('Tem certeza que deseja excluir este prestador?');" class="inline">
                                                         <input type="hidden" name="id_delete" value="<?= $prest['id'] ?>">
-                                                        <button type="submit" name="delete_prestador" class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all" title="Excluir">
-                                                            <i class="fas fa-trash-alt text-xs"></i>
-                                                        </button>
+                                                        <button type="submit" name="delete_prestador" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#ef4444;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Excluir"><i class="fas fa-trash-alt" style="font-size:10px"></i></button>
                                                     </form>
                                                 </div>
                                                 <!-- Mobile actions -->
                                                 <div class="flex justify-end gap-2 sm:hidden">
-                                                    <a href="editar_prestador.php?id=<?= $prest['id'] ?>" class="text-slate-600 p-1"><i class="fas fa-edit"></i></a>
+                                                    <a href="editar_prestador.php?id=<?= $prest['id'] ?>" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;text-decoration:none" title="Editar"><i class="fas fa-edit" style="font-size:10px"></i></a>
                                                 </div>
                                             </td>
                                         </tr>

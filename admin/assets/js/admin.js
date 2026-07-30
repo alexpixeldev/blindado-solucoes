@@ -741,7 +741,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('td, th, .admin-card, .card, .detail-item, .info-block').forEach(walk);
-        addCellCopyButtons();
+        const allowedPages = ['listar_locacoes.php', 'controle_dados.php'];
+        if (allowedPages.some(p => window.location.pathname.includes(p))) {
+            addCellCopyButtons();
+        }
     });
 
     function addCellCopyButtons() {

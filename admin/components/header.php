@@ -77,20 +77,12 @@ if ($current_page !== 'index') {
     </div>
 
     <div class="flex items-center gap-1 sm:gap-2">
-        <a href="perfil.php" class="relative inline-flex h-10 w-10 items-center justify-center rounded-xl text-slate-600 transition-colors hover:bg-slate-100 hover:text-primary-600" title="Meu Perfil">
-            <i class="far fa-user-circle text-lg"></i>
-        </a>
+        <a href="perfil.php" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Meu Perfil"><i class="fas fa-user-circle" style="font-size:10px"></i></a>
 
-        <button class="relative inline-flex h-10 w-10 items-center justify-center rounded-xl text-slate-600 transition-colors hover:bg-slate-100 hover:text-primary-600" title="Notificações">
-            <i class="far fa-bell text-lg"></i>
-            <span class="absolute right-2.5 top-2.5 flex h-2 w-2 rounded-full bg-red-500 ring-2 ring-white"></span>
-        </button>
+        <button style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;position:relative" title="Notificações"><i class="fas fa-bell" style="font-size:10px"></i><span style="position:absolute;right:-2px;top:-2px;width:6px;height:6px;border-radius:50%;background:#ef4444;border:2px solid #fff"></span></button>
 
         <div class="mx-1 h-6 w-px bg-slate-200 sm:mx-2"></div>
 
-        <a href="logout.php" class="inline-flex items-center gap-2 rounded-xl bg-red-50 px-3 py-2 text-sm font-semibold text-red-600 transition-all hover:bg-red-100 active:scale-95 sm:px-4">
-            <i class="fas fa-sign-out-alt"></i>
-            <span class="hidden sm:inline">Sair</span>
-        </a>
+        <a href="logout.php" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#ef4444;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Sair"><i class="fas fa-sign-out-alt" style="font-size:10px"></i></a>
     </div>
 </header>

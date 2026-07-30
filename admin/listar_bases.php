@@ -91,10 +91,7 @@ if (isset($_SESSION['mensagem'])) {
                         <p class="mt-1 text-slate-500">Gerencie todas as bases de atendimento operacional.</p>
                     </div>
                     <div class="flex gap-2">
-                        <a href="cadastrar_base.php" class="btn-primary">
-                            <i class="fas fa-plus"></i>
-                            <span>Nova Base</span>
-                        </a>
+                        <a href="cadastrar_base.php" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#22c55e;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Nova Base"><i class="fas fa-plus" style="font-size:10px"></i></a>
                     </div>
                 </div>
 
@@ -145,14 +142,10 @@ if (isset($_SESSION['mensagem'])) {
                                             </td>
                                             <td class="text-right">
                                                 <div class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <a href="editar_base.php?id=<?= $base['id'] ?>" class="h-8 w-8 flex items-center justify-center rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-600 hover:text-white transition-all" title="Editar">
-                                                        <i class="fas fa-edit"></i>
-                                                    </a>
+                                                    <a href="editar_base.php?id=<?= $base['id'] ?>" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Editar"><i class="fas fa-edit" style="font-size:10px"></i></a>
                                                     <form method="POST" onsubmit="return confirm('ATENÇÃO! Excluir uma base também apaga TODOS os seus edifícios (<?= $base['total_edificios'] ?> edifício(s)). Tem certeza?');" class="inline">
                                                         <input type="hidden" name="base_id" value="<?= $base['id'] ?>">
-                                                        <button type="submit" name="delete_base" class="h-8 w-8 flex items-center justify-center rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all" title="Excluir">
-                                                            <i class="fas fa-trash-alt"></i>
-                                                        </button>
+                                                        <button type="submit" name="delete_base" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#ef4444;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Excluir"><i class="fas fa-trash-alt" style="font-size:10px"></i></button>
                                                     </form>
                                                 </div>
                                             </td>

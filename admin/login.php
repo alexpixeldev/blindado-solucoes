@@ -16,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nome = trim($_POST['nome']);
     $senha = $_POST['senha'];
 
-    $stmt = $conn->prepare('SELECT id, nome, nome_real, senha, categoria FROM usuarios WHERE nome = ?');
+    $stmt = $conn->prepare('SELECT id, nome, nome_real, senha, categoria, base_id FROM usuarios WHERE nome = ?');
     $stmt->bind_param('s', $nome);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -27,6 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['usuario_nome'] = $usuario['nome'];
         $_SESSION['usuario_nome_real'] = $usuario['nome_real'];
         $_SESSION['usuario_categoria'] = strtolower(trim($usuario['categoria']));
+        $_SESSION['usuario_base_id'] = $usuario['base_id'] ?? null;
 
         header('Location: index.php');
         exit();

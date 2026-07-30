@@ -125,9 +125,7 @@ $midias = $conn->query("SELECT * FROM ocorrencias_midia WHERE ocorrencia_id = $i
                 <div class="max-w-[1000px] mx-auto">
                     <div class="mb-8 flex items-center justify-between animate-fade-in">
                         <div class="flex items-center gap-4">
-                            <a href="consultar_ocorrencia.php" class="h-10 w-10 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-primary-600 transition-all shadow-sm">
-                                <i class="fas fa-arrow-left"></i>
-                            </a>
+                            <a href="consultar_ocorrencia.php" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Voltar"><i class="fas fa-arrow-left" style="font-size:10px"></i></a>
                             <h1 class="text-3xl font-bold text-slate-900">Editar Registro</h1>
                         </div>
                         <button onclick="salvarEdicao()" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#22c55e;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Salvar"><i class="fas fa-save" style="font-size:10px"></i></button>

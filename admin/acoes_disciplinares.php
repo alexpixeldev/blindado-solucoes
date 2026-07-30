@@ -90,9 +90,7 @@ $stmt->close();
                             <input type="text" name="search" class="form-input pl-11" placeholder="Buscar por nome ou login..." value="<?= htmlspecialchars($search) ?>">
                         </div>
                         <?php if ($search): ?>
-                            <a href="acoes_disciplinares.php" class="btn-secondary mt-4" title="Limpar Filtros">
-                                <i class="fas fa-sync-alt"></i>
-                            </a>
+                            <a href="acoes_disciplinares.php" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;text-decoration:none" title="Limpar Filtros"><i class="fas fa-sync-alt" style="font-size:10px"></i></a>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -124,10 +122,7 @@ $stmt->close();
                                             <td class="font-bold text-slate-900"><?= htmlspecialchars(!empty($colab['nome_real']) ? $colab['nome_real'] : 'N/A') ?></td>
                                             <td class="text-slate-500"><?= htmlspecialchars($colab['nome']) ?></td>
                                             <td class="text-right">
-                                                <a href="registrar_acao_disciplinar.php?id=<?= $colab['id'] ?>" class="inline-flex items-center gap-2 px-4 py-2 bg-red-50 text-red-700 rounded-xl font-bold text-xs hover:bg-red-600 hover:text-white transition-all">
-                                                    <i class="fas fa-gavel"></i>
-                                                    <span>Registrar Disciplina</span>
-                                                </a>
+                                                <a href="registrar_acao_disciplinar.php?id=<?= $colab['id'] ?>" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#ef4444;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;text-decoration:none" title="Registrar Disciplina"><i class="fas fa-gavel" style="font-size:10px"></i></a>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>

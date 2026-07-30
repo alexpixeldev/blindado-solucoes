@@ -114,10 +114,7 @@ if (isset($_SESSION['mensagem'])) {
                         <h1 class="text-2xl font-bold text-slate-900 sm:text-3xl">Edifícios Cadastrados</h1>
                         <p class="mt-1 text-slate-500">Gerencie os edifícios vinculados às bases operacionais.</p>
                     </div>
-                    <a href="cadastrar_edificio.php" class="btn-primary">
-                        <i class="fas fa-plus"></i>
-                        <span>Novo Edifício</span>
-                    </a>
+                    <a href="cadastrar_edificio.php" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#22c55e;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Novo Edifício"><i class="fas fa-plus" style="font-size:10px"></i></a>
                 </div>
 
                 <?php if ($mensagem): ?>
@@ -167,14 +164,10 @@ if (isset($_SESSION['mensagem'])) {
                                             <td class="text-sm text-slate-600"><?= htmlspecialchars($edificio['nome_administradora'] ?? '-') ?></td>
                                             <td class="text-right">
                                                 <div class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <a href="editar_edificio.php?id=<?= $edificio['id'] ?>" class="h-8 w-8 flex items-center justify-center rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-600 hover:text-white transition-all" title="Editar">
-                                                        <i class="fas fa-edit"></i>
-                                                    </a>
+                                                    <a href="editar_edificio.php?id=<?= $edificio['id'] ?>" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Editar"><i class="fas fa-edit" style="font-size:10px"></i></a>
                                                     <form method="POST" onsubmit="return confirm('Deseja realmente excluir este edifício?');" class="inline">
                                                         <input type="hidden" name="edificio_id" value="<?= $edificio['id'] ?>">
-                                                        <button type="submit" name="delete_edificio" class="h-8 w-8 flex items-center justify-center rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all" title="Excluir">
-                                                            <i class="fas fa-trash-alt"></i>
-                                                        </button>
+                                                        <button type="submit" name="delete_edificio" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#ef4444;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Excluir"><i class="fas fa-trash-alt" style="font-size:10px"></i></button>
                                                     </form>
                                                 </div>
                                             </td>

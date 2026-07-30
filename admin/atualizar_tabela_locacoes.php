@@ -143,14 +143,8 @@ if ($executar) {
                         </div>
 
                         <form method="POST" class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                            <a href="index.php" class="btn-secondary order-2 sm:order-1">
-                                <i class="fas fa-arrow-left"></i>
-                                <span>Voltar ao Painel</span>
-                            </a>
-                            <button type="submit" name="executar_setup" class="btn-primary order-1 sm:order-2" onclick="return confirm('Executar atualização estrutural?')">
-                                <i class="fas fa-sync-alt"></i>
-                                <span>Executar Atualização</span>
-                            </button>
+                            <a href="index.php" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;text-decoration:none" title="Voltar ao Painel"><i class="fas fa-arrow-left" style="font-size:10px"></i></a>
+                            <button type="submit" name="executar_setup" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#22c55e;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" onclick="return confirm('Executar atualização estrutural?')" title="Executar Atualização"><i class="fas fa-sync-alt" style="font-size:10px"></i></button>
                         </form>
                     </div>
                 </div>

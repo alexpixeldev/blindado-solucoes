@@ -126,9 +126,7 @@ function calcular_horas($inicio, $fim) {
                     <div class="h-10 w-10 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center font-bold">
                         <?= strtoupper(substr($primeiro_nome, 0, 1)) ?>
                     </div>
-                    <a href="logout.php" class="h-10 w-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center hover:bg-red-600 hover:text-white transition-all" title="Sair">
-                        <i class="fas fa-sign-out-alt"></i>
-                    </a>
+                    <a href="logout.php" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#ef4444;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Sair"><i class="fas fa-sign-out-alt" style="font-size:10px"></i></a>
                 </div>
             </header>
             
@@ -139,10 +137,7 @@ function calcular_horas($inicio, $fim) {
                         <h1 class="text-2xl font-bold text-slate-900 sm:text-3xl">Olá, <?= htmlspecialchars($primeiro_nome) ?> 👋</h1>
                         <p class="mt-1 text-slate-500">Bem-vindo ao seu portal do colaborador. Aqui você encontra suas informações profissionais.</p>
                     </div>
-                    <a href="alterar_senha_colaborador.php" class="btn-secondary">
-                        <i class="fas fa-key"></i>
-                        <span>Alterar Senha</span>
-                    </a>
+                    <a href="alterar_senha_colaborador.php" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#3b82f6;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Alterar Senha"><i class="fas fa-key" style="font-size:10px"></i></a>
                 </div>
 
                 <!-- Stats Grid -->

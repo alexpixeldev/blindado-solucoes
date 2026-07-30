@@ -252,17 +252,11 @@ $meses_nomes = [
                                                     <td class="text-xs text-slate-400"><?php echo date('d/m/Y H:i', strtotime($cc['data_upload'])); ?></td>
                                                     <td class="text-right">
                                                         <div class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                            <a href="../uploads/contracheques/<?php echo $cc['arquivo']; ?>" target="_blank" class="h-8 w-8 flex items-center justify-center rounded-lg bg-primary-50 text-primary-600 hover:bg-primary-600 hover:text-white transition-all" title="Ver Arquivo">
-                                                                <i class="fas fa-eye"></i>
-                                                            </a>
-                                                            <a href="editar_contracheque.php?id=<?php echo $cc['id']; ?>" class="h-8 w-8 flex items-center justify-center rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-600 hover:text-white transition-all" title="Editar">
-                                                                <i class="fas fa-edit"></i>
-                                                            </a>
+                                                            <a href="../uploads/contracheques/<?php echo $cc['arquivo']; ?>" target="_blank" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#3b82f6;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;text-decoration:none" title="Ver Arquivo"><i class="fas fa-eye" style="font-size:10px"></i></a>
+                                                            <a href="editar_contracheque.php?id=<?php echo $cc['id']; ?>" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;text-decoration:none" title="Editar"><i class="fas fa-edit" style="font-size:10px"></i></a>
                                                             <form method="POST" onsubmit="return confirm('Deseja realmente excluir este contracheque?');" class="inline">
                                                                 <input type="hidden" name="contracheque_id" value="<?php echo $cc['id']; ?>">
-                                                                <button type="submit" name="deletar_contracheque" class="h-8 w-8 flex items-center justify-center rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all" title="Excluir">
-                                                                    <i class="fas fa-trash-alt"></i>
-                                                                </button>
+                                                                <button type="submit" name="deletar_contracheque" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#ef4444;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Excluir"><i class="fas fa-trash-alt" style="font-size:10px"></i></button>
                                                             </form>
                                                         </div>
                                                     </td>

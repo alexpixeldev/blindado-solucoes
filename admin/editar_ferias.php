@@ -118,9 +118,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <!-- Page Header -->
                 <div class="mb-8 animate-fade-in">
                     <div class="flex items-center gap-4">
-                        <a href="ferias_admin.php" class="h-10 w-10 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-primary-600 hover:border-primary-200 transition-all">
-                            <i class="fas fa-arrow-left"></i>
-                        </a>
+                        <a href="ferias_admin.php" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;text-decoration:none" title="Voltar"><i class="fas fa-arrow-left" style="font-size:10px"></i></a>
                         <div>
                             <h1 class="text-2xl font-bold text-slate-900 sm:text-3xl">Editar Documento de Férias</h1>
                             <p class="mt-1 text-slate-500">Colaborador: <span class="font-bold text-slate-900"><?= htmlspecialchars($ferias['nome_real']) ?></span></p>

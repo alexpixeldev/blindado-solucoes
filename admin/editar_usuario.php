@@ -14,17 +14,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nome = $_POST['nome'];
     $nome_real = trim($_POST['nome_real'] ?? '');
     $categoria = $_POST['categoria'];
+    $base_id = !empty($_POST['base_id']) ? intval($_POST['base_id']) : null;
     $senha = $_POST['senha'];
 
     if (!empty($senha)) {
         // Se a senha foi preenchida, atualiza com hash
         $senhaHash = password_hash($senha, PASSWORD_DEFAULT);
-        $stmt = $conn->prepare("UPDATE usuarios SET nome = ?, nome_real = ?, categoria = ?, senha = ? WHERE id = ?");
-        $stmt->bind_param("ssssi", $nome, $nome_real, $categoria, $senhaHash, $id);
+        $stmt = $conn->prepare("UPDATE usuarios SET nome = ?, nome_real = ?, categoria = ?, base_id = ?, senha = ? WHERE id = ?");
+        $stmt->bind_param("sssssi", $nome, $nome_real, $categoria, $base_id, $senhaHash, $id);
     } else {
         // Se a senha está vazia, mantém a antiga
-        $stmt = $conn->prepare("UPDATE usuarios SET nome = ?, nome_real = ?, categoria = ? WHERE id = ?");
-        $stmt->bind_param("sssi", $nome, $nome_real, $categoria, $id);
+        $stmt = $conn->prepare("UPDATE usuarios SET nome = ?, nome_real = ?, categoria = ?, base_id = ? WHERE id = ?");
+        $stmt->bind_param("ssssi", $nome, $nome_real, $categoria, $base_id, $id);
     }
 
     if ($stmt->execute()) {
@@ -45,6 +46,8 @@ if (!$usuario) {
     header("Location: usuarios.php");
     exit();
 }
+
+$bases = $conn->query("SELECT id, nome FROM bases WHERE status = 'ativo' ORDER BY nome")->fetch_all(MYSQLI_ASSOC);
 ?>
 <!DOCTYPE html>
 <html lang="pt-br" class="h-full bg-slate-50">
@@ -144,6 +147,16 @@ if (!$usuario) {
                                 </div>
                             </div>
 
+                            <div id="base-field" class="space-y-2" style="<?= ($usuario['categoria'] ?? '') === 'operador' ? '' : 'display:none' ?>">
+                                <label class="form-label">Base Vinculada</label>
+                                <select name="base_id" class="form-input">
+                                    <option value="">Selecione a base</option>
+                                    <?php foreach ($bases as $b): ?>
+                                        <option value="<?= $b['id'] ?>" <?= ($usuario['base_id'] ?? null) == $b['id'] ? 'selected' : '' ?>><?= htmlspecialchars($b['nome']) ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+
                             <div class="space-y-2">
                                 <label class="form-label">Nova Senha</label>
                                 <input type="password" name="senha" class="form-input" placeholder="Deixe em branco para manter a senha atual">
@@ -152,9 +165,7 @@ if (!$usuario) {
 
                             <div class="pt-4 flex flex-col sm:flex-row gap-3">
                                 <button type="submit" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#22c55e;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Salvar"><i class="fas fa-save" style="font-size:10px"></i></button>
-                                <a href="usuarios.php" class="btn-secondary text-center">
-                                    <span>Cancelar</span>
-                                </a>
+                                <a href="usuarios.php" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;text-decoration:none" title="Cancelar"><i class="fas fa-times" style="font-size:10px"></i></a>
                             </div>
                         </form>
                     </div>
@@ -168,5 +179,10 @@ if (!$usuario) {
     </div>
 
     <?php include 'components/footer.php'; ?>
+    <script>
+        document.querySelector('select[name="categoria"]').addEventListener('change', function() {
+            document.getElementById('base-field').style.display = this.value === 'operador' ? 'block' : 'none';
+        });
+    </script>
 </body>
 </html>

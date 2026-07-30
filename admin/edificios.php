@@ -357,10 +357,7 @@ unset($_SESSION['mensagem'], $_SESSION['mensagem_tipo']);
                             ];
                             $current_add = $add_links[$tab] ?? $add_links['edificios'];
                         ?>
-                        <a href="<?= $current_add['url'] ?>" class="btn-primary">
-                            <i class="fas fa-plus"></i>
-                            <span><?= $current_add['label'] ?></span>
-                        </a>
+                        <a href="<?= $current_add['url'] ?>" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#22c55e;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="<?= $current_add['label'] ?>"><i class="fas fa-plus" style="font-size:10px"></i></a>
                     <?php endif; ?>
                 </div>
 
@@ -412,9 +409,7 @@ unset($_SESSION['mensagem'], $_SESSION['mensagem_tipo']);
                                 </div>
                             </div>
 
-                            <a href="?tab=edificios" class="btn-secondary" title="Limpar Filtros">
-                                <i class="fas fa-sync-alt"></i>
-                            </a>
+                            <a href="?tab=edificios" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Limpar Filtros"><i class="fas fa-sync-alt" style="font-size:10px"></i></a>
                         </form>
                     </div>
                 </div>
@@ -545,12 +540,12 @@ unset($_SESSION['mensagem'], $_SESSION['mensagem_tipo']);
                                                 <div class="text-sm text-slate-500">Base responsável: <span class="font-semibold text-slate-900"><?= render_card_value($item['nome_base'] ?? 'Base não informada') ?></span></div>
                                                 <div class="flex gap-2">
                                                     <?php if ($pode_editar): ?>
-                                                    <a href="editar_edificio.php?id=<?= $item['id'] ?>" class="px-4 py-2 text-xs font-bold text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors">Editar</a>
+                                                    <a href="editar_edificio.php?id=<?= $item['id'] ?>" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Editar"><i class="fas fa-edit" style="font-size:10px"></i></a>
                                                         <form method="POST" class="inline" onsubmit="return confirm('Tem certeza que deseja excluir este edifício?');">
                                                             <input type="hidden" name="id_delete" value="<?= $item['id'] ?>">
                                                             <input type="hidden" name="tipo_delete" value="edificio">
                                                             <input type="hidden" name="current_tab" value="<?= $tab ?>">
-                                                            <button type="submit" name="delete_item" class="px-4 py-2 text-xs font-bold text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors">Excluir</button>
+                                                            <button type="submit" name="delete_item" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#ef4444;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Excluir"><i class="fas fa-trash-alt" style="font-size:10px"></i></button>
                                                         </form>
                                                     <?php endif; ?>
                                                 </div>

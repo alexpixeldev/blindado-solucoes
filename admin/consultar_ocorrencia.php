@@ -115,10 +115,7 @@ $bases = $conn->query("SELECT id, nome FROM bases ORDER BY nome")->fetch_all(MYS
                             <h1 class="text-3xl font-bold text-slate-900">Livro de Ocorrências</h1>
                             <p class="text-slate-500">Histórico de plantões e registros operacionais.</p>
                         </div>
-                        <a href="registrar_ocorrencia.php" class="btn-primary">
-                            <i class="fas fa-plus"></i>
-                            <span>Novo Registro</span>
-                        </a>
+                        <a href="registrar_ocorrencia.php" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#22c55e;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Novo Registro"><i class="fas fa-plus" style="font-size:10px"></i></a>
                     </div>
 
                     <!-- Filtros Modernos -->
@@ -197,11 +194,11 @@ $bases = $conn->query("SELECT id, nome FROM bases ORDER BY nome")->fetch_all(MYS
                                                     </div>
                                                     <?php if ($reg['usuario_id'] == $_SESSION['usuario_id'] || $usuario_categoria === 'gerente'): ?>
                                                         <div class="flex gap-2">
-                                                            <a href="editar_ocorrencia.php?id=<?= $reg['id'] ?>" class="h-10 w-10 flex items-center justify-center rounded-xl bg-slate-100 text-slate-500 hover:bg-primary-600 hover:text-white transition-all shadow-sm"><i class="fas fa-edit text-sm"></i></a>
+                                                            <a href="editar_ocorrencia.php?id=<?= $reg['id'] ?>" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Editar"><i class="fas fa-edit" style="font-size:10px"></i></a>
                                                             <?php if ($usuario_categoria === 'gerente'): ?>
                                                                 <form method="POST" onsubmit="return confirm('Excluir este registro?');" class="inline">
                                                                     <input type="hidden" name="id_delete" value="<?= $reg['id'] ?>">
-                                                                    <button type="submit" name="delete_ocorrencia" class="h-10 w-10 flex items-center justify-center rounded-xl bg-red-50 text-red-500 hover:bg-red-600 hover:text-white transition-all shadow-sm"><i class="fas fa-trash-alt text-sm"></i></button>
+                                                                    <button type="submit" name="delete_ocorrencia" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#ef4444;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Excluir"><i class="fas fa-trash-alt" style="font-size:10px"></i></button>
                                                                 </form>
                                                             <?php endif; ?>
                                                         </div>

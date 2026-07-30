@@ -378,9 +378,7 @@ if (!empty($locacaoIds)) {
                             </div>
 
                             <div>
-                                <a href="listar_locacoes.php" class="btn-secondary" title="Limpar Filtros">
-                                    <i class="fas fa-sync-alt"></i>
-                                </a>
+                                <a href="listar_locacoes.php" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;text-decoration:none" title="Limpar Filtros"><i class="fas fa-sync-alt" style="font-size:10px"></i></a>
                             </div>
                         </form>
                     </div>
@@ -473,9 +471,7 @@ if (!empty($locacaoIds)) {
                                 <?php if ($usuario_categoria === 'gerente'): ?>
                                     <form method="POST" class="loc-card-delete" onsubmit="return confirm('Tem certeza que deseja excluir esta locação?');">
                                         <input type="hidden" name="id_delete" value="<?= $loc['id'] ?>">
-                                        <button type="submit" name="delete_locacao" class="h-8 w-8 flex items-center justify-center rounded-lg bg-white border border-slate-200 text-slate-400 hover:text-red-600 hover:border-red-200 transition-all shadow-sm">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
+                                        <button type="submit" name="delete_locacao" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#ef4444;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Excluir"><i class="fas fa-trash" style="font-size:10px"></i></button>
                                     </form>
                                 <?php endif; ?>
                             </div>

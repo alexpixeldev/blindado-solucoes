@@ -92,13 +92,9 @@ $stmt->close();
                                 <input type="text" name="search" class="form-input pl-11" placeholder="Buscar por nome ou usuário..." value="<?= htmlspecialchars($search) ?>">
                             </div>
                             <div class="flex gap-2">
-                                <button type="submit" class="btn-primary px-8">
-                                    <span>Buscar</span>
-                                </button>
+                                <button type="submit" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Buscar"><i class="fas fa-search" style="font-size:10px"></i></button>
                                 <?php if ($search): ?>
-                                    <a href="contracheque.php" class="btn-secondary" title="Limpar Busca">
-                                        <i class="fas fa-sync-alt"></i>
-                                    </a>
+                                    <a href="contracheque.php" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;text-decoration:none" title="Limpar Busca"><i class="fas fa-sync-alt" style="font-size:10px"></i></a>
                                 <?php endif; ?>
                             </div>
                         </form>

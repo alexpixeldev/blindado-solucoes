@@ -201,9 +201,7 @@ try {
             <main class="flex-1 overflow-y-auto p-4 sm:p-8 custom-scrollbar">
                 <div class="mb-8 animate-fade-in flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div class="flex items-center gap-4">
-                        <a href="listar_colaboradores.php" class="h-10 w-10 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-primary-600 hover:border-primary-200 transition-all">
-                            <i class="fas fa-arrow-left"></i>
-                        </a>
+                        <a href="listar_colaboradores.php" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Voltar"><i class="fas fa-arrow-left" style="font-size:10px"></i></a>
                         <div>
                             <h1 class="text-2xl font-bold text-slate-900 sm:text-3xl">Perfil do Colaborador</h1>
                             <p class="mt-1 text-slate-500">Informações detalhadas de <?= htmlspecialchars($colaborador['nome_real'] ?? $colaborador['nome']) ?>.</p>
@@ -211,10 +209,7 @@ try {
                     </div>
                     <div class="flex gap-3">
                         <?php if (($_SESSION['usuario_categoria'] ?? '') === 'administrativo'): ?>
-                            <a href="editar_colaborador.php?id=<?= $colaborador['id'] ?>" class="btn-primary">
-                                <i class="fas fa-edit"></i>
-                                <span>Editar Dados</span>
-                            </a>
+                            <a href="editar_colaborador.php?id=<?= $colaborador['id'] ?>" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Editar"><i class="fas fa-edit" style="font-size:10px"></i></a>
                         <?php endif; ?>
                     </div>
                 </div>

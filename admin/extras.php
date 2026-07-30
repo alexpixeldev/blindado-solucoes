@@ -260,8 +260,8 @@ if (isset($_GET['action']) && $_GET['action'] === 'search_colaboradores') {
                                 <!-- campo de arquivo removido conforme solicitado -->
 
                                 <div class="flex gap-3">
-                                    <button type="submit" class="btn-primary">Registrar</button>
-                                    <button type="button" id="register-reset" class="btn-secondary">Limpar</button>
+                                    <button type="submit" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#22c55e;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Registrar"><i class="fas fa-check" style="font-size:10px"></i></button>
+                                    <button type="button" id="register-reset" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Limpar"><i class="fas fa-sync-alt" style="font-size:10px"></i></button>
                                 </div>
                                 <div id="register-message" class="text-sm mt-2"></div>
                             </form>

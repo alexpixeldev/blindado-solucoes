@@ -45,9 +45,7 @@ $categoria_label = $categoria_labels[$usuario_categoria] ?? 'Usuário';
                 <img src="../img/logo-blindado-branco.svg" alt="Blindado" class="h-full w-auto object-contain">
             </div>
         </a>
-        <button id="mobile-sidebar-close" class="inline-flex items-center justify-center rounded-lg p-2 text-slate-400 hover:bg-white/10 hover:text-white lg:hidden">
-            <i class="fas fa-times text-xl"></i>
-        </button>
+        <button id="mobile-sidebar-close" class="lg:hidden" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Fechar"><i class="fas fa-times" style="font-size:10px"></i></button>
     </div>
 
     <!-- Sidebar Navigation -->

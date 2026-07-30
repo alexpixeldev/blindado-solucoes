@@ -138,9 +138,7 @@ if (isset($_SESSION['sindico_duplicado'])) {
                 <!-- Page Header -->
                 <div class="mb-8 animate-fade-in">
                     <div class="flex items-center gap-4">
-                        <a href="edificios.php?tab=edificios" class="h-10 w-10 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-primary-600 hover:border-primary-200 transition-all">
-                            <i class="fas fa-arrow-left"></i>
-                        </a>
+                        <a href="edificios.php?tab=edificios" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Voltar"><i class="fas fa-arrow-left" style="font-size:10px"></i></a>
                         <div>
                             <h1 class="text-2xl font-bold text-slate-900 sm:text-3xl">Cadastrar Edifício</h1>
                             <p class="mt-1 text-slate-500">Adicione um novo edifício ao sistema e vincule-o a uma base.</p>
@@ -171,9 +169,7 @@ if (isset($_SESSION['sindico_duplicado'])) {
                                     <?php endif; ?>
                                 <?php endforeach; ?>
                                 <input type="hidden" name="acao_sindico" value="usar_existente">
-                                <button type="submit" name="add_edificio" class="w-full py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold text-sm transition-all">
-                                    Usar Síndico Existente
-                                </button>
+                                <button type="submit" name="add_edificio" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#22c55e;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Usar Síndico Existente"><i class="fas fa-check" style="font-size:10px"></i></button>
                             </form>
                             
                             <form method="POST" class="flex-1 flex gap-2">
@@ -184,9 +180,7 @@ if (isset($_SESSION['sindico_duplicado'])) {
                                 <?php endforeach; ?>
                                 <input type="hidden" name="acao_sindico" value="alterar_nome">
                                 <input type="text" name="sindico_nome" required placeholder="Novo nome para o síndico" class="flex-1 form-input">
-                                <button type="submit" name="add_edificio" class="px-6 py-3 bg-slate-700 hover:bg-slate-800 text-white rounded-xl font-bold text-sm transition-all">
-                                    Alterar
-                                </button>
+                                <button type="submit" name="add_edificio" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#22c55e;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Alterar"><i class="fas fa-check" style="font-size:10px"></i></button>
                             </form>
                         </div>
                     </div>
@@ -244,9 +238,7 @@ if (isset($_SESSION['sindico_duplicado'])) {
                                                 <i class="fas fa-chevron-down text-slate-400 text-xs"></i>
                                             </div>
                                         </div>
-                                        <a href="administradoras.php" class="h-10 w-10 flex items-center justify-center rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-600 hover:text-white transition-all" title="Ver Administradoras">
-                                            <i class="fas fa-search"></i>
-                                        </a>
+                                        <a href="administradoras.php" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#3b82f6;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Ver Administradoras"><i class="fas fa-building" style="font-size:10px"></i></a>
                                     </div>
                                 </div>
                                 <div class="space-y-2">
@@ -265,9 +257,7 @@ if (isset($_SESSION['sindico_duplicado'])) {
 
                             <div class="pt-6 border-t border-slate-100 flex flex-col sm:flex-row gap-3">
                                 <button type="submit" name="add_edificio" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#22c55e;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Salvar"><i class="fas fa-save" style="font-size:10px"></i></button>
-                                <a href="edificios.php?tab=edificios" class="btn-secondary text-center">
-                                    <span>Cancelar</span>
-                                </a>
+                                <a href="edificios.php?tab=edificios" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Cancelar"><i class="fas fa-times" style="font-size:10px"></i></a>
                             </div>
                         </form>
                     </div>

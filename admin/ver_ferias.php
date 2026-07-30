@@ -82,19 +82,14 @@ $stmt->close();
                 <!-- Page Header -->
                 <div class="mb-8 animate-fade-in flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div class="flex items-center gap-4">
-                        <a href="visualizar_colaborador.php?id=<?= $id ?>" class="h-10 w-10 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-primary-600 hover:border-primary-200 transition-all">
-                            <i class="fas fa-arrow-left"></i>
-                        </a>
+                        <a href="visualizar_colaborador.php?id=<?= $id ?>" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;text-decoration:none" title="Voltar"><i class="fas fa-arrow-left" style="font-size:10px"></i></a>
                         <div>
                             <h1 class="text-2xl font-bold text-slate-900 sm:text-3xl">Histórico de Férias</h1>
                             <p class="mt-1 text-slate-500">Colaborador: <span class="font-bold text-slate-900"><?= htmlspecialchars($colaborador['nome_real']) ?></span></p>
                         </div>
                     </div>
                     <div class="flex gap-3">
-                        <a href="ferias_admin.php" class="btn-primary">
-                            <i class="fas fa-umbrella-beach"></i>
-                            <span>Gerenciar Férias</span>
-                        </a>
+                        <a href="ferias_admin.php" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#22c55e;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;text-decoration:none" title="Gerenciar Férias"><i class="fas fa-umbrella-beach" style="font-size:10px"></i></a>
                     </div>
                 </div>
 
@@ -133,12 +128,8 @@ $stmt->close();
                                             </td>
                                             <td class="px-6 py-4">
                                                 <div class="flex items-center justify-center gap-2">
-                                                    <a href="../uploads/ferias/<?= htmlspecialchars($f['arquivo']) ?>" target="_blank" class="h-8 w-8 flex items-center justify-center rounded-lg bg-slate-100 text-slate-500 hover:bg-primary-100 hover:text-primary-600 transition-all" title="Ver Documento">
-                                                        <i class="fas fa-file-pdf text-xs"></i>
-                                                    </a>
-                                                    <a href="editar_ferias.php?id=<?= $f['id'] ?>" class="h-8 w-8 flex items-center justify-center rounded-lg bg-slate-100 text-slate-500 hover:bg-amber-100 hover:text-amber-600 transition-all" title="Editar">
-                                                        <i class="fas fa-edit text-xs"></i>
-                                                    </a>
+                                                    <a href="../uploads/ferias/<?= htmlspecialchars($f['arquivo']) ?>" target="_blank" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#3b82f6;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;text-decoration:none" title="Ver Documento"><i class="fas fa-file-pdf" style="font-size:10px"></i></a>
+                                                    <a href="editar_ferias.php?id=<?= $f['id'] ?>" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;text-decoration:none" title="Editar"><i class="fas fa-edit" style="font-size:10px"></i></a>
                                                 </div>
                                             </td>
                                         </tr>
