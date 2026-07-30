@@ -241,18 +241,80 @@ if (!empty($locacaoIds)) {
             color: #0f172a;
             font-weight: 600;
         }
+        .locacoes-list {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+        .loc-card {
+            background: #FFFFFF;
+            border: 1px solid #e2e8f0;
+            border-radius: 1rem;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -4px rgba(0,0,0,0.05);
+        }
+        .loc-card-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            background: #FFFFFF;
+            border-bottom: 1px solid #e2e8f0;
+            border-radius: 1rem 1rem 0 0;
+        }
+        .loc-card-title {
+            font-weight: 700;
+            font-size: 0.8rem;
+            color: #16a34a;
+        }
+        .loc-card-apt {
+            font-size: 0.65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #64748b;
+        }
+        .loc-card-date {
+            margin-left: auto;
+            font-size: 0.7rem;
+            color: #94a3b8;
+            white-space: nowrap;
+        }
+        .loc-card-delete {
+            flex-shrink: 0;
+        }
+        .loc-card-body {
+            padding: 0.75rem 1rem 1rem 1rem;
+        }
+        .loc-section + .loc-section {
+            border-top: 1px solid #e2e8f0;
+            margin-top: 6px;
+            padding-top: 6px;
+        }
+        .loc-inq-row > div {
+            transition: background 0.15s ease;
+            border-radius: 0.25rem;
+            margin: 0 -0.25rem;
+            padding: 0.125rem 0.25rem;
+        }
+        .loc-inq-row > div:hover {
+            background: #f1f5f9;
+        }
+        .loc-inq-row + .loc-inq-row {
+            border-top: 1px dashed #e2e8f0;
+            margin-top: 3px;
+            padding-top: 3px;
+        }
         @media (max-width: 640px) {
-            .admin-table tbody td {
-                padding: 0.5rem 0.75rem;
-                font-size: 0.75rem;
+            .locacoes-list {
+                gap: 1.25rem;
             }
-            .admin-table thead th {
+            .loc-card-header {
                 padding: 0.5rem 0.75rem;
-                font-size: 0.6rem;
+                gap: 0.5rem;
+                flex-wrap: wrap;
             }
-            .loc-data-wrap {
-                flex-direction: column;
-                align-items: flex-start;
+            .loc-card-body {
+                padding: 0.5rem 0.75rem 0.75rem 0.75rem;
             }
         }
     </style>
@@ -378,145 +440,117 @@ if (!empty($locacaoIds)) {
                 </form>
                 <?php endif; ?>
 
-                <!-- Table Container -->
-                <div class="animate-slide-up" style="animation-delay: 0.1s;">
-                    <div class="overflow-x-auto">
-                        <table class="admin-table" data-copy-only data-no-cell-copy>
-                            <thead>
-                                <tr>
-                                    <?php if ($usuario_categoria === 'gerente'): ?>
-                                        <th class="w-10">
-                                            <input type="checkbox" id="selectAll" class="rounded border-slate-300 text-primary-600 focus:ring-primary-500">
-                                        </th>
-                                    <?php endif; ?>
-                                    <th>Data de Registro</th>
-                                    <th>Localização</th>
-                                    <th>Ocupantes</th>
-                                    <th>Veículos</th>
-                                    <th>Período</th>
-                                    <?php if ($usuario_categoria === 'gerente'): ?>
-                                        <th class="text-right">Ações</th>
-                                    <?php endif; ?>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                    <?php if (empty($locacoes)): ?>
-                                        <tr>
-                                            <td colspan="<?= $usuario_categoria === 'gerente' ? 7 : 6 ?>" class="text-center py-12 text-slate-500">
-                                            <div class="flex flex-col items-center gap-2">
-                                                <i class="fas fa-key text-4xl text-slate-200"></i>
-                                                <p>Nenhum registro de locação encontrado.</p>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                <?php else: ?>
-                                    <?php foreach ($locacoes as $loc): ?>
-                                        <tr class="group">
-                                            <?php if ($usuario_categoria === 'gerente'): ?>
-                                                <td class="w-10">
-                                                    <input type="checkbox" name="locacao_select[]" value="<?= $loc['id'] ?>" class="locacao-checkbox rounded border-slate-300 text-primary-600 focus:ring-primary-500">
-                                                </td>
-                                            <?php endif; ?>
-                                            <td class="whitespace-nowrap">
-                                                <div class="flex flex-col">
-                                                    <span class="font-bold text-slate-900"><?= date('d/m/Y', strtotime($loc['data_registro'] ?? $loc['data_locacao'] ?? 'now')) ?></span>
-                                                    <span class="text-xs text-slate-500"><?= date('H:i', strtotime($loc['data_registro'] ?? $loc['data_locacao'] ?? 'now')) ?></span>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <div class="flex flex-col">
-                                                    <span class="font-bold text-primary-700"><?= htmlspecialchars($loc['nome_edificio']) ?></span>
-                                                    <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Apt <?= htmlspecialchars($loc['numero_apartamento']) ?></span>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <div class="space-y-3">
-                                                    <?php if (!empty($locacaoInquilinos[$loc['id']])): ?>
-                                                        <?php foreach ($locacaoInquilinos[$loc['id']] as $inquilino): ?>
-                                                            <div class="rounded-3xl border border-slate-200 bg-white p-3 shadow-sm">
-                                                                 <div class="flex gap-3 loc-data-wrap">
-                                                                    <div class="flex-1 min-w-0 space-y-1">
-                                                                        <div style="display:grid;grid-template-columns:1fr auto;align-items:center;gap:6px">
-                                                                             <div class="text-sm font-semibold text-slate-900"><?= htmlspecialchars($inquilino['nome']) ?></div>
-                                                                             <?= btnCopiar($inquilino['nome']) ?>
-                                                                         </div>
-                                                                         <div style="display:grid;grid-template-columns:1fr auto;align-items:center;gap:6px">
-                                                                             <span class="text-xs text-slate-500">Documento: <?= htmlspecialchars($inquilino['documento'] ?: '---') ?></span>
-                                                                             <?= btnCopiar($inquilino['documento'] ?: '---') ?>
-                                                                         </div>
-                                                                         <div style="display:grid;grid-template-columns:1fr auto;align-items:center;gap:6px">
-                                                                             <span class="text-xs text-slate-500">Telefone: <?= htmlspecialchars($inquilino['telefone'] ?: '---') ?></span>
-                                                                             <?= btnCopiar($inquilino['telefone'] ?: '---') ?>
-                                                                         </div>
-                                                                     </div>
-                                                                     <?php if (!empty($inquilino['selfie'])): ?>
-                                                                         <img src="<?= htmlspecialchars($inquilino['selfie']) ?>" alt="Selfie <?= htmlspecialchars($inquilino['nome']) ?>" class="h-16 w-16 rounded-2xl object-cover border border-slate-200 shadow-sm selfie-thumb flex-shrink-0" data-image-src="<?= htmlspecialchars($inquilino['selfie']) ?>" data-image-name="<?= htmlspecialchars($inquilino['nome']) ?>" />
-                                                                     <?php endif; ?>
-                                                                 </div>
-                                                             </div>
-                                                        <?php endforeach; ?>
-                                                    <?php else: ?>
-                                                        <span class="text-slate-400">Nenhum ocupante cadastrado.</span>
-                                                    <?php endif; ?>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <div class="space-y-3">
-                                                    <?php if (!empty($locacaoVeiculos[$loc['id']])): ?>
-                                                        <?php foreach ($locacaoVeiculos[$loc['id']] as $veiculo): ?>
-                                                            <div class="rounded-3xl border border-slate-200 bg-white p-3 shadow-sm">
-                                                                 <div style="display:grid;grid-template-columns:1fr auto;align-items:center;gap:4px">
-                                                                     <div class="text-sm font-semibold text-slate-900"><?= htmlspecialchars($veiculo['modelo'] ?: 'Modelo não informado') ?></div>
-                                                                     <?= btnCopiar($veiculo['modelo'] ?: 'Modelo não informado') ?>
-                                                                 </div>
-                                                                 <div style="display:grid;grid-template-columns:1fr auto;align-items:center;gap:4px;margin-top:2px">
-                                                                     <span class="text-xs text-slate-500">Cor: <?= htmlspecialchars($veiculo['cor'] ?: '---') ?></span>
-                                                                     <?= btnCopiar($veiculo['cor'] ?: '---') ?>
-                                                                 </div>
-                                                                 <div style="display:grid;grid-template-columns:1fr auto;align-items:center;gap:4px;margin-top:2px">
-                                                                     <span class="text-xs text-slate-500">Placa: <?= htmlspecialchars($veiculo['placa'] ?: '---') ?></span>
-                                                                     <?= btnCopiar($veiculo['placa'] ?: '---') ?>
-                                                                 </div>
-                                                                 <?php if (!empty($veiculo['acesso_garagem'])): ?>
-                                                                     <div style="display:grid;grid-template-columns:1fr auto;align-items:center;gap:4px;margin-top:2px">
-                                                                         <span class="text-xs text-primary-700 font-medium">Acesso garagem: <?= htmlspecialchars($veiculo['acesso_garagem']) ?></span>
-                                                                         <?= btnCopiar($veiculo['acesso_garagem']) ?>
-                                                                     </div>
-                                                                 <?php endif; ?>
-                                                             </div>
-                                                        <?php endforeach; ?>
-                                                    <?php else: ?>
-                                                        <span class="text-slate-400">Nenhum veículo cadastrado.</span>
-                                                    <?php endif; ?>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <div class="flex flex-wrap items-center gap-2">
-                                                    <span class="px-2 py-1 rounded bg-slate-100 text-slate-600 text-[10px] font-bold whitespace-nowrap"><?= $loc['data_entrada'] ? date('d/m/Y', strtotime($loc['data_entrada'])) : '---' ?></span>
-                                                    <?= btnCopiar($loc['data_entrada'] ? date('d/m/Y', strtotime($loc['data_entrada'])) : '---') ?>
-                                                    <i class="fas fa-arrow-right text-[10px] text-slate-300"></i>
-                                                    <span class="px-2 py-1 rounded bg-slate-100 text-slate-600 text-[10px] font-bold whitespace-nowrap"><?= $loc['data_saida'] ? date('d/m/Y', strtotime($loc['data_saida'])) : '---' ?></span>
-                                                    <?= btnCopiar($loc['data_saida'] ? date('d/m/Y', strtotime($loc['data_saida'])) : '---') ?>
-                                                </div>
-                                            </td>
-                                            <?php if ($usuario_categoria === 'gerente'): ?>
-                                                <td class="text-right">
-                                                    <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                                                        <form method="POST" class="inline" onsubmit="return confirm('Tem certeza que deseja excluir esta locação?');">
-                                                            <input type="hidden" name="id_delete" value="<?= $loc['id'] ?>">
-                                                            <button type="submit" name="delete_locacao" class="h-8 w-8 flex items-center justify-center rounded-lg bg-white border border-slate-200 text-slate-400 hover:text-red-600 hover:border-red-200 transition-all shadow-sm">
-                                                                <i class="fas fa-trash"></i>
-                                                            </button>
-                                                        </form>
-                                                    </div>
-                                                </td>
-                                            <?php endif; ?>
-                                        </tr>
-                                    <?php endforeach; ?>
+                <!-- Locacoes List -->
+                <div class="locacoes-list animate-slide-up" style="animation-delay: 0.1s;" data-copy-only>
+
+                    <?php if (empty($locacoes)): ?>
+                        <div class="loc-card">
+                            <div class="loc-card-body text-center py-12 text-slate-500">
+                                <div class="flex flex-col items-center gap-2">
+                                    <i class="fas fa-key text-4xl text-slate-200"></i>
+                                    <p>Nenhum registro de locação encontrado.</p>
+                                </div>
+                            </div>
+                        </div>
+                    <?php else: ?>
+                        <?php if ($usuario_categoria === 'gerente'): ?>
+                        <div class="mb-4 flex items-center gap-3 px-1">
+                            <input type="checkbox" id="selectAll" class="rounded border-slate-300 text-primary-600 focus:ring-primary-500">
+                            <label for="selectAll" class="text-sm text-slate-600 font-medium">Selecionar todas</label>
+                        </div>
+                        <?php endif; ?>
+                        <?php foreach ($locacoes as $loc): ?>
+                        <div class="loc-card">
+                            <div class="loc-card-header">
+                                <?php if ($usuario_categoria === 'gerente'): ?>
+                                    <input type="checkbox" name="locacao_select[]" value="<?= $loc['id'] ?>" class="locacao-checkbox rounded border-slate-300 text-primary-600 focus:ring-primary-500 shrink-0">
                                 <?php endif; ?>
-                            </tbody>
-                        </table>
-                    </div>
+                                <div class="flex items-baseline gap-2 min-w-0">
+                                    <span class="loc-card-title"><?= htmlspecialchars($loc['nome_edificio']) ?></span>
+                                    <span class="loc-card-apt">Apt <?= htmlspecialchars($loc['numero_apartamento']) ?></span>
+                                </div>
+                                <span class="loc-card-date"><?= date('d/m/Y', strtotime($loc['data_registro'] ?? $loc['data_locacao'] ?? 'now')) ?> <?= date('H:i', strtotime($loc['data_registro'] ?? $loc['data_locacao'] ?? 'now')) ?></span>
+                                <?php if ($usuario_categoria === 'gerente'): ?>
+                                    <form method="POST" class="loc-card-delete" onsubmit="return confirm('Tem certeza que deseja excluir esta locação?');">
+                                        <input type="hidden" name="id_delete" value="<?= $loc['id'] ?>">
+                                        <button type="submit" name="delete_locacao" class="h-8 w-8 flex items-center justify-center rounded-lg bg-white border border-slate-200 text-slate-400 hover:text-red-600 hover:border-red-200 transition-all shadow-sm">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                <?php endif; ?>
+                            </div>
+
+                            <div class="loc-card-body">
+                                <div class="loc-section">
+                                    <?php if (!empty($locacaoInquilinos[$loc['id']])): ?>
+                                         <?php foreach ($locacaoInquilinos[$loc['id']] as $inquilino): ?>
+                                             <div class="loc-inq-row">
+                                              <div style="display:grid;grid-template-columns:<?= !empty($inquilino['selfie']) ? '1fr auto auto' : '1fr auto' ?>;align-items:center;gap:4px">
+                                                      <div class="font-semibold text-slate-900" style="font-size:0.75rem">
+                                                          <?= htmlspecialchars($inquilino['nome']) ?>
+                                                          <?php if (!empty($inquilino['selfie'])): ?>
+                                                          <img class="selfie-thumb inline-block ml-2 rounded-full cursor-pointer align-middle" style="width:24px;height:24px;object-fit:cover" data-image-src="<?= htmlspecialchars($inquilino['selfie']) ?>" data-image-name="<?= htmlspecialchars($inquilino['nome']) ?>" src="<?= htmlspecialchars($inquilino['selfie']) ?>" alt="Selfie">
+                                                          <?php endif; ?>
+                                                      </div>
+                                                      <?php if (!empty($inquilino['selfie'])): ?>
+                                                      <a href="<?= htmlspecialchars($inquilino['selfie']) ?>" download="selfie-<?= preg_replace('/[^a-zA-Z0-9]/', '_', $inquilino['nome']) ?>.jpg" class="flex-shrink-0 w-24 text-center px-2 py-0.5 text-[10px] font-bold bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors whitespace-nowrap">
+                                                          <i class="fas fa-download" style="font-size:9px;margin-right:2px"></i>SALVAR IMAGEM
+                                                      </a>
+                                                      <?php endif; ?>
+                                                      <?= btnCopiar($inquilino['nome']) ?>
+                                                  </div>
+                                                 <div style="display:grid;grid-template-columns:1fr auto;align-items:center;gap:4px">
+                                                     <span style="font-size:0.65rem;color:#64748b">Doc: <?= htmlspecialchars($inquilino['documento'] ?: '---') ?></span>
+                                                     <?= btnCopiar($inquilino['documento'] ?: '---') ?>
+                                                 </div>
+                                                 <div style="display:grid;grid-template-columns:1fr auto;align-items:center;gap:4px">
+                                                     <span style="font-size:0.65rem;color:#64748b">Tel: <?= htmlspecialchars($inquilino['telefone'] ?: '---') ?></span>
+                                                     <?= btnCopiar($inquilino['telefone'] ?: '---') ?>
+                                                 </div>
+                                             </div>
+                                         <?php endforeach; ?>
+                                     <?php else: ?>
+                                         <span class="text-slate-400" style="font-size:0.7rem">Nenhum ocupante</span>
+                                     <?php endif; ?>
+                                </div>
+
+                                <div class="loc-section">
+                                    <?php if (!empty($locacaoVeiculos[$loc['id']])): ?>
+                                         <?php foreach ($locacaoVeiculos[$loc['id']] as $veiculo): ?>
+                                             <div class="loc-inq-row">
+                                                 <div style="display:grid;grid-template-columns:1fr auto;align-items:center;gap:4px">
+                                                     <div class="font-semibold text-slate-900" style="font-size:0.75rem"><?= htmlspecialchars($veiculo['modelo'] ?: 'N/I') ?></div>
+                                                     <?= btnCopiar($veiculo['modelo'] ?: 'N/I') ?>
+                                                 </div>
+                                                 <div style="display:grid;grid-template-columns:1fr auto;align-items:center;gap:4px">
+                                                     <span style="font-size:0.65rem;color:#64748b">Cor: <?= htmlspecialchars($veiculo['cor'] ?: '---') ?></span>
+                                                     <?= btnCopiar($veiculo['cor'] ?: '---') ?>
+                                                 </div>
+                                                 <div style="display:grid;grid-template-columns:1fr auto;align-items:center;gap:4px">
+                                                     <span style="font-size:0.65rem;color:#64748b">Placa: <?= htmlspecialchars($veiculo['placa'] ?: '---') ?></span>
+                                                     <?= btnCopiar($veiculo['placa'] ?: '---') ?>
+                                                 </div>
+                                             </div>
+                                         <?php endforeach; ?>
+                                     <?php else: ?>
+                                         <span class="text-slate-400" style="font-size:0.7rem">Nenhum veículo</span>
+                                     <?php endif; ?>
+                                </div>
+
+                                <div class="loc-section" style="font-size:0.7rem">
+                                    <div style="display:grid;grid-template-columns:1fr auto;align-items:center;gap:4px">
+                                        <span class="font-semibold text-slate-600">Entrada: <?= $loc['data_entrada'] ? date('d/m/Y', strtotime($loc['data_entrada'])) : '---' ?></span>
+                                        <?= btnCopiar($loc['data_entrada'] ? date('d/m/Y', strtotime($loc['data_entrada'])) : '---') ?>
+                                    </div>
+                                    <div style="display:grid;grid-template-columns:1fr auto;align-items:center;gap:4px;margin-top:2px">
+                                        <span class="font-semibold text-slate-600">Saída: <?= $loc['data_saida'] ? date('d/m/Y', strtotime($loc['data_saida'])) : '---' ?></span>
+                                        <?= btnCopiar($loc['data_saida'] ? date('d/m/Y', strtotime($loc['data_saida'])) : '---') ?>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
                 </div>
             </main>
         </div>
