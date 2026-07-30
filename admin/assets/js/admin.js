@@ -637,3 +637,134 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 });
+
+// ===== LINK & IP DETECTION =====
+(function() {
+    const LINK_RE = /https?:\/\/[^\s<>"']+|\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(?::\d+)?/gi;
+
+    function makeButtons(matchedText, copyOnly) {
+        const isUrl = matchedText.startsWith('http');
+        const link = isUrl ? matchedText : 'http://' + matchedText;
+
+        const wrapper = document.createElement('span');
+        wrapper.className = 'inline-flex items-center gap-1';
+
+        const textSpan = document.createElement('span');
+        textSpan.textContent = matchedText;
+        wrapper.appendChild(textSpan);
+
+        const copyBtn = document.createElement('button');
+        copyBtn.type = 'button';
+        copyBtn.className = 'ml-1 px-2 py-0.5 text-[10px] font-bold bg-slate-700 text-white rounded hover:bg-slate-800 transition-colors';
+        copyBtn.textContent = 'COPIAR';
+        copyBtn.onclick = function(e) {
+            e.stopPropagation();
+            navigator.clipboard.writeText(matchedText).then(() => {
+                const orig = copyBtn.textContent;
+                copyBtn.textContent = 'COPIADO!';
+                setTimeout(() => copyBtn.textContent = orig, 1500);
+            });
+        };
+        wrapper.appendChild(copyBtn);
+
+        if (!copyOnly) {
+            const openBtn = document.createElement('button');
+            openBtn.type = 'button';
+            openBtn.className = 'ml-1 px-2 py-0.5 text-[10px] font-bold bg-primary-600 text-white rounded hover:bg-primary-700 transition-colors';
+            openBtn.textContent = 'ABRIR';
+            openBtn.onclick = function(e) {
+                e.stopPropagation();
+                window.open(link, '_blank');
+            };
+            wrapper.appendChild(openBtn);
+        }
+
+        return wrapper;
+    }
+
+    function processTextNode(node, copyOnly) {
+        const text = node.nodeValue;
+        if (!text.trim()) return null;
+
+        LINK_RE.lastIndex = 0;
+        const matches = [];
+        let m;
+        while ((m = LINK_RE.exec(text)) !== null) {
+            matches.push({ index: m.index, text: m[0] });
+        }
+        if (matches.length === 0) return null;
+
+        const fragment = document.createDocumentFragment();
+        let lastIndex = 0;
+        for (const match of matches) {
+            if (match.index > lastIndex) {
+                fragment.appendChild(document.createTextNode(text.slice(lastIndex, match.index)));
+            }
+            fragment.appendChild(makeButtons(match.text, copyOnly));
+            lastIndex = match.index + match.text.length;
+        }
+        if (lastIndex < text.length) {
+            fragment.appendChild(document.createTextNode(text.slice(lastIndex)));
+        }
+        return fragment;
+    }
+
+    function walk(el, copyOnly) {
+        if (el.dataset && el.dataset.linkProcessed) return;
+        copyOnly = copyOnly || (el.closest && el.closest('[data-copy-only]') !== null);
+        const isTable = el.tagName === 'TD' || el.tagName === 'TH';
+        const isContent = el.matches?.('.admin-card, .card, .detail-item, .info-block, p, span, li, dt, dd');
+        if (!isTable && !isContent) return;
+
+        const childNodes = Array.from(el.childNodes);
+        let modified = false;
+        for (const child of childNodes) {
+            if (child.nodeType === 3) {
+                const result = processTextNode(child, copyOnly);
+                if (result) {
+                    child.parentNode.replaceChild(result, child);
+                    modified = true;
+                }
+            } else if (child.nodeType === 1 && !child.matches?.('button, a, input, textarea, select, script, style')) {
+                if (walk(child, copyOnly)) modified = true;
+            }
+        }
+        if (modified) el.dataset.linkProcessed = '1';
+        return modified;
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('td, th, .admin-card, .card, .detail-item, .info-block').forEach(walk);
+        addCellCopyButtons();
+    });
+
+    function addCellCopyButtons() {
+        document.querySelectorAll('td:not([data-no-cell-copy])').forEach(td => {
+            if (td.dataset.copyAdded || td.closest('[data-no-cell-copy], .no-copy')) return;
+            if (td.querySelector('button, a')) return;
+
+            const text = td.textContent.trim();
+            if (!text || text.length < 2) return;
+
+            td.dataset.copyAdded = '1';
+
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.title = 'Copiar: ' + text.slice(0, 60);
+            btn.innerHTML = '<i class="fas fa-copy" style="font-size:10px"></i>';
+            btn.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;vertical-align:middle;margin-left:4px;padding:0;line-height:1;flex-shrink:0';
+            btn.onmouseover = () => btn.style.background = '#64748b';
+            btn.onmouseout = () => btn.style.background = '#94a3b8';
+            btn.onclick = function(e) {
+                e.stopPropagation();
+                navigator.clipboard.writeText(text).then(() => {
+                    const orig = btn.innerHTML;
+                    btn.innerHTML = '<i class="fas fa-check" style="font-size:10px"></i>';
+                    setTimeout(() => btn.innerHTML = orig, 1500);
+                });
+            };
+
+            td.appendChild(btn);
+        });
+    }
+})();
