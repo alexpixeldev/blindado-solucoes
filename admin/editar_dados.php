@@ -218,6 +218,31 @@ if ($id) {
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style_modern.css">
+    <style>
+        .loc-card {
+            background: #FFFFFF;
+            border: 1px solid #e2e8f0;
+            border-radius: 1rem;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -4px rgba(0,0,0,0.05);
+        }
+        .loc-card-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            background: #FFFFFF;
+            border-bottom: 1px solid #e2e8f0;
+            border-radius: 1rem 1rem 0 0;
+        }
+        .loc-card-body {
+            padding: 1rem;
+        }
+        .loc-section + .loc-section {
+            border-top: 1px solid #e2e8f0;
+            margin-top: 12px;
+            padding-top: 12px;
+        }
+    </style>
 </head>
 <body class="h-full text-slate-800 antialiased">
     <div class="flex min-h-screen">
@@ -243,74 +268,83 @@ if ($id) {
                 <?php endif; ?>
 
                 <div class="max-w-4xl animate-slide-up">
-                    <div class="admin-card">
-                        <form method="POST" class="space-y-6">
-                            <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                                <div class="space-y-2">
-                                    <label class="form-label">Local (Edifício ou Base) *</label>
-                                    <select name="selecao_id" class="form-input appearance-none" required>
-                                        <option value="">Selecione o Local</option>
-                                        <?php foreach ($lista_selecao as $item): ?>
-                                            <?php 
-                                                $val = $item['id'] . '|' . $item['tipo_origem'];
-                                                $selected = '';
-                                                if ($item['tipo_origem'] === 'edificio' && ($dados['edificio_id'] ?? 0) == $item['id']) $selected = 'selected';
-                                                if ($item['tipo_origem'] === 'base' && ($dados['base_id'] ?? 0) == $item['id']) $selected = 'selected';
-                                            ?>
-                                            <option value="<?= $val ?>" <?= $selected ?>><?= htmlspecialchars($item['nome']) ?> (<?= ucfirst($item['tipo_origem']) ?>)</option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                </div>
-                                <div class="space-y-2">
-                                    <label class="form-label">Status</label>
-                                    <select name="status" class="form-input appearance-none">
-                                        <option value="ativo" <?= ($dados['status'] ?? '') === 'ativo' ? 'selected' : '' ?>>Ativo</option>
-                                        <option value="inativo" <?= ($dados['status'] ?? '') === 'inativo' ? 'selected' : '' ?>>Inativo</option>
-                                    </select>
-                                </div>
+                    <div class="loc-card">
+                        <div class="loc-card-header">
+                            <div class="min-w-0 flex-1">
+                                <span class="font-bold text-sm text-slate-900"><?= $id ? 'Editar' : 'Novo' ?> Registro: <?= ucfirst($tipo) ?></span>
                             </div>
+                        </div>
+                        <div class="loc-card-body">
+                            <form method="POST" class="space-y-6">
+                                <div class="loc-section">
+                                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                                        <div class="space-y-2">
+                                            <label class="form-label">Local (Edifício ou Base) *</label>
+                                            <select name="selecao_id" class="form-input appearance-none" required>
+                                                <option value="">Selecione o Local</option>
+                                                <?php foreach ($lista_selecao as $item): ?>
+                                                    <?php 
+                                                        $val = $item['id'] . '|' . $item['tipo_origem'];
+                                                        $selected = '';
+                                                        if ($item['tipo_origem'] === 'edificio' && ($dados['edificio_id'] ?? 0) == $item['id']) $selected = 'selected';
+                                                        if ($item['tipo_origem'] === 'base' && ($dados['base_id'] ?? 0) == $item['id']) $selected = 'selected';
+                                                    ?>
+                                                    <option value="<?= $val ?>" <?= $selected ?>><?= htmlspecialchars($item['nome']) ?> (<?= ucfirst($item['tipo_origem']) ?>)</option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </div>
+                                        <div class="space-y-2">
+                                            <label class="form-label">Status</label>
+                                            <select name="status" class="form-input appearance-none">
+                                                <option value="ativo" <?= ($dados['status'] ?? '') === 'ativo' ? 'selected' : '' ?>>Ativo</option>
+                                                <option value="inativo" <?= ($dados['status'] ?? '') === 'inativo' ? 'selected' : '' ?>>Inativo</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
 
                             <?php if ($tipo === 'faciais'): ?>
-                                <div class="space-y-4 pt-4 border-t border-slate-100">
-                                    <div class="space-y-2">
-                                        <label class="form-label">Marca do Equipamento</label>
-                                        <input type="text" name="marca_equipamento" class="form-input" value="<?= htmlspecialchars($dados['marca_equipamento'] ?? '') ?>">
-                                    </div>
-                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div class="loc-section">
+                                    <div class="space-y-4">
                                         <div class="space-y-2">
-                                            <label class="form-label">Usuário</label>
-                                            <input type="text" name="usuario_equipamento" class="form-input" value="<?= htmlspecialchars($dados['login'] ?? '') ?>">
+                                            <label class="form-label">Marca do Equipamento</label>
+                                            <input type="text" name="marca_equipamento" class="form-input" value="<?= htmlspecialchars($dados['marca_equipamento'] ?? '') ?>">
+                                        </div>
+                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            <div class="space-y-2">
+                                                <label class="form-label">Usuário</label>
+                                                <input type="text" name="usuario_equipamento" class="form-input" value="<?= htmlspecialchars($dados['login'] ?? '') ?>">
+                                            </div>
+                                            <div class="space-y-2">
+                                                <label class="form-label">Senha</label>
+                                                <input type="text" name="senha_equipamento" class="form-input" value="<?= htmlspecialchars($dados['senha'] ?? '') ?>">
+                                            </div>
                                         </div>
                                         <div class="space-y-2">
-                                            <label class="form-label">Senha</label>
-                                            <input type="text" name="senha_equipamento" class="form-input" value="<?= htmlspecialchars($dados['senha'] ?? '') ?>">
+                                            <label class="form-label">Acessos (IP e Observação)</label>
+                                            <div id="container-acessos" class="space-y-3">
+                                                <?php
+                                                $acessos = $dados['acessos_lista'] ?? [];
+                                                if (empty($acessos)) {
+                                                    $acessos = [['ip' => '', 'obs' => '']];
+                                                }
+                                                foreach ($acessos as $idx => $ac):
+                                                ?>
+                                                    <div class="flex gap-3">
+                                                        <input type="text" name="ip[]" class="form-input flex-1" placeholder="IP" value="<?= htmlspecialchars($ac['ip']) ?>">
+                                                        <input type="text" name="obs[]" class="form-input flex-[2]" placeholder="Observação" value="<?= htmlspecialchars($ac['obs']) ?>">
+                                                    </div>
+                                                <?php endforeach; ?>
+                                            </div>
+                                            <button type="button" onclick="addAcesso()" class="text-xs font-bold text-primary-600 hover:text-primary-700 mt-2"><i class="fas fa-plus mr-1"></i> Adicionar mais um acesso</button>
                                         </div>
-                                    </div>
-                                    <div class="space-y-2">
-                                        <label class="form-label">Acessos (IP e Observação)</label>
-                                        <div id="container-acessos" class="space-y-3">
-                                            <?php
-                                            $acessos = $dados['acessos_lista'] ?? [];
-                                            if (empty($acessos)) {
-                                                $acessos = [['ip' => '', 'obs' => '']];
-                                            }
-                                            foreach ($acessos as $idx => $ac):
-                                            ?>
-                                                <div class="flex gap-3">
-                                                    <input type="text" name="ip[]" class="form-input flex-1" placeholder="IP" value="<?= htmlspecialchars($ac['ip']) ?>">
-                                                    <input type="text" name="obs[]" class="form-input flex-[2]" placeholder="Observação" value="<?= htmlspecialchars($ac['obs']) ?>">
-                                                </div>
-                                            <?php endforeach; ?>
-                                        </div>
-                                        <button type="button" onclick="addAcesso()" class="text-xs font-bold text-primary-600 hover:text-primary-700 mt-2"><i class="fas fa-plus mr-1"></i> Adicionar mais um acesso</button>
                                     </div>
                                 </div>
                             <?php elseif ($tipo === 'ata'): ?>
-                                <div class="space-y-4 pt-4 border-t border-slate-100">
+                                <div class="loc-section">
                                     <div id="container-ata" class="space-y-6">
                                         <?php 
                                         $itens = $dados['itens_lista'] ?? [];
-                                        // Filtrar apenas itens com marca_modelo não vazio e reindexar
                                         $itens = array_values(array_filter($itens, function($item) {
                                             return !empty($item['marca_modelo']);
                                         }));
@@ -333,57 +367,63 @@ if ($id) {
                                     <button type="button" onclick="addAta()" class="text-xs font-bold text-primary-600 hover:text-primary-700 mt-2"><i class="fas fa-plus mr-1"></i> Adicionar mais um item ATA</button>
                                 </div>
                             <?php elseif ($tipo === 'radio_fibra'): ?>
-                                <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 pt-4 border-t border-slate-100">
-                                    <div class="space-y-2"><label class="form-label">IP</label><input type="text" name="ip" class="form-input" value="<?= htmlspecialchars($dados['ip'] ?? '') ?>"></div>
-                                    <div class="space-y-2"><label class="form-label">Local Detalhe</label><input type="text" name="local_detalhe" class="form-input" value="<?= htmlspecialchars($dados['local_detalhe'] ?? '') ?>"></div>
-                                    <div class="space-y-2"><label class="form-label">Modo</label><input type="text" name="modo" class="form-input" value="<?= htmlspecialchars($dados['modo'] ?? '') ?>"></div>
-                                    <div class="space-y-2"><label class="form-label">Marca</label><input type="text" name="marca" class="form-input" value="<?= htmlspecialchars($dados['marca'] ?? '') ?>"></div>
-                                    <div class="space-y-2"><label class="form-label">Modelo</label><input type="text" name="modelo" class="form-input" value="<?= htmlspecialchars($dados['modelo'] ?? '') ?>"></div>
-                                    <div class="space-y-2"><label class="form-label">Login</label><input type="text" name="login" class="form-input" value="<?= htmlspecialchars($dados['login'] ?? '') ?>"></div>
-                                    <div class="space-y-2"><label class="form-label">Senha</label><input type="text" name="senha" class="form-input" value="<?= htmlspecialchars($dados['senha'] ?? '') ?>"></div>
-                                    <div class="flex items-center gap-3 pt-4">
-                                        <input type="checkbox" name="is_pop" id="is_pop" class="h-5 w-5 rounded border-slate-300 text-primary-600 focus:ring-primary-500" <?= ($dados['is_pop'] ?? 0) ? 'checked' : '' ?>>
-                                        <label for="is_pop" class="text-sm font-bold text-slate-700">Este local é um POP?</label>
+                                <div class="loc-section">
+                                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                                        <div class="space-y-2"><label class="form-label">IP</label><input type="text" name="ip" class="form-input" value="<?= htmlspecialchars($dados['ip'] ?? '') ?>"></div>
+                                        <div class="space-y-2"><label class="form-label">Local Detalhe</label><input type="text" name="local_detalhe" class="form-input" value="<?= htmlspecialchars($dados['local_detalhe'] ?? '') ?>"></div>
+                                        <div class="space-y-2"><label class="form-label">Modo</label><input type="text" name="modo" class="form-input" value="<?= htmlspecialchars($dados['modo'] ?? '') ?>"></div>
+                                        <div class="space-y-2"><label class="form-label">Marca</label><input type="text" name="marca" class="form-input" value="<?= htmlspecialchars($dados['marca'] ?? '') ?>"></div>
+                                        <div class="space-y-2"><label class="form-label">Modelo</label><input type="text" name="modelo" class="form-input" value="<?= htmlspecialchars($dados['modelo'] ?? '') ?>"></div>
+                                        <div class="space-y-2"><label class="form-label">Login</label><input type="text" name="login" class="form-input" value="<?= htmlspecialchars($dados['login'] ?? '') ?>"></div>
+                                        <div class="space-y-2"><label class="form-label">Senha</label><input type="text" name="senha" class="form-input" value="<?= htmlspecialchars($dados['senha'] ?? '') ?>"></div>
+                                        <div class="flex items-center gap-3 pt-4">
+                                            <input type="checkbox" name="is_pop" id="is_pop" class="h-5 w-5 rounded border-slate-300 text-primary-600 focus:ring-primary-500" <?= ($dados['is_pop'] ?? 0) ? 'checked' : '' ?>>
+                                            <label for="is_pop" class="text-sm font-bold text-slate-700">Este local é um POP?</label>
+                                        </div>
                                     </div>
                                 </div>
                             <?php elseif ($tipo === 'dvr'): ?>
-                                <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 pt-4 border-t border-slate-100">
-                                    <div class="space-y-2"><label class="form-label">IP / Domínio</label><input type="text" name="ip_dominio" class="form-input" value="<?= htmlspecialchars($dados['ip_dominio'] ?? '') ?>"></div>
-                                    <div class="space-y-2"><label class="form-label">Cloud</label><input type="text" name="cloud" class="form-input" value="<?= htmlspecialchars($dados['cloud'] ?? '') ?>"></div>
-                                    <div class="space-y-2"><label class="form-label">Porta TCP</label><input type="text" name="porta_tcp" class="form-input" value="<?= htmlspecialchars($dados['porta_tcp'] ?? '') ?>"></div>
-                                    <div class="space-y-2"><label class="form-label">Porta HTTP</label><input type="text" name="porta_http" class="form-input" value="<?= htmlspecialchars($dados['porta_http'] ?? '') ?>"></div>
-                                    <div class="space-y-2"><label class="form-label">Login</label><input type="text" name="login" class="form-input" value="<?= htmlspecialchars($dados['login'] ?? '') ?>"></div>
-                                    <div class="space-y-2"><label class="form-label">Senha</label><input type="text" name="senha" class="form-input" value="<?= htmlspecialchars($dados['senha'] ?? '') ?>"></div>
-                                    <div class="space-y-2"><label class="form-label">Modelo</label><input type="text" name="modelo" class="form-input" value="<?= htmlspecialchars($dados['modelo'] ?? '') ?>"></div>
-                                    <div class="space-y-2"><label class="form-label">Senha Mibo</label><input type="text" name="senha_mibo" class="form-input" value="<?= htmlspecialchars($dados['senha_mibo'] ?? '') ?>"></div>
+                                <div class="loc-section">
+                                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                                        <div class="space-y-2"><label class="form-label">IP / Domínio</label><input type="text" name="ip_dominio" class="form-input" value="<?= htmlspecialchars($dados['ip_dominio'] ?? '') ?>"></div>
+                                        <div class="space-y-2"><label class="form-label">Cloud</label><input type="text" name="cloud" class="form-input" value="<?= htmlspecialchars($dados['cloud'] ?? '') ?>"></div>
+                                        <div class="space-y-2"><label class="form-label">Porta TCP</label><input type="text" name="porta_tcp" class="form-input" value="<?= htmlspecialchars($dados['porta_tcp'] ?? '') ?>"></div>
+                                        <div class="space-y-2"><label class="form-label">Porta HTTP</label><input type="text" name="porta_http" class="form-input" value="<?= htmlspecialchars($dados['porta_http'] ?? '') ?>"></div>
+                                        <div class="space-y-2"><label class="form-label">Login</label><input type="text" name="login" class="form-input" value="<?= htmlspecialchars($dados['login'] ?? '') ?>"></div>
+                                        <div class="space-y-2"><label class="form-label">Senha</label><input type="text" name="senha" class="form-input" value="<?= htmlspecialchars($dados['senha'] ?? '') ?>"></div>
+                                        <div class="space-y-2"><label class="form-label">Modelo</label><input type="text" name="modelo" class="form-input" value="<?= htmlspecialchars($dados['modelo'] ?? '') ?>"></div>
+                                        <div class="space-y-2"><label class="form-label">Senha Mibo</label><input type="text" name="senha_mibo" class="form-input" value="<?= htmlspecialchars($dados['senha_mibo'] ?? '') ?>"></div>
+                                    </div>
                                 </div>
                             <?php elseif ($tipo === 'ips'): ?>
-                                <div class="space-y-4 pt-4 border-t border-slate-100">
-                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <div class="space-y-2"><label class="form-label">Estação</label><input type="text" name="estacao" class="form-input" value="<?= htmlspecialchars($dados['estacao'] ?? '') ?>"></div>
-                                        <div class="space-y-2"><label class="form-label">IP</label><input type="text" name="ip" class="form-input" value="<?= htmlspecialchars($dados['ip'] ?? '') ?>"></div>
-                                    </div>
-                                    <div class="space-y-2">
-                                        <label class="form-label">Ramais (Número e Senha)</label>
-                                        <div id="container-ramais" class="space-y-3">
-                                            <?php 
-                                            $ramais = $dados['ramais_lista'] ?? [];
-                                            if (empty($ramais)) {
-                                                $ramais = [['numero' => '', 'senha' => '']];
-                                            }
-                                            foreach ($ramais as $idx => $rm): 
-                                            ?>
-                                                <div class="flex gap-3">
-                                                    <input type="text" name="ramal_num[]" class="form-input flex-1" placeholder="Número" value="<?= htmlspecialchars($rm['numero']) ?>">
-                                                    <input type="text" name="ramal_senha[]" class="form-input flex-1" placeholder="Senha" value="<?= htmlspecialchars($rm['senha']) ?>">
-                                                </div>
-                                            <?php endforeach; ?>
+                                <div class="loc-section">
+                                    <div class="space-y-4">
+                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            <div class="space-y-2"><label class="form-label">Estação</label><input type="text" name="estacao" class="form-input" value="<?= htmlspecialchars($dados['estacao'] ?? '') ?>"></div>
+                                            <div class="space-y-2"><label class="form-label">IP</label><input type="text" name="ip" class="form-input" value="<?= htmlspecialchars($dados['ip'] ?? '') ?>"></div>
                                         </div>
-                                        <button type="button" onclick="addRamal()" class="text-xs font-bold text-primary-600 hover:text-primary-700 mt-2"><i class="fas fa-plus mr-1"></i> Adicionar mais um ramal</button>
+                                        <div class="space-y-2">
+                                            <label class="form-label">Ramais (Número e Senha)</label>
+                                            <div id="container-ramais" class="space-y-3">
+                                                <?php 
+                                                $ramais = $dados['ramais_lista'] ?? [];
+                                                if (empty($ramais)) {
+                                                    $ramais = [['numero' => '', 'senha' => '']];
+                                                }
+                                                foreach ($ramais as $idx => $rm): 
+                                                ?>
+                                                    <div class="flex gap-3">
+                                                        <input type="text" name="ramal_num[]" class="form-input flex-1" placeholder="Número" value="<?= htmlspecialchars($rm['numero']) ?>">
+                                                        <input type="text" name="ramal_senha[]" class="form-input flex-1" placeholder="Senha" value="<?= htmlspecialchars($rm['senha']) ?>">
+                                                    </div>
+                                                <?php endforeach; ?>
+                                            </div>
+                                            <button type="button" onclick="addRamal()" class="text-xs font-bold text-primary-600 hover:text-primary-700 mt-2"><i class="fas fa-plus mr-1"></i> Adicionar mais um ramal</button>
+                                        </div>
                                     </div>
                                 </div>
                             <?php elseif ($tipo === 'ramais'): ?>
-                                <div class="space-y-4 pt-4 border-t border-slate-100">
+                                <div class="loc-section">
                                     <div id="container-ramais-multiplos" class="space-y-4">
                                         <?php 
                                         $ramais_multi = $dados['ramais_múltiplos'] ?? [];
@@ -414,15 +454,17 @@ if ($id) {
                             <?php endif; ?>
 
                             <?php if ($tipo !== 'ramais'): ?>
-                            <div class="space-y-2 pt-4 border-t border-slate-100">
+                            <div class="loc-section">
                                 <label class="form-label">Observações Gerais</label>
                                 <textarea name="observacao" class="form-input min-h-[100px]"><?= htmlspecialchars($dados['observacao'] ?? '') ?></textarea>
                             </div>
                             <?php endif; ?>
 
-                            <div class="pt-6 border-t border-slate-100 flex flex-col sm:flex-row gap-3">
-                                <button type="submit" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#22c55e;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Salvar"><i class="fas fa-save" style="font-size:10px"></i></button>
-                                <a href="controle_dados.php?tipo=<?= $tipo ?>" class="btn-secondary text-center"><span>Cancelar</span></a>
+                            <div class="loc-section">
+                                <div class="flex flex-col sm:flex-row gap-3">
+                                    <button type="submit" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#22c55e;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Salvar"><i class="fas fa-save" style="font-size:10px"></i></button>
+                                    <a href="controle_dados.php?tipo=<?= $tipo ?>" class="btn-secondary text-center"><span>Cancelar</span></a>
+                                </div>
                             </div>
                         </form>
                     </div>
