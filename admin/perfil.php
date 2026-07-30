@@ -162,10 +162,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             </div>
 
                             <div class="pt-6">
-                                <button type="submit" class="btn-primary w-full sm:w-auto px-8">
-                                    <i class="fas fa-save"></i>
-                                    <span>Salvar Alterações</span>
-                                </button>
+                                <button type="submit" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#22c55e;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Salvar"><i class="fas fa-save" style="font-size:10px"></i></button>
                             </div>
                         </form>
                     </div>

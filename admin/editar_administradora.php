@@ -137,10 +137,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             </div>
 
                             <div class="pt-6 border-t border-slate-100 flex flex-col sm:flex-row gap-3">
-                                <button type="submit" class="btn-primary flex-1">
-                                    <i class="fas fa-save"></i>
-                                    <span>Salvar Alterações</span>
-                                </button>
+                                <button type="submit" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#22c55e;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Salvar"><i class="fas fa-save" style="font-size:10px"></i></button>
                                 <a href="edificios.php?tab=administradoras" class="btn-secondary text-center">
                                     <span>Cancelar</span>
                                 </a>

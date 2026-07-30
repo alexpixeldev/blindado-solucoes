@@ -121,9 +121,8 @@ $stmt->close();
                                                     </span>
                                                 </td>
                                                 <td class="text-center">
-                                                    <a href="../uploads/ferias/<?php echo htmlspecialchars($f['arquivo']); ?>" target="_blank" class="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-bold text-white hover:bg-primary-700 transition-all shadow-sm">
-                                                        <i class="fas fa-file-pdf"></i>
-                                                        <span>Visualizar</span>
+                                                    <a href="../uploads/ferias/<?php echo htmlspecialchars($f['arquivo']); ?>" target="_blank" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#3b82f6;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;text-decoration:none" onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#3b82f6'" title="Visualizar">
+                                                        <i class="fas fa-file-pdf" style="font-size:10px"></i>
                                                     </a>
                                                 </td>
                                             </tr>

@@ -147,9 +147,8 @@ $stmt->close();
                                                             <i class="fas fa-plus"></i>
                                                             <span>Adicionar</span>
                                                         </a>
-                                                        <a href="ver_contracheques.php?id=<?= $colab['id'] ?>" class="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-600 hover:text-white transition-all">
-                                                            <i class="fas fa-eye"></i>
-                                                            <span>Visualizar</span>
+                                                        <a href="ver_contracheques.php?id=<?= $colab['id'] ?>" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#3b82f6;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;text-decoration:none" onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#3b82f6'" title="Visualizar">
+                                                            <i class="fas fa-eye" style="font-size:10px"></i>
                                                         </a>
                                                     </div>
                                                 </td>

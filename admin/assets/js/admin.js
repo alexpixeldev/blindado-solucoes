@@ -655,14 +655,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const copyBtn = document.createElement('button');
         copyBtn.type = 'button';
-        copyBtn.className = 'ml-1 px-2 py-0.5 text-[10px] font-bold bg-slate-700 text-white rounded hover:bg-slate-800 transition-colors';
-        copyBtn.textContent = 'COPIAR';
+        copyBtn.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0';
+        copyBtn.innerHTML = '<i class="fas fa-copy" style="font-size:10px"></i>';
+        copyBtn.title = 'Copiar: ' + matchedText.slice(0, 60);
+        copyBtn.onmouseover = () => copyBtn.style.background = '#64748b';
+        copyBtn.onmouseout = () => copyBtn.style.background = '#94a3b8';
         copyBtn.onclick = function(e) {
             e.stopPropagation();
             navigator.clipboard.writeText(matchedText).then(() => {
-                const orig = copyBtn.textContent;
-                copyBtn.textContent = 'COPIADO!';
-                setTimeout(() => copyBtn.textContent = orig, 1500);
+                const orig = copyBtn.innerHTML;
+                copyBtn.innerHTML = '<i class="fas fa-check" style="font-size:10px"></i>';
+                setTimeout(() => copyBtn.innerHTML = orig, 1500);
             });
         };
         wrapper.appendChild(copyBtn);
@@ -670,8 +673,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!copyOnly) {
             const openBtn = document.createElement('button');
             openBtn.type = 'button';
-            openBtn.className = 'ml-1 px-2 py-0.5 text-[10px] font-bold bg-primary-600 text-white rounded hover:bg-primary-700 transition-colors';
-            openBtn.textContent = 'ABRIR';
+            openBtn.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#3b82f6;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0';
+            openBtn.innerHTML = '<i class="fas fa-external-link-alt" style="font-size:10px"></i>';
+            openBtn.title = 'Abrir: ' + link;
+            openBtn.onmouseover = () => openBtn.style.background = '#2563eb';
+            openBtn.onmouseout = () => openBtn.style.background = '#3b82f6';
             openBtn.onclick = function(e) {
                 e.stopPropagation();
                 window.open(link, '_blank');
@@ -767,4 +773,19 @@ document.addEventListener('DOMContentLoaded', () => {
             td.appendChild(btn);
         });
     }
-})();
+    })();
+
+    function copiarTexto(texto, btn) {
+        const origHTML = btn.innerHTML;
+        navigator.clipboard.writeText(texto).then(() => {
+            btn.innerHTML = '<i class="fas fa-check" style="font-size:10px"></i>';
+            setTimeout(() => {
+                btn.innerHTML = origHTML;
+            }, 1500);
+        }).catch(() => {
+            btn.innerHTML = '<i class="fas fa-times" style="font-size:10px"></i>';
+            setTimeout(() => {
+                btn.innerHTML = origHTML;
+            }, 1500);
+        });
+    }

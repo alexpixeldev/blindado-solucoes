@@ -163,10 +163,7 @@ $situacoes = $conn->query("SELECT nome FROM situacoes_entrega ORDER BY nome")->f
                                 </div>
                             </div>
                             <div class="flex flex-col gap-4 pt-6 border-t border-slate-100 sm:flex-row sm:items-center sm:justify-end">
-                                <button type="submit" class="btn-primary">
-                                    <i class="fas fa-save"></i>
-                                    <span>Salvar Alterações</span>
-                                </button>
+                                <button type="submit" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#22c55e;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Salvar"><i class="fas fa-save" style="font-size:10px"></i></button>
                                 <a href="consultar_entrega.php" class="btn-secondary text-center"><span>Cancelar</span></a>
                             </div>
                         </form>

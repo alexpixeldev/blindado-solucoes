@@ -264,10 +264,7 @@ if (isset($_SESSION['sindico_duplicado'])) {
                             </div>
 
                             <div class="pt-6 border-t border-slate-100 flex flex-col sm:flex-row gap-3">
-                                <button type="submit" name="add_edificio" class="btn-primary flex-1">
-                                    <i class="fas fa-save"></i>
-                                    <span>Cadastrar Edifício</span>
-                                </button>
+                                <button type="submit" name="add_edificio" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#22c55e;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Salvar"><i class="fas fa-save" style="font-size:10px"></i></button>
                                 <a href="edificios.php?tab=edificios" class="btn-secondary text-center">
                                     <span>Cancelar</span>
                                 </a>

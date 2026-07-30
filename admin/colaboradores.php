@@ -202,9 +202,8 @@ function calcular_horas($inicio, $fim) {
                                                         <td class="font-bold text-slate-900"><?= $meses[$c['mes']] ?> / <?= $c['ano'] ?></td>
                                                         <td class="text-slate-500"><?= htmlspecialchars($c['descricao'] ?: 'Contracheque Mensal') ?></td>
                                                         <td class="text-right">
-                                                            <a href="../uploads/contracheques/<?= $c['arquivo'] ?>" target="_blank" class="inline-flex items-center gap-2 px-3 py-1.5 bg-primary-50 text-primary-700 rounded-lg font-bold text-xs hover:bg-primary-600 hover:text-white transition-all">
-                                                                <i class="fas fa-download"></i>
-                                                                <span>Baixar PDF</span>
+                                                            <a href="../uploads/contracheques/<?= $c['arquivo'] ?>" target="_blank" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#3b82f6;color:#fff;font-size:10px;cursor:pointer;vertical-align:middle;padding:0;line-height:1;flex-shrink:0;text-decoration:none" onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#3b82f6'" title="Baixar PDF">
+                                                                <i class="fas fa-download" style="font-size:10px"></i>
                                                             </a>
                                                         </td>
                                                     </tr>

@@ -154,9 +154,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <div class="flex-1 min-w-0">
                                         <p class="text-sm font-medium text-slate-900 truncate"><?= htmlspecialchars($contracheque['arquivo']) ?></p>
                                     </div>
-                                    <a href="../uploads/contracheques/<?= htmlspecialchars($contracheque['arquivo']) ?>" target="_blank" class="btn-secondary py-1.5 px-3 text-xs">
-                                        <i class="fas fa-download mr-1"></i>
-                                        Baixar
+                                    <a href="../uploads/contracheques/<?= htmlspecialchars($contracheque['arquivo']) ?>" target="_blank" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#3b82f6;color:#fff;font-size:10px;cursor:pointer;vertical-align:middle;padding:0;line-height:1;flex-shrink:0;text-decoration:none" onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#3b82f6'" title="Baixar">
+                                        <i class="fas fa-download" style="font-size:10px"></i>
                                     </a>
                                 </div>
                             </div>
@@ -177,10 +176,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             </div>
 
                             <div class="pt-6 border-t border-slate-100 flex flex-col sm:flex-row gap-3">
-                                <button type="submit" class="btn-primary flex-1">
-                                    <i class="fas fa-save"></i>
-                                    <span>Salvar Novo Arquivo</span>
-                                </button>
+                                <button type="submit" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#22c55e;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Salvar"><i class="fas fa-save" style="font-size:10px"></i></button>
                                 <a href="contracheques_admin.php" class="btn-secondary text-center">
                                     <span>Cancelar</span>
                                 </a>

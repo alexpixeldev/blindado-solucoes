@@ -145,6 +145,26 @@ function format_legacy_text($text) {
     return $text;
 }
 
+function btnCopiar($texto) {
+    $js = json_encode($texto, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
+    return '<button type="button" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;vertical-align:middle;padding:0;line-height:1;flex-shrink:0" onclick=\'copiarTexto(' . $js . ', this)\' onmouseover="this.style.background=\'#64748b\'" onmouseout="this.style.background=\'#94a3b8\'" title="Copiar"><i class="fas fa-copy"></i></button>';
+}
+
+function btnAbrir($valor) {
+    if (empty($valor)) return '';
+    $link = (strpos($valor, 'http') === 0) ? $valor : 'http://' . $valor;
+    return '<a href="' . htmlspecialchars($link) . '" target="_blank" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#3b82f6;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;text-decoration:none" onmouseover="this.style.background=\'#2563eb\'" onmouseout="this.style.background=\'#3b82f6\'" title="Abrir: ' . htmlspecialchars($link) . '"><i class="fas fa-external-link-alt" style="font-size:10px"></i></a>';
+}
+
+function isIpOrUrl($valor) {
+    if (empty($valor)) return false;
+    if (filter_var($valor, FILTER_VALIDATE_IP)) return true;
+    if (filter_var($valor, FILTER_VALIDATE_URL)) return true;
+    if (preg_match('/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/', $valor)) return true;
+    if (preg_match('/^[a-zA-Z0-9][-a-zA-Z0-9]*\.[a-zA-Z]{2,}/', $valor)) return true;
+    return false;
+}
+
 /**
  * Função para renderizar dados que podem ser JSON ou texto simples
  */
@@ -152,7 +172,7 @@ function render_data_field($content, $type) {
     if (empty($content)) return '<span class="text-slate-400 italic">---</span>';
     $decoded = json_decode($content, true);
     if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-        $html = '<div class="overflow-x-auto mt-2"><table class="min-w-full divide-y divide-slate-200 text-[11px] border border-slate-100 rounded-lg overflow-hidden">';
+        $html = '<div class="overflow-x-auto mt-2"><table data-no-cell-copy class="min-w-full divide-y divide-slate-200 text-[11px] border border-slate-100 rounded-lg overflow-hidden">';
         if (isset($decoded[0]) && is_array($decoded[0])) {
             $headers = array_keys($decoded[0]);
             $html .= '<thead class="bg-slate-50"><tr>';
@@ -162,7 +182,13 @@ function render_data_field($content, $type) {
                 $html .= '<tr>';
                 foreach ($headers as $h) {
                     $val = $item[$h] ?? '';
-                    $html .= '<td class="px-3 py-2 whitespace-nowrap text-slate-700 font-medium">' . htmlspecialchars(format_legacy_text($val)) . '</td>';
+                    $display = htmlspecialchars(format_legacy_text($val));
+                    $extra_attrs = '';
+                    if (isIpOrUrl($val)) {
+                        $display .= '<span class="copy-actions" style="display:inline-flex;gap:2px">' . btnAbrir($val) . btnCopiar($val) . '</span>';
+                        $extra_attrs = ' data-link-processed="1"';
+                    }
+                    $html .= '<td class="px-3 py-2 whitespace-nowrap text-slate-700 font-medium"' . $extra_attrs . '>' . $display . '</td>';
                 }
                 $html .= '</tr>';
             }
@@ -170,7 +196,13 @@ function render_data_field($content, $type) {
             $html .= '<tbody class="bg-white divide-y divide-slate-100">';
             foreach ($decoded as $key => $val) {
                 if (is_array($val)) $val = json_encode($val);
-                $html .= '<tr><td class="px-3 py-2 bg-slate-50 font-bold text-slate-500 w-24">' . htmlspecialchars(ucfirst($key)) . '</td><td class="px-3 py-2 text-slate-700 font-medium">' . htmlspecialchars(format_legacy_text($val)) . '</td></tr>';
+                $display = htmlspecialchars(format_legacy_text($val));
+                $extra_attrs = '';
+                if (isIpOrUrl($val)) {
+                    $display .= '<span class="copy-actions" style="display:inline-flex;gap:2px">' . btnAbrir($val) . btnCopiar($val) . '</span>';
+                    $extra_attrs = ' data-link-processed="1"';
+                }
+                $html .= '<tr><td class="px-3 py-2 bg-slate-50 font-bold text-slate-500 w-24">' . htmlspecialchars(ucfirst($key)) . '</td><td class="px-3 py-2 text-slate-700 font-medium"' . $extra_attrs . '>' . $display . '</td></tr>';
             }
         }
         $html .= '</tbody></table></div>';
@@ -201,6 +233,39 @@ function render_data_field($content, $type) {
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style_modern.css">
+    <style>
+        .copy-row {
+            transition: background 0.15s ease;
+            border-radius: 0.25rem;
+            margin: 0 -0.25rem;
+            padding: 0.125rem 0.25rem;
+            display:grid;
+            grid-template-columns:1fr auto;
+            align-items:center;
+            gap:4px;
+        }
+        .copy-row:hover {
+            background: #f1f5f9;
+        }
+        .copy-row > :last-child {
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.15s ease;
+        }
+        .copy-row:hover > :last-child {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .copy-actions {
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.15s ease;
+        }
+        tr:hover .copy-actions {
+            opacity: 1;
+            pointer-events: auto;
+        }
+    </style>
 </head>
 <body class="h-full text-slate-800 antialiased">
     <div class="flex min-h-screen">
@@ -357,42 +422,42 @@ function render_data_field($content, $type) {
                                     <div class="space-y-4">
                                         <?php if ($tipo_dados === 'faciais'): ?>
                                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-                                                <div class="space-y-1"><span class="text-[10px] font-bold uppercase text-slate-400">Marca Equipamento</span><p class="text-sm font-bold text-slate-700"><?= htmlspecialchars(format_legacy_text($row['marca_equipamento'])) ?></p></div>
-                                                <div class="space-y-1"><span class="text-[10px] font-bold uppercase text-slate-400">Usuário</span><p class="text-sm font-bold text-slate-700"><?= htmlspecialchars(format_legacy_text($row['login'] ?? '')) ?></p></div>
-                                                <div class="space-y-1"><span class="text-[10px] font-bold uppercase text-slate-400">Senha</span><p class="text-sm font-bold text-slate-700"><?= htmlspecialchars(format_legacy_text($row['senha'] ?? '')) ?></p></div>
+                                                <div class="space-y-1"><span class="text-[10px] font-bold uppercase text-slate-400">Marca Equipamento</span><?php if (!empty($row['marca_equipamento'])): ?><div class="copy-row"><p class="text-sm font-bold text-slate-700"><?= htmlspecialchars(format_legacy_text($row['marca_equipamento'])) ?></p><?= btnCopiar($row['marca_equipamento']) ?></div><?php else: ?><p class="text-sm font-bold text-slate-400">---</p><?php endif; ?></div>
+                                                <div class="space-y-1"><span class="text-[10px] font-bold uppercase text-slate-400">Usuário</span><?php if (!empty($row['login'])): ?><div class="copy-row"><p class="text-sm font-bold text-slate-700"><?= htmlspecialchars(format_legacy_text($row['login'])) ?></p><?= btnCopiar($row['login']) ?></div><?php else: ?><p class="text-sm font-bold text-slate-400">---</p><?php endif; ?></div>
+                                                <div class="space-y-1"><span class="text-[10px] font-bold uppercase text-slate-400">Senha</span><?php if (!empty($row['senha'])): ?><div class="copy-row"><p class="text-sm font-bold text-slate-700"><?= htmlspecialchars(format_legacy_text($row['senha'])) ?></p><?= btnCopiar($row['senha']) ?></div><?php else: ?><p class="text-sm font-bold text-slate-400">---</p><?php endif; ?></div>
                                             </div>
                                             <div class="space-y-1"><span class="text-[10px] font-bold uppercase text-slate-400">Detalhamento de Acessos</span><?= render_data_field($row['acessos'], 'faciais') ?></div>
                                         <?php elseif ($tipo_dados === 'ata'): ?>
                                             <div class="space-y-1"><span class="text-[10px] font-bold uppercase text-slate-400">Configurações ATA</span><?= render_data_field($row['itens_ata'], 'ata') ?></div>
                                         <?php elseif ($tipo_dados === 'ips'): ?>
                                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-                                                <div class="space-y-1"><span class="text-[10px] font-bold uppercase text-slate-400">Estação</span><p class="text-sm font-bold text-slate-700"><?= htmlspecialchars(format_legacy_text($row['estacao'])) ?></p></div>
-                                                <div class="space-y-1"><span class="text-[10px] font-bold uppercase text-slate-400">IP Estação</span><p class="text-sm font-bold text-primary-600 bg-primary-50 px-2 py-1 rounded"><?= htmlspecialchars($row['ip']) ?></p></div>
+                                                <div class="space-y-1"><span class="text-[10px] font-bold uppercase text-slate-400">Estação</span><?php if (!empty($row['estacao'])): ?><div class="copy-row"><p class="text-sm font-bold text-slate-700"><?= htmlspecialchars(format_legacy_text($row['estacao'])) ?></p><?= btnCopiar($row['estacao']) ?></div><?php else: ?><p class="text-sm font-bold text-slate-400">---</p><?php endif; ?></div>
+                                                <div class="space-y-1"><span class="text-[10px] font-bold uppercase text-slate-400">IP Estação</span><?php if (!empty($row['ip'])): ?><div class="copy-row" data-link-processed="1"><p class="text-sm font-bold text-primary-600 bg-primary-50 px-2 py-1 rounded"><?= htmlspecialchars($row['ip']) ?></p><span style="display:inline-flex;gap:2px"><?= btnAbrir($row['ip']) ?><?= btnCopiar($row['ip']) ?></span></div><?php else: ?><p class="text-sm font-bold text-slate-400">---</p><?php endif; ?></div>
                                                 <div class="space-y-1"><span class="text-[10px] font-bold uppercase text-slate-400">IP Estação</span><p class="text-sm font-bold text-primary-600"><?= htmlspecialchars($row['ip']) ?></p></div>
                                             </div>
                                             <div class="space-y-1"><span class="text-[10px] font-bold uppercase text-slate-400">Ramais Configurados</span><?= render_data_field($row['ramais'], 'ips') ?></div>
                                         <?php elseif ($tipo_dados === 'radio_fibra'): ?>
                                             <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                                                <div class="space-y-1"><span class="text-[10px] font-bold uppercase text-slate-400">IP</span><p class="text-sm font-bold text-primary-600"><?= htmlspecialchars($row['ip']) ?></p></div>
-                                                <div class="space-y-1"><span class="text-[10px] font-bold uppercase text-slate-400">Marca/Modelo</span><p class="text-sm font-bold text-slate-700"><?= htmlspecialchars(format_legacy_text($row['marca'] . ' ' . $row['modelo'])) ?></p></div>
-                                                <div class="space-y-1"><span class="text-[10px] font-bold uppercase text-slate-400">Usuário</span><p class="text-sm font-bold text-slate-700"><?= htmlspecialchars(format_legacy_text($row['login'])) ?></p></div>
-                                                <div class="space-y-1"><span class="text-[10px] font-bold uppercase text-slate-400">Senha</span><p class="text-sm font-bold text-slate-700"><?= htmlspecialchars(format_legacy_text($row['senha'])) ?></p></div>
-                                                <div class="space-y-1"><span class="text-[10px] font-bold uppercase text-slate-400">Local</span><p class="text-sm font-bold text-slate-700"><?= htmlspecialchars(format_legacy_text($row['local_detalhe'])) ?></p></div>
+                                                <div class="space-y-1"><span class="text-[10px] font-bold uppercase text-slate-400">IP</span><?php if (!empty($row['ip'])): ?><div class="copy-row" data-link-processed="1"><p class="text-sm font-bold text-primary-600"><?= htmlspecialchars($row['ip']) ?></p><span style="display:inline-flex;gap:2px"><?= btnAbrir($row['ip']) ?><?= btnCopiar($row['ip']) ?></span></div><?php else: ?><p class="text-sm font-bold text-slate-400">---</p><?php endif; ?></div>
+                                                <div class="space-y-1"><span class="text-[10px] font-bold uppercase text-slate-400">Marca/Modelo</span><?php $rf_mm = format_legacy_text($row['marca'] . ' ' . $row['modelo']); if (!empty(trim($rf_mm))): ?><div class="copy-row"><p class="text-sm font-bold text-slate-700"><?= htmlspecialchars($rf_mm) ?></p><?= btnCopiar($rf_mm) ?></div><?php else: ?><p class="text-sm font-bold text-slate-400">---</p><?php endif; ?></div>
+                                                <div class="space-y-1"><span class="text-[10px] font-bold uppercase text-slate-400">Usuário</span><?php if (!empty($row['login'])): ?><div class="copy-row"><p class="text-sm font-bold text-slate-700"><?= htmlspecialchars(format_legacy_text($row['login'])) ?></p><?= btnCopiar($row['login']) ?></div><?php else: ?><p class="text-sm font-bold text-slate-400">---</p><?php endif; ?></div>
+                                                <div class="space-y-1"><span class="text-[10px] font-bold uppercase text-slate-400">Senha</span><?php if (!empty($row['senha'])): ?><div class="copy-row"><p class="text-sm font-bold text-slate-700"><?= htmlspecialchars(format_legacy_text($row['senha'])) ?></p><?= btnCopiar($row['senha']) ?></div><?php else: ?><p class="text-sm font-bold text-slate-400">---</p><?php endif; ?></div>
+                                                <div class="space-y-1"><span class="text-[10px] font-bold uppercase text-slate-400">Local</span><?php if (!empty($row['local_detalhe'])): ?><div class="copy-row"><p class="text-sm font-bold text-slate-700"><?= htmlspecialchars(format_legacy_text($row['local_detalhe'])) ?></p><?= btnCopiar($row['local_detalhe']) ?></div><?php else: ?><p class="text-sm font-bold text-slate-400">---</p><?php endif; ?></div>
                                             </div>
                                         <?php elseif ($tipo_dados === 'dvr'): ?>
                                             <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                                                <div class="space-y-1"><span class="text-[10px] font-bold uppercase text-slate-400">IP/Domínio</span><p class="text-sm font-bold text-primary-600"><?= htmlspecialchars($row['ip_dominio']) ?></p></div>
-                                                <div class="space-y-1"><span class="text-[10px] font-bold uppercase text-slate-400">Cloud</span><p class="text-sm font-bold text-slate-700"><?= htmlspecialchars(format_legacy_text($row['cloud'])) ?></p></div>
-                                                <div class="space-y-1"><span class="text-[10px] font-bold uppercase text-slate-400">Modelo</span><p class="text-sm font-bold text-slate-700"><?= htmlspecialchars(format_legacy_text($row['modelo'])) ?></p></div>
-                                                <div class="space-y-1"><span class="text-[10px] font-bold uppercase text-slate-400">Usuário</span><p class="text-sm font-bold text-slate-700"><?= htmlspecialchars(format_legacy_text($row['login'])) ?></p></div>
-                                                <div class="space-y-1"><span class="text-[10px] font-bold uppercase text-slate-400">Senha</span><p class="text-sm font-bold text-slate-700"><?= htmlspecialchars(format_legacy_text($row['senha'])) ?></p></div>
+                                                <div class="space-y-1"><span class="text-[10px] font-bold uppercase text-slate-400">IP/Domínio</span><?php if (!empty($row['ip_dominio'])): ?><div class="copy-row" data-link-processed="1"><p class="text-sm font-bold text-primary-600"><?= htmlspecialchars($row['ip_dominio']) ?></p><span style="display:inline-flex;gap:2px"><?= btnAbrir($row['ip_dominio']) ?><?= btnCopiar($row['ip_dominio']) ?></span></div><?php else: ?><p class="text-sm font-bold text-slate-400">---</p><?php endif; ?></div>
+                                                <div class="space-y-1"><span class="text-[10px] font-bold uppercase text-slate-400">Cloud</span><?php if (!empty($row['cloud'])): ?><div class="copy-row"><p class="text-sm font-bold text-slate-700"><?= htmlspecialchars(format_legacy_text($row['cloud'])) ?></p><?= btnCopiar($row['cloud']) ?></div><?php else: ?><p class="text-sm font-bold text-slate-400">---</p><?php endif; ?></div>
+                                                <div class="space-y-1"><span class="text-[10px] font-bold uppercase text-slate-400">Modelo</span><?php if (!empty($row['modelo'])): ?><div class="copy-row"><p class="text-sm font-bold text-slate-700"><?= htmlspecialchars(format_legacy_text($row['modelo'])) ?></p><?= btnCopiar($row['modelo']) ?></div><?php else: ?><p class="text-sm font-bold text-slate-400">---</p><?php endif; ?></div>
+                                                <div class="space-y-1"><span class="text-[10px] font-bold uppercase text-slate-400">Usuário</span><?php if (!empty($row['login'])): ?><div class="copy-row"><p class="text-sm font-bold text-slate-700"><?= htmlspecialchars(format_legacy_text($row['login'])) ?></p><?= btnCopiar($row['login']) ?></div><?php else: ?><p class="text-sm font-bold text-slate-400">---</p><?php endif; ?></div>
+                                                <div class="space-y-1"><span class="text-[10px] font-bold uppercase text-slate-400">Senha</span><?php if (!empty($row['senha'])): ?><div class="copy-row"><p class="text-sm font-bold text-slate-700"><?= htmlspecialchars(format_legacy_text($row['senha'])) ?></p><?= btnCopiar($row['senha']) ?></div><?php else: ?><p class="text-sm font-bold text-slate-400">---</p><?php endif; ?></div>
                                             </div>
                                         <?php elseif ($tipo_dados === 'ramais'): ?>
                                             <div class="flex flex-wrap gap-2">
                                                 <?php foreach ($row['ramais_grouped'] as $ramal): ?>
-                                                    <div class="bg-slate-50 border border-slate-100 rounded-lg px-3 py-2 flex flex-col">
+                                                    <div class="bg-slate-50 border border-slate-100 rounded-lg px-3 py-2 flex flex-col" style="position:relative">
                                                         <span class="text-[9px] font-bold uppercase text-slate-400"><?= htmlspecialchars(format_legacy_text($ramal['categoria_nome'])) ?></span>
-                                                        <span class="text-sm font-bold text-slate-700"><?= htmlspecialchars(format_legacy_text($ramal['numero_ramal'])) ?></span>
+                                                        <div class="copy-row"><span class="text-sm font-bold text-slate-700"><?= htmlspecialchars(format_legacy_text($ramal['numero_ramal'])) ?></span><?= btnCopiar($ramal['numero_ramal']) ?></div>
                                                     </div>
                                                 <?php endforeach; ?>
                                             </div>
@@ -401,7 +466,7 @@ function render_data_field($content, $type) {
                                         <?php if (!empty($row['observacao'])): ?>
                                             <div class="mt-4 p-3 bg-slate-50 rounded-xl border border-slate-100">
                                                 <span class="text-[10px] font-bold uppercase text-slate-400 block mb-1">Observações Gerais</span>
-                                                <p class="text-xs text-slate-600 italic"><?= nl2br(htmlspecialchars(format_legacy_text($row['observacao']))) ?></p>
+                                                <div class="copy-row" style="align-items:start"><p class="text-xs text-slate-600 italic"><?= nl2br(htmlspecialchars(format_legacy_text($row['observacao']))) ?></p><?= btnCopiar($row['observacao']) ?></div>
                                             </div>
                                         <?php endif; ?>
                                     </div>

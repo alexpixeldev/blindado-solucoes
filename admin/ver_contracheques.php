@@ -136,10 +136,7 @@ $meses = [
                                                 <span class="text-sm font-medium text-slate-600"><?= htmlspecialchars($meses[$cc['mes']]) ?></span>
                                             </td>
                                             <td class="px-6 py-4">
-                                                <a href="../uploads/contracheques/<?= htmlspecialchars($cc['arquivo']) ?>" target="_blank" class="inline-flex items-center text-xs font-bold text-primary-600 hover:text-primary-700">
-                                                    <i class="fas fa-external-link-alt mr-1.5"></i>
-                                                    Visualizar Arquivo
-                                                </a>
+                                                <a href="../uploads/contracheques/<?= htmlspecialchars($cc['arquivo']) ?>" target="_blank" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#3b82f6;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;text-decoration:none" onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#3b82f6'" title="Visualizar"><i class="fas fa-external-link-alt" style="font-size:10px"></i></a>
                                             </td>
                                             <td class="px-6 py-4">
                                                 <div class="flex items-center justify-center gap-2">

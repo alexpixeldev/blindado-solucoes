@@ -5,7 +5,7 @@ require_once 'components/modern_calendar.php';
 
 function btnCopiar($texto) {
     $js = json_encode($texto, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
-    return '<button type="button" class="flex-shrink-0 w-16 text-center px-2 py-0.5 text-[10px] font-bold bg-slate-700 text-white rounded hover:bg-slate-800 transition-colors" onclick=\'copiarTexto(' . $js . ', this)\'>COPIAR</button>';
+    return '<button type="button" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;vertical-align:middle;padding:0;line-height:1;flex-shrink:0" onclick=\'copiarTexto(' . $js . ', this)\' onmouseover="this.style.background=\'#64748b\'" onmouseout="this.style.background=\'#94a3b8\'" title="Copiar"><i class="fas fa-copy"></i></button>';
 }
 
 $usuario_categoria = $_SESSION['usuario_categoria'] ?? '';
@@ -493,20 +493,20 @@ if (!empty($locacaoIds)) {
                                                           <?php endif; ?>
                                                       </div>
                                                       <?php if (!empty($inquilino['selfie'])): ?>
-                                                      <a href="<?= htmlspecialchars($inquilino['selfie']) ?>" download="selfie-<?= preg_replace('/[^a-zA-Z0-9]/', '_', $inquilino['nome']) ?>.jpg" class="flex-shrink-0 w-24 text-center px-2 py-0.5 text-[10px] font-bold bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors whitespace-nowrap">
-                                                          <i class="fas fa-download" style="font-size:9px;margin-right:2px"></i>SALVAR IMAGEM
+                                                      <a href="<?= htmlspecialchars($inquilino['selfie']) ?>" download="selfie-<?= preg_replace('/[^a-zA-Z0-9]/', '_', $inquilino['nome']) ?>.jpg" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#3b82f6;color:#fff;font-size:10px;cursor:pointer;vertical-align:middle;padding:0;line-height:1;flex-shrink:0;text-decoration:none" onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#3b82f6'" title="Salvar imagem">
+                                                          <i class="fas fa-download" style="font-size:10px"></i>
                                                       </a>
                                                       <?php endif; ?>
                                                       <?= btnCopiar($inquilino['nome']) ?>
                                                   </div>
-                                                 <div style="display:grid;grid-template-columns:1fr auto;align-items:center;gap:4px">
-                                                     <span style="font-size:0.65rem;color:#64748b">Doc: <?= htmlspecialchars($inquilino['documento'] ?: '---') ?></span>
-                                                     <?= btnCopiar($inquilino['documento'] ?: '---') ?>
-                                                 </div>
-                                                 <div style="display:grid;grid-template-columns:1fr auto;align-items:center;gap:4px">
-                                                     <span style="font-size:0.65rem;color:#64748b">Tel: <?= htmlspecialchars($inquilino['telefone'] ?: '---') ?></span>
-                                                     <?= btnCopiar($inquilino['telefone'] ?: '---') ?>
-                                                 </div>
+                                                  <div style="display:grid;grid-template-columns:<?= !empty($inquilino['documento']) ? '1fr auto' : '1fr' ?>;align-items:center;gap:4px">
+                                                      <span style="font-size:0.65rem;color:#64748b">Doc: <?= htmlspecialchars($inquilino['documento'] ?: '---') ?></span>
+                                                      <?php if (!empty($inquilino['documento'])): ?><?= btnCopiar($inquilino['documento']) ?><?php endif; ?>
+                                                  </div>
+                                                  <div style="display:grid;grid-template-columns:<?= !empty($inquilino['telefone']) ? '1fr auto' : '1fr' ?>;align-items:center;gap:4px">
+                                                      <span style="font-size:0.65rem;color:#64748b">Tel: <?= htmlspecialchars($inquilino['telefone'] ?: '---') ?></span>
+                                                      <?php if (!empty($inquilino['telefone'])): ?><?= btnCopiar($inquilino['telefone']) ?><?php endif; ?>
+                                                  </div>
                                              </div>
                                          <?php endforeach; ?>
                                      <?php else: ?>
@@ -517,20 +517,20 @@ if (!empty($locacaoIds)) {
                                 <div class="loc-section">
                                     <?php if (!empty($locacaoVeiculos[$loc['id']])): ?>
                                          <?php foreach ($locacaoVeiculos[$loc['id']] as $veiculo): ?>
-                                             <div class="loc-inq-row">
-                                                 <div style="display:grid;grid-template-columns:1fr auto;align-items:center;gap:4px">
-                                                     <div class="font-semibold text-slate-900" style="font-size:0.75rem"><?= htmlspecialchars($veiculo['modelo'] ?: 'N/I') ?></div>
-                                                     <?= btnCopiar($veiculo['modelo'] ?: 'N/I') ?>
-                                                 </div>
-                                                 <div style="display:grid;grid-template-columns:1fr auto;align-items:center;gap:4px">
-                                                     <span style="font-size:0.65rem;color:#64748b">Cor: <?= htmlspecialchars($veiculo['cor'] ?: '---') ?></span>
-                                                     <?= btnCopiar($veiculo['cor'] ?: '---') ?>
-                                                 </div>
-                                                 <div style="display:grid;grid-template-columns:1fr auto;align-items:center;gap:4px">
-                                                     <span style="font-size:0.65rem;color:#64748b">Placa: <?= htmlspecialchars($veiculo['placa'] ?: '---') ?></span>
-                                                     <?= btnCopiar($veiculo['placa'] ?: '---') ?>
-                                                 </div>
-                                             </div>
+                                              <div class="loc-inq-row">
+                                                  <div style="display:grid;grid-template-columns:<?= !empty($veiculo['modelo']) ? '1fr auto' : '1fr' ?>;align-items:center;gap:4px">
+                                                      <div class="font-semibold text-slate-900" style="font-size:0.75rem"><?= htmlspecialchars($veiculo['modelo'] ?: 'N/I') ?></div>
+                                                      <?php if (!empty($veiculo['modelo'])): ?><?= btnCopiar($veiculo['modelo']) ?><?php endif; ?>
+                                                  </div>
+                                                  <div style="display:grid;grid-template-columns:<?= !empty($veiculo['cor']) ? '1fr auto' : '1fr' ?>;align-items:center;gap:4px">
+                                                      <span style="font-size:0.65rem;color:#64748b">Cor: <?= htmlspecialchars($veiculo['cor'] ?: '---') ?></span>
+                                                      <?php if (!empty($veiculo['cor'])): ?><?= btnCopiar($veiculo['cor']) ?><?php endif; ?>
+                                                  </div>
+                                                  <div style="display:grid;grid-template-columns:<?= !empty($veiculo['placa']) ? '1fr auto' : '1fr' ?>;align-items:center;gap:4px">
+                                                      <span style="font-size:0.65rem;color:#64748b">Placa: <?= htmlspecialchars($veiculo['placa'] ?: '---') ?></span>
+                                                      <?php if (!empty($veiculo['placa'])): ?><?= btnCopiar($veiculo['placa']) ?><?php endif; ?>
+                                                  </div>
+                                              </div>
                                          <?php endforeach; ?>
                                      <?php else: ?>
                                          <span class="text-slate-400" style="font-size:0.7rem">Nenhum veículo</span>
@@ -538,13 +538,13 @@ if (!empty($locacaoIds)) {
                                 </div>
 
                                 <div class="loc-section" style="font-size:0.7rem">
-                                    <div style="display:grid;grid-template-columns:1fr auto;align-items:center;gap:4px">
+                                    <div style="display:grid;grid-template-columns:<?= !empty($loc['data_entrada']) ? '1fr auto' : '1fr' ?>;align-items:center;gap:4px">
                                         <span class="font-semibold text-slate-600">Entrada: <?= $loc['data_entrada'] ? date('d/m/Y', strtotime($loc['data_entrada'])) : '---' ?></span>
-                                        <?= btnCopiar($loc['data_entrada'] ? date('d/m/Y', strtotime($loc['data_entrada'])) : '---') ?>
+                                        <?php if (!empty($loc['data_entrada'])): ?><?= btnCopiar(date('d/m/Y', strtotime($loc['data_entrada']))) ?><?php endif; ?>
                                     </div>
-                                    <div style="display:grid;grid-template-columns:1fr auto;align-items:center;gap:4px;margin-top:2px">
+                                    <div style="display:grid;grid-template-columns:<?= !empty($loc['data_saida']) ? '1fr auto' : '1fr' ?>;align-items:center;gap:4px;margin-top:2px">
                                         <span class="font-semibold text-slate-600">Saída: <?= $loc['data_saida'] ? date('d/m/Y', strtotime($loc['data_saida'])) : '---' ?></span>
-                                        <?= btnCopiar($loc['data_saida'] ? date('d/m/Y', strtotime($loc['data_saida'])) : '---') ?>
+                                        <?php if (!empty($loc['data_saida'])): ?><?= btnCopiar(date('d/m/Y', strtotime($loc['data_saida']))) ?><?php endif; ?>
                                     </div>
                                 </div>
                             </div>
@@ -565,9 +565,8 @@ if (!empty($locacaoIds)) {
                     <div id="photoModalSubtitle" class="text-sm text-slate-500">Clique no botão para salvar.</div>
                 </div>
                 <div class="modal-actions">
-                    <a id="photoModalSave" class="btn-primary inline-flex items-center gap-2" download="selfie.jpg" href="#">
-                        <i class="fas fa-download"></i>
-                        Salvar imagem
+                    <a id="photoModalSave" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#3b82f6;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;text-decoration:none" onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#3b82f6'" title="Salvar" download="selfie.jpg" href="#">
+                        <i class="fas fa-download" style="font-size:10px"></i>
                     </a>
                     <button type="button" id="photoModalClose" class="btn-secondary inline-flex items-center gap-2">
                         <i class="fas fa-times"></i>
@@ -677,21 +676,16 @@ if (!empty($locacaoIds)) {
         }
 
         function copiarTexto(texto, btn) {
-            const origText = btn.textContent;
-            const origClass = btn.className;
+            const origHTML = btn.innerHTML;
             navigator.clipboard.writeText(texto).then(() => {
-                btn.textContent = 'COPIADO!';
-                btn.className = origClass.replace('bg-slate-700', 'bg-green-600');
+                btn.innerHTML = '<i class="fas fa-check" style="font-size:10px"></i>';
                 setTimeout(() => {
-                    btn.textContent = origText;
-                    btn.className = origClass;
+                    btn.innerHTML = origHTML;
                 }, 1500);
             }).catch(() => {
-                btn.textContent = 'ERRO';
-                btn.className = origClass.replace('bg-slate-700', 'bg-red-600');
+                btn.innerHTML = '<i class="fas fa-times" style="font-size:10px"></i>';
                 setTimeout(() => {
-                    btn.textContent = origText;
-                    btn.className = origClass;
+                    btn.innerHTML = origHTML;
                 }, 1500);
             });
         }

@@ -166,10 +166,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <div class="flex items-center justify-between">
                                     <label class="form-label">Documento Anexo</label>
                                     <?php if ($extra['arquivo']): ?>
-                                        <a href="../uploads/extras/<?= htmlspecialchars($extra['arquivo']) ?>" target="_blank" class="text-xs font-bold text-primary-600 hover:text-primary-700 flex items-center gap-1">
-                                            <i class="fas fa-external-link-alt"></i>
-                                            Visualizar Atual
-                                        </a>
+                                        <a href="../uploads/extras/<?= htmlspecialchars($extra['arquivo']) ?>" target="_blank" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#3b82f6;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;text-decoration:none" onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#3b82f6'" title="Visualizar"><i class="fas fa-external-link-alt" style="font-size:10px"></i></a>
                                     <?php endif; ?>
                                 </div>
                                 
@@ -186,10 +183,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             </div>
 
                             <div class="pt-6 border-t border-slate-100 flex flex-col sm:flex-row gap-3">
-                                <button type="submit" class="btn-primary flex-1">
-                                    <i class="fas fa-save"></i>
-                                    <span>Salvar Alterações</span>
-                                </button>
+                                <button type="submit" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#22c55e;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Salvar"><i class="fas fa-save" style="font-size:10px"></i></button>
                                 <a href="ver_extras.php?id=<?= $extra['usuario_id'] ?>" class="btn-secondary text-center">
                                     <span>Cancelar</span>
                                 </a>
