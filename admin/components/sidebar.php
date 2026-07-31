@@ -42,7 +42,7 @@ $categoria_label = $categoria_labels[$usuario_categoria] ?? 'Usuário';
     <div class="flex h-20 items-center justify-between border-b border-white/10 px-6">
         <a href="index.php" class="flex items-center justify-center w-full">
             <div class="flex h-14 w-full items-center justify-center">
-                <img src="../img/logo-blindado-branco.svg" alt="Blindado" class="h-full w-auto object-contain">
+                <img src="../img/logo-blindado-sync-horizontal-otimizado.svg" alt="Blindado" class="h-full w-auto object-contain">
             </div>
         </a>
         <button id="mobile-sidebar-close" class="lg:hidden icon-btn" title="Fechar"><i class="fas fa-times"></i></button>

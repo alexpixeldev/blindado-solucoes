@@ -88,7 +88,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="sm:mx-auto sm:w-full sm:max-w-md animate-fade-in">
             <div class="flex justify-center">
                 <div class="inline-flex items-center justify-center p-3 rounded-2xl shadow-lg bg-[#122542] border border-white/10">
-                    <img src="../img/logo_horizontal.png" alt="Blindado Soluções" class="h-12 w-auto object-contain">
+                    <img src="../img/logo-blindado-sync-horizontal-otimizado.svg" alt="Blindado Soluções" class="h-12 w-auto object-contain">
                 </div>
             </div>
             <h2 class="mt-4 text-center text-2xl font-bold tracking-tight text-slate-100">Acesse o Painel</h2>
