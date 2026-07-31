@@ -47,7 +47,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['salvar_plantao'])) {
 
     $locais_edificios = $_POST['edificios'] ?? [];
     $descricoes = $_POST['descricao'] ?? [];
-    $midias = $_POST['midias'] ?? [];
 
     $conn->begin_transaction();
     try {
@@ -56,32 +55,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['salvar_plantao'])) {
         $count = 0;
         foreach ($locais_edificios as $i => $edificios_block) {
             $descricao = trim($descricoes[$i] ?? '');
-            $midias_bloco = isset($midias[$i]) ? (is_array($midias[$i]) ? $midias[$i] : [$midias[$i]]) : [];
-            $midias_html = '';
-            foreach ($midias_bloco as $m) {
-                $m = trim($m);
-                if ($m) {
-                    $ext = strtolower(pathinfo(parse_url($m, PHP_URL_PATH), PATHINFO_EXTENSION));
-                    $videoExts = ['mp4', 'webm', 'ogg', 'mov', 'avi', 'mkv', 'flv', 'wmv'];
-                    $audioExts = ['mp3', 'wav', 'ogg', 'm4a', 'aac', 'flac', 'wma'];
-                    if (in_array($ext, $videoExts)) {
-                        $midias_html .= '<div class="media-wrapper"><video controls width="100%"><source src="' . htmlspecialchars($m) . '"></video></div>';
-                    } elseif (in_array($ext, $audioExts)) {
-                        $midias_html .= '<div class="media-wrapper"><audio controls style="width:100%"><source src="' . htmlspecialchars($m) . '"></audio></div>';
-                    } else {
-                        $midias_html .= '<div class="media-wrapper"><img src="' . htmlspecialchars($m) . '" style="max-width:100%;height:auto"></div>';
-                    }
-                }
-            }
-            $descricao_completa = $descricao . ($midias_html ? '<div class="report-media">' . $midias_html . '</div>' : '');
-            if (!$descricao && !$midias_html) continue;
+            $descricao_completa = $descricao;
+            if (!$descricao) continue;
 
             if (!is_array($edificios_block)) $edificios_block = [$edificios_block];
             foreach ($edificios_block as $raw) {
                 $raw = trim($raw);
                 if (empty($raw)) continue;
                 if (strpos($raw, 'b_') === 0) {
-                    $edificio_id = 0;
+                    $edificio_id = null;
+                    $base_id = intval(substr($raw, 2));
                 } elseif (strpos($raw, 'e_') === 0) {
                     $edificio_id = intval(substr($raw, 2));
                 } else {
@@ -124,6 +107,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['salvar_plantao'])) {
         .meta-value input, .meta-value select { width: 100%; padding: 8px 12px; border: 1.5px solid #e2e8f0; border-radius: 8px; background: #fff; font-size: 0.9rem; font-weight: 500; color: #1a1a2e; outline: none; transition: border-color 0.15s, box-shadow 0.15s; box-sizing: border-box; }
         .meta-value input:focus, .meta-value select:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
         .meta-value input:hover, .meta-value select:hover { border-color: #94a3b8; }
+        .meta-value-row { display: flex; align-items: center; gap: 8px; }
+        .meta-value-row .modern-calendar-container { flex: 1; }
+        .turno-select { width: auto !important; min-width: 110px; flex-shrink: 0; }
         .top-bar { position: sticky; top: 0; z-index: 1000; background: #ffffff; border-bottom: 1px solid #e8eaed; padding: 14px 32px; display: flex; justify-content: space-between; align-items: center; }
         
         .top-bar-left { display: flex; align-items: center; gap: 8px; }
@@ -173,27 +159,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['salvar_plantao'])) {
         .location-dropdown { position: absolute; top: 100%; left: 0; right: 0; background: #fff; border: 1px solid #e2e8f0; border-radius: 6px; box-shadow: 0 4px 16px rgba(0,0,0,0.1); max-height: 200px; overflow-y: auto; display: none; z-index: 100; margin-top: 2px; }
         .location-dropdown.open { display: block; }
 
-        .upload-area { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 28px; border: 2px dashed #d0d5dd; border-radius: 12px; background: #fafbfc; cursor: pointer; transition: all 0.2s; min-height: 100px; }
-        .upload-area:hover { border-color: #3b82f6; background: #f0f4ff; }
-        .upload-area.has-files { border-style: solid; border-color: #22c55e; background: #f0fdf4; padding: 16px; }
-        .upload-icon { font-size: 28px; color: #98a2b3; margin-bottom: 8px; transition: all 0.2s; }
-        .upload-area:hover .upload-icon { color: #3b82f6; transform: scale(1.1); }
-        .upload-text { font-size: 0.85rem; font-weight: 600; color: #475569; }
-        .upload-hint { font-size: 0.75rem; color: #98a2b3; margin-top: 4px; }
-        .upload-input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 10; }
-        .upload-previews { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; width: 100%; }
-        .upload-preview-item { position: relative; width: 80px; height: 80px; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0; background: #fff; flex-shrink: 0; }
-        .upload-preview-item img { width: 100%; height: 100%; object-fit: cover; }
-        .upload-preview-item .file-icon { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 24px; color: #64748b; background: #f1f5f9; }
-        .upload-preview-item .file-name { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.6); color: #fff; font-size: 8px; padding: 2px 4px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; }
-        .upload-preview-item .remove-file { position: absolute; top: 2px; right: 2px; width: 18px; height: 18px; border: none; border-radius: 50%; background: rgba(239,68,68,0.8); color: #fff; font-size: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 11; }
-        .upload-preview-item .remove-file:hover { background: #ef4444; }
-        .upload-progress { width: 100%; height: 4px; background: #e2e8f0; border-radius: 2px; margin-top: 8px; overflow: hidden; }
-        .upload-progress-bar { height: 100%; background: #22c55e; border-radius: 2px; transition: width 0.3s; width: 0%; }
-        .upload-hidden-inputs { display: none; }
+        .inline-media-toolbar { display: flex; align-items: center; gap: 6px; padding: 6px 0; flex-wrap: wrap; }
+        .toolbar-btn { display: inline-flex; align-items: center; gap: 4px; padding: 5px 12px; border: 1px solid #e2e8f0; border-radius: 6px; background: #fff; color: #475569; font-size: 0.78rem; font-weight: 500; cursor: pointer; transition: all 0.15s; }
+        .toolbar-btn:hover { border-color: #3b82f6; color: #3b82f6; background: #f0f4ff; }
+        .toolbar-btn i { font-size: 0.82rem; }
+        .toolbar-btn.loading { opacity: 0.6; pointer-events: none; }
 
-        .descricao-textarea { width: 100%; min-height: 280px; padding: 18px 22px; border: 1.5px solid #e2e8f0; border-radius: 10px; font-size: 0.95rem; line-height: 1.7; color: #1a1a2e; background: #fff; outline: none; resize: vertical; font-family: inherit; transition: border-color 0.15s, box-shadow 0.15s; box-sizing: border-box; }
-        .descricao-textarea:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.08); }
+        .toast { position: fixed; bottom: 20px; right: 20px; z-index: 99999; padding: 12px 18px; border-radius: 8px; color: #fff; font-size: 0.85rem; font-weight: 600; box-shadow: 0 4px 16px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 10px; opacity: 0; transform: translateY(10px); transition: opacity 0.25s, transform 0.25s; max-width: 340px; }
+        .toast.show { opacity: 1; transform: translateY(0); }
+        .toast.success { background: #16a34a; }
+        .toast.error { background: #dc2626; }
+        .toast.loading { background: #2563eb; }
+        .toast i { font-size: 1rem; }
+
+        .upload-progress-wrap { margin: 2px 0 8px; height: 8px; border-radius: 5px; background: #e2e8f0; overflow: hidden; position: relative; display: none; }
+        .upload-progress-wrap.active { display: block; }
+        .upload-progress-fill { height: 100%; width: 0; background: #3b82f6; transition: width 0.2s; border-radius: 5px; }
+        .upload-progress-wrap.done .upload-progress-fill { background: #16a34a; }
+
+        .descricao-editor { width: 100%; min-height: 280px; padding: 18px 22px; border: 1.5px solid #e2e8f0; border-radius: 10px; font-size: 0.95rem; line-height: 1.7; color: #1a1a2e; background: #fff; outline: none; font-family: inherit; transition: border-color 0.15s, box-shadow 0.15s; box-sizing: border-box; overflow-y: auto; position: relative; }
+        .descricao-editor:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.08); }
+        .descricao-editor:empty::before { content: attr(data-placeholder); color: #a0afbe; pointer-events: none; }
+        .editor-media-remove { position: absolute; width: 24px; height: 24px; border: none; border-radius: 50%; background: #ef4444; color: #fff; font-size: 14px; line-height: 1; cursor: pointer; display: none; align-items: center; justify-content: center; z-index: 50; box-shadow: 0 2px 8px rgba(0,0,0,0.3); padding: 0; }
+        .editor-media-remove.show { display: flex; }
+        .editor-media-remove:hover { background: #dc2626; }
+        .descricao-editor img.media-thumb { max-width: 140px; max-height: 110px; border-radius: 6px; margin: 6px 2px; cursor: zoom-in; border: 1.5px solid #e2e8f0; vertical-align: middle; transition: max-width 0.2s, max-height 0.2s, border-color 0.2s; }
+        .descricao-editor img.media-thumb:hover { border-color: #3b82f6; }
+        .descricao-editor img.media-thumb.expanded { max-width: 100%; max-height: none; cursor: zoom-out; border-color: #bfdbfe; }
+        .descricao-editor video.media-thumb { max-width: 200px; max-height: 130px; border-radius: 6px; margin: 6px 2px; cursor: pointer; border: 1.5px solid #e2e8f0; background: #0f172a; vertical-align: middle; transition: max-width 0.2s, max-height 0.2s, border-color 0.2s; }
+        .descricao-editor video.media-thumb:hover { border-color: #3b82f6; }
+        .descricao-editor video.media-thumb.expanded { max-width: 100%; max-height: 100%; border-color: #bfdbfe; }
+        .descricao-editor audio.media-audio { width: 100%; max-width: 340px; margin: 6px 2px; display: block; }
 
         .autocomplete-wrap { position: relative; width: 100%; }
         .autocomplete-input { width: 100%; padding: 8px 12px; border: 1.5px solid #e2e8f0; border-radius: 8px; background: #fff; font-size: 0.9rem; font-weight: 500; color: #1a1a2e; outline: none; transition: border-color 0.15s, box-shadow 0.15s; box-sizing: border-box; }
@@ -216,6 +212,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['salvar_plantao'])) {
             .page-content { padding: 20px 16px !important; margin: 12px !important; }
             .notion-header-static { font-size: 1.25rem !important; }
             .notion-meta { grid-template-columns: 1fr !important; padding: 16px !important; }
+            .meta-value-row { flex-direction: column; align-items: stretch; }
+            .turno-select { width: 100% !important; }
             .top-bar { padding: 12px 16px !important; }
         }
     </style>
@@ -248,17 +246,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['salvar_plantao'])) {
                     <div class="notion-meta">
                         <div class="meta-row"><span class="meta-label"><i class="fas fa-user-tie"></i> Supervisor</span><div class="meta-value"><div class="autocomplete-wrap"><input type="text" id="supervisor-input" class="autocomplete-input" placeholder="Digite o nome do supervisor" required autocomplete="off"><input type="hidden" name="supervisor_nome" id="supervisor-nome"><div class="autocomplete-dropdown" id="supervisor-dropdown"></div></div></div></div>
                         <div class="meta-row"><span class="meta-label"><i class="fas fa-user"></i> Operador 1</span><div class="meta-value"><div class="autocomplete-wrap"><input type="text" id="operador1-input" class="autocomplete-input" placeholder="Digite o nome do operador" required autocomplete="off"><input type="hidden" name="operador1_nome" id="operador1-nome"><div class="autocomplete-dropdown" id="operador1-dropdown"></div></div></div></div>
-                        <div class="meta-row"><span class="meta-label"><i class="fas fa-user"></i> Operador 2</span><div class="meta-value"><div class="autocomplete-wrap"><input type="text" id="operador2-input" class="autocomplete-input" placeholder="Digite o nome do operador" autocomplete="off"><input type="hidden" name="operador2_nome" id="operador2-nome"><div class="autocomplete-dropdown" id="operador2-dropdown"></div></div></div></div>
                         <div class="meta-row">
-                            <span class="meta-label"><i class="fas fa-calendar-alt"></i> Data</span>
-                            <div class="meta-value">
+                            <span class="meta-label"><i class="fas fa-calendar-alt"></i> Data / Turno</span>
+                            <div class="meta-value meta-value-row">
                                 <?php renderModernCalendar('data_ocorrencia', date('Y-m-d'), ''); ?>
                                 <script>
                                     document.getElementById('value_calendar_data_ocorrencia').setAttribute('onchange', 'updateTitle()');
                                 </script>
+                                <select name="periodo_dia" id="periodo_dia" required onchange="updateTitle()" class="turno-select">
+                                    <option value="dia" selected>Diurno</option>
+                                    <option value="noite">Noturno</option>
+                                </select>
                             </div>
                         </div>
-                        <div class="meta-row"><span class="meta-label"><i class="fas fa-clock"></i> Turno</span><div class="meta-value"><select name="periodo_dia" id="periodo_dia" required onchange="updateTitle()"><option value="dia" selected>Diurno</option><option value="noite">Noturno</option></select></div></div>
+                        <div class="meta-row"><span class="meta-label"><i class="fas fa-user"></i> Operador 2</span><div class="meta-value"><div class="autocomplete-wrap"><input type="text" id="operador2-input" class="autocomplete-input" placeholder="Digite o nome do operador" autocomplete="off"><input type="hidden" name="operador2_nome" id="operador2-nome"><div class="autocomplete-dropdown" id="operador2-dropdown"></div></div></div></div>
                     </div>
                     <div class="w-full space-y-6">
                         <div id="reports-container">
@@ -277,18 +278,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['salvar_plantao'])) {
                                 <div class="report-block-body">
                                     <div class="selected-hidden" data-block="0"></div>
                                     <div class="space-y-2">
-                                        <textarea name="descricao[]" class="descricao-textarea" placeholder="Descreva detalhadamente o ocorrido..."></textarea>
-                                    </div>
-                                    <div class="space-y-2">
-                                        <label class="form-label">Mídia / Anexo</label>
-                                        <div class="upload-area" data-block="0">
-                                            <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
-                                            <p class="upload-text">Clique ou arraste arquivos aqui</p>
-                                            <p class="upload-hint">Qualquer formato: imagens, vídeos, áudios, PDF, etc.</p>
-                                            <input type="file" class="upload-input" multiple accept="*/*">
-                                            <div class="upload-previews"></div>
-                                            <div class="upload-hidden-inputs"></div>
+                                        <div class="inline-media-toolbar">
+                                            <button type="button" class="toolbar-btn btn-add-audio" title="Adicionar áudio"><i class="fas fa-microphone"></i> Áudio</button>
+                                            <button type="button" class="toolbar-btn btn-add-image" title="Adicionar imagem"><i class="fas fa-image"></i> Imagem</button>
+                                            <button type="button" class="toolbar-btn btn-add-video" title="Adicionar vídeo"><i class="fas fa-video"></i> Vídeo</button>
                                         </div>
+                                        <div class="descricao-editor" contenteditable="true" data-block="0" data-placeholder="Descreva detalhadamente o ocorrido..."></div>
+                                        <input type="hidden" name="descricao[]" class="descricao-hidden">
                                     </div>
                                 </div>
                             </div>
@@ -507,114 +503,346 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['salvar_plantao'])) {
             });
         }
 
-        function initUploadArea(area) {
-            const input = area.querySelector('.upload-input');
-            const previews = area.querySelector('.upload-previews');
-            const hiddenInputs = area.querySelector('.upload-hidden-inputs');
+        // ── Contenteditable / Inline Media ──
 
-            input.addEventListener('change', function() {
-                const files = Array.from(this.files);
-                files.forEach(file => uploadFile(file, area));
-                this.value = '';
-            });
+        function restoreSelection(editor) {
+            editor.focus();
+            const sel = window.getSelection();
+            if (editor._lastRange) {
+                sel.removeAllRanges();
+                sel.addRange(editor._lastRange);
+                return;
+            }
+            if (!sel.rangeCount) {
+                const range = document.createRange();
+                range.setStart(editor, editor.childNodes.length || 0);
+                range.collapse(true);
+                sel.removeAllRanges();
+                sel.addRange(range);
+            }
+        }
 
-            area.addEventListener('dragover', function(e) {
-                e.preventDefault();
-                this.style.borderColor = '#22c55e';
-                this.style.background = '#f0fdf4';
+        function insertMediaInline(editor, filepath, ext, mediaType) {
+            let isVideo, isAudio, isImage;
+            if (mediaType === 'audio' || mediaType === 'video' || mediaType === 'image') {
+                isVideo = mediaType === 'video';
+                isAudio = mediaType === 'audio';
+                isImage = mediaType === 'image';
+            } else {
+                isVideo = ['mp4','webm','ogg','mov','avi','mkv','flv','wmv','m4v','3gp','3g2'].includes(ext);
+                isAudio = ['mp3','wav','wave','ogg','oga','m4a','m4b','m4r','aac','flac','wma','aiff','opus','webm','amr','3gp','3g2','caf'].includes(ext);
+                isImage = ['jpg','jpeg','png','gif','webp','bmp','svg','tiff'].includes(ext);
+            }
+
+            restoreSelection(editor);
+
+            let el;
+            if (isImage) {
+                el = document.createElement('img');
+                el.src = filepath;
+                el.contentEditable = 'false';
+                el.classList.add('media-thumb');
+                el.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    this.classList.toggle('expanded');
+                });
+            } else if (isVideo) {
+                el = document.createElement('video');
+                el.preload = 'metadata';
+                el.contentEditable = 'false';
+                el.classList.add('media-thumb');
+                el.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const expanded = this.classList.toggle('expanded');
+                    this.controls = expanded;
+                    if (!expanded) this.pause();
+                });
+                const src = document.createElement('source');
+                src.src = filepath;
+                el.appendChild(src);
+            } else if (isAudio) {
+                el = document.createElement('audio');
+                el.controls = true;
+                el.preload = 'metadata';
+                el.contentEditable = 'false';
+                el.classList.add('media-audio');
+                const src = document.createElement('source');
+                src.src = filepath;
+                el.appendChild(src);
+            } else {
+                el = document.createElement('a');
+                el.href = filepath;
+                el.textContent = filepath.split('/').pop();
+                el.target = '_blank';
+            }
+
+            const sel = window.getSelection();
+            const range = sel.getRangeAt(0);
+            range.deleteContents();
+            range.insertNode(el);
+            range.setStartAfter(el);
+            range.collapse(true);
+            sel.removeAllRanges();
+            sel.addRange(range);
+
+            editor.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+
+        function initContentEditable(editor) {
+            // Salvar posição do cursor para inserir mídia no lugar certo
+            function saveRange() {
+                const sel = window.getSelection();
+                if (sel.rangeCount && editor.contains(sel.anchorNode)) {
+                    editor._lastRange = sel.getRangeAt(0).cloneRange();
+                }
+            }
+            editor.addEventListener('mouseup', saveRange);
+            editor.addEventListener('keyup', saveRange);
+            editor.addEventListener('blur', saveRange);
+
+            // Placeholder via CSS :empty::before
+            editor.addEventListener('input', function() {
+                this.dataset.placeholder = this.getAttribute('data-placeholder');
             });
-            area.addEventListener('dragleave', function(e) {
+            // Colar como texto puro
+            editor.addEventListener('paste', function(e) {
                 e.preventDefault();
-                this.style.borderColor = '#cbd5e1';
-                this.style.background = '';
+                const text = (e.clipboardData || window.clipboardData).getData('text/plain');
+                document.execCommand('insertText', false, text);
             });
-            area.addEventListener('drop', function(e) {
-                e.preventDefault();
-                this.style.borderColor = '#cbd5e1';
-                this.style.background = '';
-                const files = Array.from(e.dataTransfer.files);
-                files.forEach(file => uploadFile(file, area));
+            // Enter = <br> (parágrafo simples)
+            editor.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    document.execCommand('insertLineBreak');
+                    e.preventDefault();
+                }
             });
         }
 
-        function uploadFile(file, area) {
-            const previews = area.querySelector('.upload-previews');
-            const hiddenInputs = area.querySelector('.upload-hidden-inputs');
-            const ext = file.name.split('.').pop().toLowerCase();
-            const isImage = ['jpg','jpeg','png','gif','webp','bmp','svg'].includes(ext);
+        function sanitizeEditorContent(editor) {
+            const clone = editor.cloneNode(true);
+            clone.querySelectorAll('.editor-media-remove').forEach(function(btn) { btn.remove(); });
+            clone.querySelectorAll('img.media-thumb, video.media-thumb, audio.media-audio').forEach(el => {
+                el.classList.remove('media-thumb', 'expanded', 'media-audio');
+                el.removeAttribute('style');
+                el.removeAttribute('contenteditable');
+                if (el.tagName === 'VIDEO' || el.tagName === 'AUDIO') el.controls = true;
+                if (el.tagName === 'IMG') el.setAttribute('style', 'max-width:100%;height:auto;border-radius:6px');
+            });
+            return clone.innerHTML;
+        }
 
-            const item = document.createElement('div');
-            item.className = 'upload-preview-item';
+        function initMediaRemoval(editor) {
+            let removeBtn = null;
 
-            if (isImage) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    item.innerHTML = `<img src="${e.target.result}" alt="${file.name}">`;
-                };
-                reader.readAsDataURL(file);
-            } else {
-                const icons = { 'pdf':'fa-file-pdf','mp3':'fa-file-audio','wav':'fa-file-audio','mp4':'fa-file-video','mov':'fa-file-video','zip':'fa-file-archive','rar':'fa-file-archive','doc':'fa-file-word','docx':'fa-file-word','xls':'fa-file-excel','xlsx':'fa-file-excel' };
-                const icon = icons[ext] || 'fa-file';
-                item.innerHTML = `<div class="file-icon"><i class="fas ${icon}"></i></div>`;
+            function getMediaUrl(el) {
+                if (el.tagName === 'A') return el.getAttribute('href') || '';
+                if (el.src) return el.src;
+                const s = el.querySelector('source');
+                return s ? (s.getAttribute('src') || '') : '';
             }
 
-            const nameSpan = document.createElement('div');
-            nameSpan.className = 'file-name';
-            nameSpan.textContent = file.name.length > 15 ? file.name.slice(0, 12) + '...' : file.name;
-            item.appendChild(nameSpan);
+            function deleteMediaFile(url) {
+                if (!url || url.indexOf('uploads/ocorrencias/') === -1) return;
+                const fd = new FormData();
+                fd.append('url', url);
+                fetch('api_remover_arquivo.php', { method: 'POST', body: fd }).catch(function() {});
+            }
 
-            const progress = document.createElement('div');
-            progress.className = 'upload-progress';
-            const bar = document.createElement('div');
-            bar.className = 'upload-progress-bar';
-            progress.appendChild(bar);
-            item.appendChild(progress);
+            function ensureBtn() {
+                if (!removeBtn || !removeBtn.isConnected) {
+                    removeBtn = document.createElement('button');
+                    removeBtn.type = 'button';
+                    removeBtn.className = 'editor-media-remove';
+                    removeBtn.innerHTML = '&times;';
+                    removeBtn.title = 'Remover mídia';
+                    editor.appendChild(removeBtn);
+                    removeBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const target = this._target;
+                        this.classList.remove('show');
+                        if (target) {
+                            deleteMediaFile(getMediaUrl(target));
+                            target.remove();
+                        }
+                        editor.dispatchEvent(new Event('input', { bubbles: true }));
+                    });
+                }
+                return removeBtn;
+            }
 
-            const removeBtn = document.createElement('button');
-            removeBtn.type = 'button';
-            removeBtn.className = 'remove-file';
-            removeBtn.innerHTML = '<i class="fas fa-times"></i>';
-            removeBtn.onclick = function() {
-                const hidden = item.querySelector('input[type="hidden"]');
-                if (hidden) hidden.remove();
-                item.remove();
-            };
-            item.appendChild(removeBtn);
+            function positionBtn(el) {
+                const btn = ensureBtn();
+                const editorRect = editor.getBoundingClientRect();
+                const elRect = el.getBoundingClientRect();
+                btn.style.left = (elRect.right - editorRect.left - 10) + 'px';
+                btn.style.top = (elRect.top - editorRect.top - 10) + 'px';
+                btn._target = el;
+                btn.classList.add('show');
+            }
 
-            previews.appendChild(item);
-            area.classList.add('has-files');
+            function hideBtn() {
+                if (removeBtn) removeBtn.classList.remove('show');
+            }
 
+            editor.addEventListener('mouseover', function(e) {
+                if (e.target.closest('.editor-media-remove')) return;
+                const el = e.target.closest('img.media-thumb, video.media-thumb, audio.media-audio');
+                if (el) {
+                    positionBtn(el);
+                } else {
+                    hideBtn();
+                }
+            });
+
+            editor.addEventListener('mouseleave', function() {
+                hideBtn();
+            });
+
+            editor.addEventListener('click', function(e) {
+                const el = e.target.closest('img.media-thumb, video.media-thumb, audio.media-audio');
+                if (el) {
+                    e.stopPropagation();
+                    positionBtn(el);
+                } else {
+                    hideBtn();
+                }
+            });
+
+            editor.addEventListener('scroll', hideBtn);
+
+            document.addEventListener('click', function(e) {
+                if (!editor.contains(e.target)) hideBtn();
+            });
+        }
+
+        function syncContentEditable() {
+            document.querySelectorAll('.report-block').forEach(block => {
+                const editor = block.querySelector('.descricao-editor');
+                const hidden = block.querySelector('.descricao-hidden');
+                if (editor && hidden) {
+                    const html = sanitizeEditorContent(editor);
+                    hidden.value = html === '<br>' ? '' : html;
+                }
+            });
+        }
+
+        function showToast(message, type) {
+            const toast = document.createElement('div');
+            toast.className = 'toast ' + (type || 'loading');
+            const icon = document.createElement('i');
+            icon.className = 'fas ' + (type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-circle-notch fa-spin');
+            toast.appendChild(icon);
+            toast.appendChild(document.createTextNode(message));
+            document.body.appendChild(toast);
+            requestAnimationFrame(function() { toast.classList.add('show'); });
+            setTimeout(function() {
+                toast.classList.remove('show');
+                setTimeout(function() { toast.remove(); }, 300);
+            }, type === 'error' ? 5000 : 3000);
+        }
+
+        function convertAndUpload(editor, file, tipo) {
+            showToast('Convertendo áudio para MP3...', 'loading');
+            BlindadoAudio.convertAudioToMp3(file, function(mp3File) {
+                doUpload(editor, mp3File, tipo);
+            }, function(err) {
+                showToast((err && err.message) || 'Não foi possível converter o áudio.', 'error');
+            });
+        }
+
+        function uploadMediaAndInsert(editor, file, tipo) {
+            const ext = file.name.split('.').pop().toLowerCase();
+            const isAudioFile = ['mp3','wav','wave','ogg','oga','m4a','m4b','m4r','aac','flac','wma','aiff','opus','webm','amr','3gp','3g2','caf'].includes(ext);
+            if (isAudioFile) {
+                convertAndUpload(editor, file, tipo);
+            } else {
+                doUpload(editor, file, tipo);
+            }
+        }
+
+        function doUpload(editor, file, tipo) {
             const fd = new FormData();
             fd.append('file', file);
+
+            const tipoLabel = tipo || 'arquivo';
+            let barWrap = editor.nextElementSibling && editor.nextElementSibling.classList && editor.nextElementSibling.classList.contains('upload-progress-wrap')
+                ? editor.nextElementSibling
+                : null;
+            if (!barWrap) {
+                barWrap = document.createElement('div');
+                barWrap.className = 'upload-progress-wrap';
+                barWrap.innerHTML = '<div class="upload-progress-fill"></div>';
+                editor.after(barWrap);
+            }
+            const fill = barWrap.querySelector('.upload-progress-fill');
+            fill.style.width = '0%';
+            barWrap.classList.remove('done');
+            barWrap.classList.add('active');
+
             const xhr = new XMLHttpRequest();
             xhr.open('POST', 'api_upload_imagem.php', true);
+
             xhr.upload.onprogress = function(e) {
                 if (e.lengthComputable) {
-                    bar.style.width = (e.loaded / e.total * 100) + '%';
+                    fill.style.width = Math.round((e.loaded / e.total) * 100) + '%';
                 }
             };
+
             xhr.onload = function() {
-                bar.style.width = '100%';
-                setTimeout(() => progress.remove(), 500);
+                barWrap.classList.add('done');
+                setTimeout(function() { barWrap.classList.remove('active'); }, 800);
                 try {
                     const result = JSON.parse(xhr.responseText);
                     if (result.location) {
-                        const hidden = document.createElement('input');
-                        hidden.type = 'hidden';
-                        hidden.name = 'midias[' + area.dataset.block + '][]';
-                        hidden.value = result.location;
-                        hiddenInputs.appendChild(hidden);
+                        const ext2 = file.name.split('.').pop().toLowerCase();
+                        const mediaType = result.file && result.file.type ? result.file.type : null;
+                        insertMediaInline(editor, result.location, ext2, mediaType);
+                        showToast('Upload concluído: ' + file.name, 'success');
                     } else {
-                        item.innerHTML = '<div class="file-icon" style="color:#ef4444"><i class="fas fa-exclamation-triangle"></i></div><div class="file-name" style="color:#ef4444">Erro</div>';
+                        showToast((result.message || 'Erro no upload') + ' (' + file.name + ')', 'error');
                     }
                 } catch(e) {
-                    item.innerHTML = '<div class="file-icon" style="color:#ef4444"><i class="fas fa-exclamation-triangle"></i></div><div class="file-name" style="color:#ef4444">Erro</div>';
+                    showToast('Resposta inválida do servidor: ' + xhr.responseText.substring(0, 100), 'error');
                 }
             };
+
             xhr.onerror = function() {
-                item.innerHTML = '<div class="file-icon" style="color:#ef4444"><i class="fas fa-exclamation-triangle"></i></div><div class="file-name" style="color:#ef4444">Erro</div>';
+                barWrap.classList.add('done');
+                setTimeout(function() { barWrap.classList.remove('active'); }, 800);
+                showToast('Falha de conexão ao enviar ' + file.name, 'error');
             };
+
             xhr.send(fd);
+        }
+
+        function initInlineToolbar(block) {
+            const editor = block.querySelector('.descricao-editor');
+            const toolbar = block.querySelector('.inline-media-toolbar');
+            if (!toolbar || !editor) return;
+
+            toolbar.querySelector('.btn-add-audio').addEventListener('click', function() {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = 'audio/*';
+                input.onchange = function() { if (this.files[0]) uploadMediaAndInsert(editor, this.files[0], 'áudio'); };
+                input.click();
+            });
+            toolbar.querySelector('.btn-add-image').addEventListener('click', function() {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = 'image/*';
+                input.onchange = function() { if (this.files[0]) uploadMediaAndInsert(editor, this.files[0], 'imagem'); };
+                input.click();
+            });
+            toolbar.querySelector('.btn-add-video').addEventListener('click', function() {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = 'video/*';
+                input.onchange = function() { if (this.files[0]) uploadMediaAndInsert(editor, this.files[0], 'vídeo'); };
+                input.click();
+            });
         }
 
         function addReportBlock() {
@@ -641,18 +869,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['salvar_plantao'])) {
                 <div class="report-block-body">
                     <div class="selected-hidden" data-block="${idx}"></div>
                     <div class="space-y-2">
-                        <textarea name="descricao[]" class="descricao-textarea" placeholder="Descreva detalhadamente o ocorrido..."></textarea>
-                    </div>
-                    <div class="space-y-2">
-                        <label class="form-label">Mídia / Anexo</label>
-                        <div class="upload-area" data-block="${blockIndex}">
-                            <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
-                            <p class="upload-text">Clique ou arraste arquivos aqui</p>
-                            <p class="upload-hint">Qualquer formato: imagens, vídeos, áudios, PDF, etc.</p>
-                            <input type="file" class="upload-input" multiple accept="*/*">
-                            <div class="upload-previews"></div>
-                            <div class="upload-hidden-inputs"></div>
+                        <div class="inline-media-toolbar">
+                            <button type="button" class="toolbar-btn btn-add-audio" title="Adicionar áudio"><i class="fas fa-microphone"></i> Áudio</button>
+                            <button type="button" class="toolbar-btn btn-add-image" title="Adicionar imagem"><i class="fas fa-image"></i> Imagem</button>
+                            <button type="button" class="toolbar-btn btn-add-video" title="Adicionar vídeo"><i class="fas fa-video"></i> Vídeo</button>
                         </div>
+                        <div class="descricao-editor" contenteditable="true" data-block="${idx}" data-placeholder="Descreva detalhadamente o ocorrido..."></div>
+                        <input type="hidden" name="descricao[]" class="descricao-hidden">
                     </div>
                 </div>
             `;
@@ -669,8 +892,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['salvar_plantao'])) {
             });
 
             initLocationAutocomplete(div.querySelector('.report-block-header .location-autocomplete'));
-            initUploadArea(div.querySelector('.upload-area'));
-            initTextareaAutoResize(div.querySelector('.descricao-textarea'));
+            initContentEditable(div.querySelector('.descricao-editor'));
+            initInlineToolbar(div);
+            initMediaRemoval(div.querySelector('.descricao-editor'));
 
             div.querySelector('.remove-block').addEventListener('click', function() {
                 div.remove();
@@ -681,9 +905,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['salvar_plantao'])) {
         function renumberBlocks() {
             const container = document.getElementById('reports-container');
             container.querySelectorAll('.report-block').forEach((block, idx) => {
-                block.querySelector('.upload-area').dataset.block = idx;
                 const hidContainer = block.querySelector('.selected-hidden');
                 if (hidContainer) hidContainer.dataset.block = idx;
+                const editor = block.querySelector('.descricao-editor');
+                if (editor) editor.dataset.block = idx;
                 block.querySelectorAll('input[name^="edificios["]').forEach(cb => {
                     cb.name = 'edificios[' + idx + '][]';
                 });
@@ -692,25 +917,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['salvar_plantao'])) {
             });
         }
 
-        function initTextareaAutoResize() {
-            document.querySelectorAll('.descricao-textarea').forEach(ta => {
-                ta.style.height = 'auto';
-                ta.style.height = Math.max(ta.scrollHeight, 320) + 'px';
-                ta.addEventListener('input', function() {
-                    this.style.height = 'auto';
-                    this.style.height = Math.max(this.scrollHeight, 320) + 'px';
-                });
-            });
-        }
-
         function salvarRelatorio() {
+            syncContentEditable();
             document.getElementById('form-plantao').submit();
         }
 
         // Inicializar primeiro bloco
-        document.querySelectorAll('.upload-area').forEach(initUploadArea);
-        initTextareaAutoResize();
+        document.querySelectorAll('.descricao-editor').forEach(function(ed) {
+            initContentEditable(ed);
+            initMediaRemoval(ed);
+        });
         document.querySelectorAll('.location-autocomplete').forEach(ac => initLocationAutocomplete(ac));
+        document.querySelectorAll('.report-block').forEach(block => initInlineToolbar(block));
 
         // Botão adicionar local no primeiro bloco
         document.querySelector('.add-location-btn').addEventListener('click', function() {
@@ -736,6 +954,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['salvar_plantao'])) {
             });
         });
     </script>
+    <script src="assets/js/gsm_decoder.js"></script>
+    <script src="assets/js/lame.min.js"></script>
+    <script src="assets/js/gsm_audio.js"></script>
 </body>
 </html>
 <?php

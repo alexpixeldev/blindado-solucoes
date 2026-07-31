@@ -43,13 +43,13 @@ if ($file_field && isset($_FILES[$file_field])) {
 
     // Tipos MIME permitidos
     $allowed_mime_images = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/bmp', 'image/tiff', 'image/svg+xml'];
-    $allowed_mime_videos = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'video/x-msvideo', 'video/x-matroska', 'video/x-flv', 'video/x-ms-wmv', 'video/mp2t'];
-    $allowed_mime_audio = ['audio/mpeg', 'audio/wav', 'audio/x-wav', 'audio/ogg', 'audio/mp4', 'audio/aac', 'audio/flac', 'audio/x-ms-wma', 'audio/aiff', 'audio/opus'];
+    $allowed_mime_videos = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'video/x-msvideo', 'video/x-matroska', 'video/x-flv', 'video/x-ms-wmv', 'video/mp2t', 'video/3gpp', 'video/3gpp2'];
+    $allowed_mime_audio = ['audio/mpeg', 'audio/mp3', 'audio/x-mpeg', 'audio/x-mpeg-3', 'audio/wav', 'audio/x-wav', 'audio/wave', 'audio/x-wave', 'audio/ogg', 'audio/oga', 'audio/mp4', 'audio/x-m4a', 'audio/m4b', 'audio/aac', 'audio/x-aac', 'audio/flac', 'audio/x-flac', 'audio/x-ms-wma', 'audio/aiff', 'audio/x-aiff', 'audio/opus', 'audio/webm', 'audio/midi', 'audio/x-midi', 'audio/mp4a-latm', 'audio/amr', 'audio/x-amr', 'audio/x-caf', 'audio/x-mpegurl'];
 
     // Extensões permitidas (fallback)
     $allowed_images = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'tiff', 'svg'];
-    $allowed_videos = ['mp4', 'webm', 'ogg', 'mov', 'avi', 'mkv', 'flv', 'wmv', 'm4v'];
-    $allowed_audio = ['mp3', 'wav', 'ogg', 'm4a', 'aac', 'flac', 'wma', 'aiff', 'opus'];
+    $allowed_videos = ['mp4', 'webm', 'ogg', 'mov', 'avi', 'mkv', 'flv', 'wmv', 'm4v', '3gp', '3g2'];
+    $allowed_audio = ['mp3', 'wav', 'wave', 'ogg', 'oga', 'm4a', 'm4b', 'aac', 'flac', 'wma', 'aiff', 'opus', 'webm', 'mid', 'midi', 'amr', '3gp', '3g2', 'caf', 'm4r'];
 
     // Detecta o tipo MIME real do arquivo
     $finfo = finfo_open(FILEINFO_MIME_TYPE);

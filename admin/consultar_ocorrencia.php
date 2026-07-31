@@ -14,6 +14,26 @@ if (in_array($usuario_categoria, ['administrador', 'colaborador'])) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_ocorrencia'])) {
     if ($usuario_categoria === 'gerente') {
         $id_delete = intval($_POST['id_delete']);
+
+        // Apagar arquivos de mídia do relatório antes de remover o registro
+        $stmt = $conn->prepare("SELECT descricao FROM ocorrencias WHERE id = ?");
+        $stmt->bind_param("i", $id_delete);
+        $stmt->execute();
+        $stmt->bind_result($descricao);
+        if ($stmt->fetch()) {
+            preg_match_all('/uploads\/ocorrencias\/([^"\'\\s<>]+)/', $descricao, $matches);
+            foreach ($matches[1] as $media) {
+                $dir_upload = realpath(__DIR__ . '/../uploads/ocorrencias/');
+                if ($dir_upload) {
+                    $arquivo = $dir_upload . DIRECTORY_SEPARATOR . basename($media);
+                    if (is_file($arquivo)) {
+                        @unlink($arquivo);
+                    }
+                }
+            }
+        }
+        $stmt->close();
+
         $stmt = $conn->prepare("DELETE FROM ocorrencias WHERE id = ?");
         $stmt->bind_param("i", $id_delete);
         $stmt->execute();
@@ -98,8 +118,18 @@ $bases = $conn->query("SELECT id, nome FROM bases ORDER BY nome")->fetch_all(MYS
         .plantao-header { background: #f8fafc; padding: 1.5rem; border-bottom: 1px solid #f1f5f9; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
         .relatorio-body { padding: 2.5rem; }
         .mention { background: #dcfce7; color: #15803d; padding: 2px 6px; border-radius: 4px; font-weight: 600; text-decoration: none; }
-        .prose img, .prose video { max-width: 100%; border-radius: 1rem; margin: 1.5rem 0; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
         .prose p { margin-bottom: 1rem; line-height: 1.7; font-size: 1.05rem; color: #475569; }
+        .prose img, .prose video { max-width: 240px !important; max-height: 180px !important; border-radius: 10px !important; margin: 0.5rem 0 !important; box-shadow: 0 2px 6px rgba(0,0,0,0.1); cursor: zoom-in; border: 1.5px solid #e2e8f0; display: block; transition: border-color 0.15s, box-shadow 0.15s; }
+        .prose img:hover, .prose video:hover { border-color: #3b82f6; box-shadow: 0 4px 12px rgba(59,130,246,0.15); }
+        .prose audio { max-width: 340px; width: 100%; margin: 0.5rem 0; display: block; }
+        .prose a.media-link { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; background: #f1f5f9; border-radius: 8px; font-size: 0.85rem; color: #2563eb; text-decoration: none; }
+        .lightbox { position: fixed; inset: 0; background: rgba(15,23,42,0.92); display: none; align-items: center; justify-content: center; z-index: 9999; padding: 24px; }
+        .lightbox.open { display: flex; }
+        .lightbox img { max-width: 92vw; max-height: 88vh; border-radius: 8px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+        .lightbox video { max-width: 92vw; max-height: 88vh; border-radius: 8px; outline: none; }
+        .lightbox audio { max-width: 80vw; }
+        .lightbox-close { position: absolute; top: 16px; right: 16px; width: 40px; height: 40px; border: none; border-radius: 50%; background: rgba(255,255,255,0.15); color: #fff; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .lightbox-close:hover { background: rgba(255,255,255,0.3); }
     </style>
 </head>
 <body class="h-full text-slate-800 antialiased">
@@ -228,6 +258,11 @@ $bases = $conn->query("SELECT id, nome FROM bases ORDER BY nome")->fetch_all(MYS
         </div>
     </div>
 
+    <div class="lightbox" id="lightbox">
+        <button type="button" class="lightbox-close" id="lightbox-close" title="Fechar (ESC)"><i class="fas fa-times"></i></button>
+        <div id="lightbox-content"></div>
+    </div>
+
     <script>
         function toggleDetails(key) {
             const details = document.getElementById('details-' + key);
@@ -242,6 +277,52 @@ $bases = $conn->query("SELECT id, nome FROM bases ORDER BY nome")->fetch_all(MYS
                 icon.style.transform = 'rotate(0deg)';
             }
         }
+
+        // Lightbox para expandir mídia na consulta
+        (function() {
+            const lightbox = document.getElementById('lightbox');
+            const content = document.getElementById('lightbox-content');
+            const closeBtn = document.getElementById('lightbox-close');
+
+            function closeLightbox() {
+                lightbox.classList.remove('open');
+                content.innerHTML = '';
+            }
+
+            function openMedia(el) {
+                content.innerHTML = '';
+                const clone = el.cloneNode(true);
+                clone.removeAttribute('style');
+                clone.style.maxWidth = '92vw';
+                clone.style.maxHeight = '88vh';
+                clone.style.borderRadius = '8px';
+                clone.style.margin = '0';
+                clone.style.boxShadow = 'none';
+                if (clone.tagName === 'VIDEO' || clone.tagName === 'AUDIO') {
+                    clone.controls = true;
+                }
+                content.appendChild(clone);
+                lightbox.classList.add('open');
+                const media = content.querySelector('video, audio');
+                if (media) media.play().catch(function(){});
+            }
+
+            document.addEventListener('click', function(e) {
+                const target = e.target;
+                if (target.closest('.prose') && (target.tagName === 'IMG' || target.tagName === 'VIDEO')) {
+                    e.preventDefault();
+                    openMedia(target);
+                }
+                if (e.target === lightbox) {
+                    closeLightbox();
+                }
+            });
+
+            closeBtn.addEventListener('click', closeLightbox);
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') closeLightbox();
+            });
+        })();
     </script>
 </body>
 </html>
