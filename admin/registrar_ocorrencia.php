@@ -120,6 +120,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['salvar_plantao'])) {
         .btn-cancel:hover { border-color: #cbd5e1; color: #475569; }
         .btn-save { padding: 8px 20px; border: none; border-radius: 8px; background: #1a1a2e; color: #fff; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: background 0.15s; }
         .btn-save:hover { background: #2d2d4a; }
+        .form-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 10px; margin-top: 28px; padding-top: 22px; border-top: 1px solid #e8eaed; }
 
         /* Ajuste calendário */
         .modern-calendar-container { width: 100%; }
@@ -208,6 +209,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['salvar_plantao'])) {
         .add-report-btn:hover { border-color: #3b82f6; color: #3b82f6; background: #f8faff; }
         .form-label { font-size: 0.8rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.3px; display: block; margin-bottom: 6px; }
 
+        .draft-indicator { font-size: 0.78rem; color: #16a34a; font-weight: 600; display: none; white-space: nowrap; }
+        .draft-indicator.saved { display: inline; }
+        #draft-banner { position: fixed; top: 0; left: 0; right: 0; z-index: 9999; background: #16a34a; color: #fff; padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 0.9rem; box-shadow: 0 2px 12px rgba(0,0,0,0.2); flex-wrap: wrap; }
+
         @media (max-width: 768px) {
             .page-content { padding: 20px 16px !important; margin: 12px !important; }
             .notion-header-static { font-size: 1.25rem !important; }
@@ -228,8 +233,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['salvar_plantao'])) {
                     <span>Novo Relatório de Plantão</span>
                 </div>
                 <div class="top-bar-right">
-                    <a href="consultar_ocorrencia.php" class="btn-cancel">Descartar</a>
-                    <button onclick="salvarRelatorio()" class="btn-save">Finalizar Relatório</button>
+                    <span id="draft-indicator" class="draft-indicator"></span>
                 </div>
             </header>
             <main class="page-content">
@@ -238,6 +242,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['salvar_plantao'])) {
                         <i class="fas fa-check-circle"></i>
                         <span class="font-bold"><?= $mensagem ?></span>
                     </div>
+                    <?php if ($mensagem_tipo === 'success'): ?>
+                        <script>try { localStorage.removeItem('rascunho_plantao_<?= (int)$usuario_id ?>'); } catch (e) {}</script>
+                    <?php endif; ?>
                 <?php endif; ?>
 
                 <form id="form-plantao" method="POST">
@@ -293,6 +300,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['salvar_plantao'])) {
                             <i class="fas fa-plus-circle"></i> Adicionar Relatório
                         </button>
                     </div>
+                    <div class="form-actions">
+                        <a href="consultar_ocorrencia.php" class="btn-cancel">Descartar</a>
+                        <button type="button" onclick="salvarRelatorio()" class="btn-save">Finalizar Relatório</button>
+                    </div>
                 </form>
             </main>
         </div>
@@ -344,6 +355,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['salvar_plantao'])) {
                                 hidden.value = name;
                                 dropdown.classList.remove('open');
                                 selected = true;
+                                scheduleDraftSave();
                             });
                             dropdown.appendChild(div);
                         });
@@ -431,6 +443,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['salvar_plantao'])) {
                 if (placeholder && tagsContainer.querySelectorAll('.location-tag').length === 0) {
                     placeholder.style.display = '';
                 }
+                scheduleDraftSave();
             });
 
             const hidden = document.createElement('input');
@@ -441,6 +454,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['salvar_plantao'])) {
             tag._hiddenInput = hidden;
 
             tagsContainer.appendChild(tag);
+            scheduleDraftSave();
         }
 
         function initLocationAutocomplete(container) {
@@ -899,7 +913,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['salvar_plantao'])) {
             div.querySelector('.remove-block').addEventListener('click', function() {
                 div.remove();
                 renumberBlocks();
+                scheduleDraftSave();
             });
+
+            return div;
         }
 
         function renumberBlocks() {
@@ -921,6 +938,203 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['salvar_plantao'])) {
             syncContentEditable();
             document.getElementById('form-plantao').submit();
         }
+
+        // ── Autosave de rascunho (localStorage) ──
+        const DRAFT_KEY = 'rascunho_plantao_' + <?= json_encode($usuario_id) ?>;
+        let draftTimer = null;
+        let draftSavedAt = 0;
+
+        function collectDraft() {
+            syncContentEditable();
+            const blocks = [];
+            document.querySelectorAll('.report-block').forEach(function(block) {
+                const hiddenContainer = block.querySelector('.selected-hidden');
+                const locais = [];
+                if (hiddenContainer) {
+                    hiddenContainer.querySelectorAll('input').forEach(function(inp) {
+                        if (inp.value) locais.push(inp.value);
+                    });
+                }
+                const descInput = block.querySelector('.descricao-hidden');
+                blocks.push({ locais: locais, descricao: descInput ? descInput.value : '' });
+            });
+            return {
+                savedAt: Date.now(),
+                meta: {
+                    supervisor: document.getElementById('supervisor-nome').value,
+                    supervisorText: document.getElementById('supervisor-input').value,
+                    operador1: document.getElementById('operador1-nome').value,
+                    operador1Text: document.getElementById('operador1-input').value,
+                    operador2: document.getElementById('operador2-nome').value,
+                    operador2Text: document.getElementById('operador2-input').value,
+                    data_ocorrencia: document.getElementById('value_calendar_data_ocorrencia').value,
+                    periodo_dia: document.getElementById('periodo_dia').value
+                },
+                blocks: blocks
+            };
+        }
+
+        function hasDraftContent(draft) {
+            if (draft.meta.supervisorText || draft.meta.operador1Text || draft.meta.operador2Text) return true;
+            if (draft.meta.data_ocorrencia !== document.getElementById('value_calendar_data_ocorrencia').value) return true;
+            return draft.blocks.some(function(b) { return b.descricao || b.locais.length > 0; });
+        }
+
+        function saveDraftNow() {
+            try {
+                const draft = collectDraft();
+                if (!hasDraftContent(draft)) return;
+                localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+                draftSavedAt = draft.savedAt;
+                updateDraftIndicator();
+            } catch (e) {}
+        }
+
+        function scheduleDraftSave() {
+            clearTimeout(draftTimer);
+            draftTimer = setTimeout(saveDraftNow, 800);
+        }
+
+        function updateDraftIndicator() {
+            const el = document.getElementById('draft-indicator');
+            if (!el) return;
+            if (draftSavedAt) {
+                const d = new Date(draftSavedAt);
+                const pad = n => String(n).padStart(2, '0');
+                el.textContent = 'Rascunho salvo às ' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+                el.classList.add('saved');
+            } else {
+                el.textContent = '';
+                el.classList.remove('saved');
+            }
+        }
+
+        function normalizeEditorMedia(editor) {
+            editor.querySelectorAll('img, video, audio').forEach(function(el) {
+                el.contentEditable = 'false';
+                if (el.tagName === 'IMG') {
+                    el.classList.add('media-thumb');
+                    el.removeAttribute('style');
+                    el.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        this.classList.toggle('expanded');
+                    });
+                } else if (el.tagName === 'VIDEO') {
+                    el.classList.add('media-thumb');
+                    el.controls = false;
+                    el.preload = 'metadata';
+                    el.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        const expanded = this.classList.toggle('expanded');
+                        this.controls = expanded;
+                        if (!expanded) this.pause();
+                    });
+                } else if (el.tagName === 'AUDIO') {
+                    el.classList.add('media-audio');
+                    el.controls = true;
+                    el.preload = 'metadata';
+                }
+            });
+        }
+
+        function restoreDraft(draft) {
+            document.getElementById('supervisor-nome').value = draft.meta.supervisor || '';
+            document.getElementById('supervisor-input').value = draft.meta.supervisorText || '';
+            document.getElementById('operador1-nome').value = draft.meta.operador1 || '';
+            document.getElementById('operador1-input').value = draft.meta.operador1Text || '';
+            document.getElementById('operador2-nome').value = draft.meta.operador2 || '';
+            document.getElementById('operador2-input').value = draft.meta.operador2Text || '';
+
+            if (draft.meta.data_ocorrencia) {
+                const hid = document.getElementById('value_calendar_data_ocorrencia');
+                const disp = document.getElementById('display_calendar_data_ocorrencia');
+                if (hid) hid.value = draft.meta.data_ocorrencia;
+                if (disp) {
+                    const p = draft.meta.data_ocorrencia.split('-');
+                    disp.value = p[2] + '/' + p[1] + '/' + p[0];
+                }
+                if (window.modernCalendars && modernCalendars['calendar_data_ocorrencia']) {
+                    modernCalendars['calendar_data_ocorrencia'].selectedDate = draft.meta.data_ocorrencia;
+                }
+            }
+            if (draft.meta.periodo_dia) {
+                document.getElementById('periodo_dia').value = draft.meta.periodo_dia;
+            }
+
+            const container = document.getElementById('reports-container');
+            container.querySelectorAll('.report-block').forEach(function(b) { b.remove(); });
+
+            if (!draft.blocks || draft.blocks.length === 0) {
+                addReportBlock();
+            } else {
+                draft.blocks.forEach(function(block) {
+                    const div = addReportBlock();
+                    const editor = div.querySelector('.descricao-editor');
+                    if (block.descricao) {
+                        editor.innerHTML = block.descricao;
+                        normalizeEditorMedia(editor);
+                    }
+                    const blockIdx = parseInt(div.querySelector('.selected-hidden').dataset.block);
+                    block.locais.forEach(function(v) {
+                        const found = locaisOptions.find(function(o) { return o.value === v; });
+                        addLocationTag(blockIdx, v, found ? found.label : v);
+                    });
+                });
+            }
+
+            if (typeof updateTitle === 'function') updateTitle();
+            draftSavedAt = draft.savedAt || Date.now();
+            updateDraftIndicator();
+        }
+
+        function discardDraft() {
+            try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
+            draftSavedAt = 0;
+            updateDraftIndicator();
+        }
+
+        function checkSavedDraft() {
+            let draft = null;
+            try { draft = JSON.parse(localStorage.getItem(DRAFT_KEY)); } catch (e) { return; }
+            if (!draft || !draft.blocks || !draft.meta) return;
+            const d = new Date(draft.savedAt || Date.now());
+            const pad = n => String(n).padStart(2, '0');
+            const when = pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+
+            const banner = document.createElement('div');
+            banner.id = 'draft-banner';
+            banner.innerHTML =
+                '<span style="display:flex;align-items:center;gap:8px"><i class="fas fa-file-pen"></i> Você tem um rascunho salvo às ' + when + '. Deseja continuar?</span>' +
+                '<span style="display:flex;gap:8px">' +
+                    '<button type="button" id="draft-restore" style="background:#fff;color:#16a34a;border:none;border-radius:8px;padding:8px 16px;font-weight:700;font-size:0.85rem;cursor:pointer">Restaurar</button>' +
+                    '<button type="button" id="draft-discard" style="background:transparent;color:#fff;border:1px solid rgba(255,255,255,0.6);border-radius:8px;padding:8px 16px;font-weight:600;font-size:0.85rem;cursor:pointer">Descartar</button>' +
+                '</span>';
+            document.body.appendChild(banner);
+            banner.querySelector('#draft-restore').addEventListener('click', function() {
+                restoreDraft(draft);
+                banner.remove();
+                showToast('Rascunho restaurado.', 'success');
+            });
+            banner.querySelector('#draft-discard').addEventListener('click', function() {
+                discardDraft();
+                banner.remove();
+                showToast('Rascunho descartado.', 'success');
+            });
+        }
+
+        // Autosave em mudanças do formulário (inputs, selects, editores e mídia)
+        document.getElementById('form-plantao').addEventListener('input', scheduleDraftSave);
+        document.getElementById('form-plantao').addEventListener('change', scheduleDraftSave);
+
+        // "Descartar" (cancelar) remove o rascunho antes de sair
+        const cancelLink = document.querySelector('.btn-cancel');
+        if (cancelLink) {
+            cancelLink.addEventListener('click', function() {
+                discardDraft();
+            });
+        }
+
+        checkSavedDraft();
 
         // Inicializar primeiro bloco
         document.querySelectorAll('.descricao-editor').forEach(function(ed) {
@@ -951,6 +1165,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['salvar_plantao'])) {
                 if (document.querySelectorAll('.report-block').length === 0) {
                     addReportBlock();
                 }
+                scheduleDraftSave();
             });
         });
     </script>

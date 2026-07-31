@@ -142,7 +142,6 @@ $midias = $conn->query("SELECT * FROM ocorrencias_midia WHERE ocorrencia_id = $i
                             <a href="consultar_ocorrencia.php" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Voltar"><i class="fas fa-arrow-left" style="font-size:10px"></i></a>
                             <h1 class="text-3xl font-bold text-slate-900">Editar Registro</h1>
                         </div>
-                        <button onclick="salvarEdicao()" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#22c55e;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Salvar"><i class="fas fa-save" style="font-size:10px"></i></button>
                     </div>
 
                     <?php if ($mensagem): ?>
@@ -228,6 +227,11 @@ $midias = $conn->query("SELECT * FROM ocorrencias_midia WHERE ocorrencia_id = $i
                                 <div class="descricao-editor" id="descricao-editor" contenteditable="true" data-placeholder="Descreva detalhadamente o ocorrido..."><?= $ocorrencia['descricao'] ?></div>
                                 <input type="hidden" name="descricao" id="descricao-hidden">
                             </div>
+                        </div>
+
+                        <div class="flex flex-col gap-4 pt-6 border-t border-slate-100 sm:flex-row sm:items-center sm:justify-end">
+                            <a href="consultar_ocorrencia.php" class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-600 text-sm font-semibold hover:bg-slate-50 transition-colors">Descartar</a>
+                            <button type="button" onclick="salvarEdicao()" class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-green-600 text-white text-sm font-semibold hover:bg-green-700 transition-colors shadow-sm"><i class="fas fa-save"></i> Salvar Alterações</button>
                         </div>
                     </form>
                 </div>
