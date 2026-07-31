@@ -178,7 +178,7 @@ $midias = $conn->query("SELECT * FROM ocorrencias_midia WHERE ocorrencia_id = $i
                                     <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                         <i class="fas fa-clock text-slate-400 text-sm"></i>
                                     </div>
-                                    <select name="periodo_dia" class="form-input pl-11 appearance-none" required>
+                                    <select name="periodo_dia" class="form-input pl-11 appearance-none pr-10" required>
                                         <option value="dia" <?= $ocorrencia['periodo_dia'] == 'dia' ? 'selected' : '' ?>>Diurno</option>
                                         <option value="noite" <?= $ocorrencia['periodo_dia'] == 'noite' ? 'selected' : '' ?>>Noturno</option>
                                     </select>
@@ -193,7 +193,7 @@ $midias = $conn->query("SELECT * FROM ocorrencias_midia WHERE ocorrencia_id = $i
                                     <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                         <i class="fas fa-map-marker-alt text-slate-400 text-sm"></i>
                                     </div>
-                                    <select name="local_id" class="form-input pl-11 appearance-none" required>
+                                    <select name="local_id" class="form-input pl-11 appearance-none pr-10" required>
                                         <optgroup label="Bases">
                                             <?php foreach ($bases as $b): ?>
                                                 <option value="b_<?= $b['id'] ?>" <?= $ocorrencia['base_id'] == $b['id'] ? 'selected' : '' ?>>Base: <?= htmlspecialchars($b['nome']) ?></option>

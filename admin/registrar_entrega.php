@@ -148,7 +148,7 @@ $situacoes = $conn->query("SELECT nome FROM situacoes_entrega ORDER BY nome")->f
                                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                             <i class="fas fa-truck text-slate-400 text-sm"></i>
                                         </div>
-                                        <select name="transportadora" class="form-input pl-11 appearance-none" required>
+                                        <select name="transportadora" class="form-input pl-11 appearance-none pr-10" required>
                                             <option value="">-- Selecione --</option>
                                             <?php foreach ($transportadoras as $t): ?>
                                                 <option value="<?= htmlspecialchars($t['nome']) ?>"><?= htmlspecialchars($t['nome']) ?></option>

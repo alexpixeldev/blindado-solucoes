@@ -164,7 +164,7 @@ $bases = $conn->query("SELECT id, nome FROM bases ORDER BY nome")->fetch_all(MYS
                                     <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                         <i class="fas fa-map-marker-alt text-slate-400 text-sm"></i>
                                     </div>
-                                    <select name="local_id" class="form-input pl-11 appearance-none" onchange="this.form.submit()">
+                                    <select name="local_id" class="form-input pl-11 appearance-none pr-10" onchange="this.form.submit()">
                                         <option value="">Todos os Locais</option>
                                         <optgroup label="Bases">
                                             <?php foreach ($bases as $b): ?>
