@@ -57,16 +57,16 @@ $edificios = $conn->query("SELECT e.id, e.nome, b.nome as base_nome FROM edifici
                 extend: {
                     colors: {
                         primary: {
-                            50: '#f0fdf4',
-                            100: '#dcfce7',
-                            200: '#bbf7d0',
-                            300: '#86efac',
-                            400: '#4ade80',
-                            500: '#22c55e',
-                            600: '#16a34a',
-                            700: '#15803d',
-                            800: '#166534',
-                            900: '#14532d',
+                            50: '#EDFBF0',
+                            100: '#D8F5DE',
+                            200: '#B4EAC0',
+                            300: '#8ADF9E',
+                            400: '#5BD077',
+                            500: '#3BBE55',
+                            600: '#25A937',
+                            700: '#1E8C2E',
+                            800: '#186F24',
+                            900: '#114A19',
                         }
                     }
                 }
@@ -133,8 +133,8 @@ $edificios = $conn->query("SELECT e.id, e.nome, b.nome as base_nome FROM edifici
                             </div>
 
                             <div class="flex gap-2">
-                                <button type="submit" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Filtrar"><i class="fas fa-filter" style="font-size:10px"></i></button>
-                                <a href="locacoes.php" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;text-decoration:none" title="Limpar Filtros"><i class="fas fa-sync-alt" style="font-size:10px"></i></a>
+                                <button type="submit" class="icon-btn" title="Filtrar"><i class="fas fa-filter" style="font-size:10px"></i></button>
+                                <a href="locacoes.php" class="icon-btn" title="Limpar Filtros"><i class="fas fa-sync-alt" style="font-size:10px"></i></a>
                             </div>
                         </form>
                     </div>

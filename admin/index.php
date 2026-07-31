@@ -165,7 +165,7 @@ if ($usuario_categoria === 'administrativo') {
 }
 ?>
 <!DOCTYPE html>
-<html lang="pt-br" class="h-full bg-slate-50">
+<html lang="pt-br" class="h-full" style="background: var(--bg-primary);">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -180,16 +180,16 @@ if ($usuario_categoria === 'administrativo') {
                 extend: {
                     colors: {
                         primary: {
-                            50: '#f0fdf4',
-                            100: '#dcfce7',
-                            200: '#bbf7d0',
-                            300: '#86efac',
-                            400: '#4ade80',
-                            500: '#22c55e',
-                            600: '#16a34a',
-                            700: '#15803d',
-                            800: '#166534',
-                            900: '#14532d',
+                            50: '#EDFBF0',
+                            100: '#D8F5DE',
+                            200: '#B4EAC0',
+                            300: '#8ADF9E',
+                            400: '#5BD077',
+                            500: '#3BBE55',
+                            600: '#25A937',
+                            700: '#1E8C2E',
+                            800: '#186F24',
+                            900: '#114A19',
                         }
                     }
                 }
@@ -206,25 +206,22 @@ if ($usuario_categoria === 'administrativo') {
     <link rel="stylesheet" href="apexcharts-flyonui.min.css">
     <style>
         :root {
-            --color-base-content: #1e293b;
-            --color-base-100: #ffffff;
-            --color-base-200: #f1f5f9;
-            --color-info: #22c55e;
-            --color-accent: #3b82f6;
-            --color-success: #22c55e;
+            --color-base-content: #F2F2F3;
+            --color-base-100: #122542;
+            --color-base-200: #061328;
+            --color-info: #3BBE55;
+            --color-accent: #29A7F7;
+            --color-success: #3BBE55;
             --color-error: #ef4444;
         }
     </style>
-    
-    <!-- Modo Noturno -->
-    <?php include 'components/dark_mode_header.php'; ?>
     
     <!-- ApexCharts -->
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     <!-- FlyonUI ApexCharts Helper -->
     <script src="helper-apexcharts.min.js"></script>
 </head>
-<body class="h-full text-slate-800 antialiased">
+<body class="h-full text-slate-800 antialiased" style="background: var(--bg-primary);">
     <div class="flex min-h-screen">
         <?php include 'components/sidebar.php'; ?>
         
@@ -402,13 +399,11 @@ if ($usuario_categoria === 'administrativo') {
                 </div>
             </main>
             
-            <footer class="border-t border-slate-200 bg-white p-4 text-center text-xs text-slate-500">
+            <footer class="border-t p-4 text-center text-xs" style="border-color: var(--border); color: var(--text-secondary); background: var(--bg-secondary);">
                 <p>&copy; <?php echo date('Y'); ?> Blindado Soluções. Todos os direitos reservados.</p>
             </footer>
         </div>
     </div>
-
-    <?php include 'components/base_footer.php'; ?>
 
     <?php if (isset($chart_data)): ?>
     <script>
@@ -690,4 +685,5 @@ if ($usuario_categoria === 'administrativo') {
         });
     </script>
     <?php endif; ?>
-</html>
+
+    <?php include 'components/footer.php'; ?>

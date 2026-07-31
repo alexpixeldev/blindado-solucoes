@@ -181,8 +181,8 @@ try {
                 extend: {
                     colors: {
                         primary: {
-                            50: '#f0fdf4', 100: '#dcfce7', 200: '#bbf7d0', 300: '#86efac', 400: '#4ade80',
-                            500: '#22c55e', 600: '#16a34a', 700: '#15803d', 800: '#166534', 900: '#14532d',
+                            50: '#EDFBF0', 100: '#D8F5DE', 200: '#B4EAC0', 300: '#8ADF9E', 400: '#5BD077',
+                            500: '#3BBE55', 600: '#25A937', 700: '#1E8C2E', 800: '#186F24', 900: '#114A19',
                         }
                     }
                 }
@@ -201,7 +201,7 @@ try {
             <main class="flex-1 overflow-y-auto p-4 sm:p-8 custom-scrollbar">
                 <div class="mb-8 animate-fade-in flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div class="flex items-center gap-4">
-                        <a href="listar_colaboradores.php" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Voltar"><i class="fas fa-arrow-left" style="font-size:10px"></i></a>
+                        <a href="listar_colaboradores.php" class="icon-btn" title="Voltar"><i class="fas fa-arrow-left" style="font-size:10px"></i></a>
                         <div>
                             <h1 class="text-2xl font-bold text-slate-900 sm:text-3xl">Perfil do Colaborador</h1>
                             <p class="mt-1 text-slate-500">Informações detalhadas de <?= htmlspecialchars($colaborador['nome_real'] ?? $colaborador['nome']) ?>.</p>
@@ -209,7 +209,7 @@ try {
                     </div>
                     <div class="flex gap-3">
                         <?php if (($_SESSION['usuario_categoria'] ?? '') === 'administrativo'): ?>
-                            <a href="editar_colaborador.php?id=<?= $colaborador['id'] ?>" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Editar"><i class="fas fa-edit" style="font-size:10px"></i></a>
+                            <a href="editar_colaborador.php?id=<?= $colaborador['id'] ?>" class="icon-btn" title="Editar"><i class="fas fa-edit" style="font-size:10px"></i></a>
                         <?php endif; ?>
                     </div>
                 </div>

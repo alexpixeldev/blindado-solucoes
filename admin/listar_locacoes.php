@@ -5,7 +5,7 @@ require_once 'components/modern_calendar.php';
 
 function btnCopiar($texto) {
     $js = json_encode($texto, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
-    return '<button type="button" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;vertical-align:middle;padding:0;line-height:1;flex-shrink:0" onclick=\'copiarTexto(' . $js . ', this)\' onmouseover="this.style.background=\'#64748b\'" onmouseout="this.style.background=\'#94a3b8\'" title="Copiar"><i class="fas fa-copy"></i></button>';
+    return '<button type="button" class="icon-btn" onclick=\'copiarTexto(' . $js . ', this)\' onmouseover="this.style.background=\'#64748b\'" onmouseout="this.style.background=\'#94a3b8\'" title="Copiar"><i class="fas fa-copy"></i></button>';
 }
 
 $usuario_categoria = $_SESSION['usuario_categoria'] ?? '';
@@ -176,8 +176,8 @@ if (!empty($locacaoIds)) {
                 extend: {
                     colors: {
                         primary: {
-                            50: '#f0fdf4', 100: '#dcfce7', 200: '#bbf7d0', 300: '#86efac', 400: '#4ade80',
-                            500: '#22c55e', 600: '#16a34a', 700: '#15803d', 800: '#166534', 900: '#14532d',
+                            50: '#EDFBF0', 100: '#D8F5DE', 200: '#B4EAC0', 300: '#8ADF9E', 400: '#5BD077',
+                            500: '#3BBE55', 600: '#25A937', 700: '#1E8C2E', 800: '#186F24', 900: '#114A19',
                         }
                     }
                 }
@@ -195,7 +195,7 @@ if (!empty($locacaoIds)) {
         }
         .selfie-thumb:hover {
             transform: scale(1.12);
-            box-shadow: 0 20px 45px rgba(15, 23, 42, 0.18);
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.4);
         }
         .photo-modal-backdrop {
             position: fixed;
@@ -214,10 +214,11 @@ if (!empty($locacaoIds)) {
         .photo-modal-card {
             max-width: 920px;
             width: 100%;
-            background: #ffffff;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
             border-radius: 1.25rem;
             overflow: hidden;
-            box-shadow: 0 32px 90px rgba(15,23,42,0.25);
+            box-shadow: 0 32px 90px rgba(0,0,0,0.55);
         }
         .photo-modal-card img {
             width: 100%;
@@ -238,7 +239,7 @@ if (!empty($locacaoIds)) {
         }
         .photo-modal-footer .modal-title {
             font-size: 0.95rem;
-            color: #0f172a;
+            color: var(--text-primary);
             font-weight: 600;
         }
         .locacoes-list {
@@ -247,36 +248,36 @@ if (!empty($locacaoIds)) {
             gap: 2rem;
         }
         .loc-card {
-            background: #FFFFFF;
-            border: 1px solid #e2e8f0;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
             border-radius: 1rem;
-            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -4px rgba(0,0,0,0.05);
+            box-shadow: 0 8px 24px var(--shadow);
         }
         .loc-card-header {
             display: flex;
             align-items: center;
             gap: 0.75rem;
             padding: 0.75rem 1rem;
-            background: #FFFFFF;
-            border-bottom: 1px solid #e2e8f0;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
             border-radius: 1rem 1rem 0 0;
         }
         .loc-card-title {
             font-weight: 700;
             font-size: 0.8rem;
-            color: #16a34a;
+            color: #25A937;
         }
         .loc-card-apt {
             font-size: 0.65rem;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.05em;
-            color: #64748b;
+            color: var(--text-secondary);
         }
         .loc-card-date {
             margin-left: auto;
             font-size: 0.7rem;
-            color: #94a3b8;
+            color: var(--text-secondary);
             white-space: nowrap;
         }
         .loc-card-delete {
@@ -286,7 +287,7 @@ if (!empty($locacaoIds)) {
             padding: 0.75rem 1rem 1rem 1rem;
         }
         .loc-section + .loc-section {
-            border-top: 1px solid #e2e8f0;
+            border-top: 1px solid var(--border);
             margin-top: 6px;
             padding-top: 6px;
         }
@@ -297,10 +298,10 @@ if (!empty($locacaoIds)) {
             padding: 0.125rem 0.25rem;
         }
         .loc-inq-row > div:hover {
-            background: #f1f5f9;
+            background: rgba(255, 255, 255, 0.06);
         }
         .loc-inq-row + .loc-inq-row {
-            border-top: 1px dashed #e2e8f0;
+            border-top: 1px dashed rgba(255, 255, 255, 0.12);
             margin-top: 3px;
             padding-top: 3px;
         }
@@ -378,7 +379,7 @@ if (!empty($locacaoIds)) {
                             </div>
 
                             <div>
-                                <a href="listar_locacoes.php" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;text-decoration:none" title="Limpar Filtros"><i class="fas fa-sync-alt" style="font-size:10px"></i></a>
+                                <a href="listar_locacoes.php" class="icon-btn" title="Limpar Filtros"><i class="fas fa-sync-alt" style="font-size:10px"></i></a>
                             </div>
                         </form>
                     </div>
@@ -424,11 +425,11 @@ if (!empty($locacaoIds)) {
                             </div>
                         </div>
                         <div class="flex gap-2 ml-auto">
-                            <button type="button" onclick="clearSelection()" class="px-4 py-2 text-xs font-bold text-red-700 bg-white border border-red-300 rounded-lg hover:bg-red-100 transition-colors">
-                                <i class="fas fa-times mr-1"></i> Limpar
+                            <button type="button" onclick="clearSelection()" class="btn btn-cancel btn-sm">
+                                <i class="fas fa-times"></i> Limpar
                             </button>
-                            <button type="button" onclick="bulkDelete()" class="px-4 py-2 text-xs font-bold text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors shadow-sm">
-                                <i class="fas fa-trash-alt mr-1"></i> Excluir Selecionadas
+                            <button type="button" onclick="bulkDelete()" class="btn btn-danger btn-sm">
+                                <i class="fas fa-trash-alt"></i> Excluir Selecionadas
                             </button>
                         </div>
                     </div>
@@ -471,7 +472,7 @@ if (!empty($locacaoIds)) {
                                 <?php if ($usuario_categoria === 'gerente'): ?>
                                     <form method="POST" class="loc-card-delete" onsubmit="return confirm('Tem certeza que deseja excluir esta locação?');">
                                         <input type="hidden" name="id_delete" value="<?= $loc['id'] ?>">
-                                        <button type="submit" name="delete_locacao" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#ef4444;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Excluir"><i class="fas fa-trash" style="font-size:10px"></i></button>
+                                        <button type="submit" name="delete_locacao" class="icon-btn-red" title="Excluir"><i class="fas fa-trash" style="font-size:10px"></i></button>
                                     </form>
                                 <?php endif; ?>
                             </div>
@@ -489,7 +490,7 @@ if (!empty($locacaoIds)) {
                                                           <?php endif; ?>
                                                       </div>
                                                       <?php if (!empty($inquilino['selfie'])): ?>
-                                                      <a href="<?= htmlspecialchars($inquilino['selfie']) ?>" download="selfie-<?= preg_replace('/[^a-zA-Z0-9]/', '_', $inquilino['nome']) ?>.jpg" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#3b82f6;color:#fff;font-size:10px;cursor:pointer;vertical-align:middle;padding:0;line-height:1;flex-shrink:0;text-decoration:none" onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#3b82f6'" title="Salvar imagem">
+                                                      <a href="<?= htmlspecialchars($inquilino['selfie']) ?>" download="selfie-<?= preg_replace('/[^a-zA-Z0-9]/', '_', $inquilino['nome']) ?>.jpg" class="icon-btn-blue" onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#3b82f6'" title="Salvar imagem">
                                                           <i class="fas fa-download" style="font-size:10px"></i>
                                                       </a>
                                                       <?php endif; ?>
@@ -561,7 +562,7 @@ if (!empty($locacaoIds)) {
                     <div id="photoModalSubtitle" class="text-sm text-slate-500">Clique no botão para salvar.</div>
                 </div>
                 <div class="modal-actions">
-                    <a id="photoModalSave" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#3b82f6;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;text-decoration:none" onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#3b82f6'" title="Salvar" download="selfie.jpg" href="#">
+                    <a id="photoModalSave" class="icon-btn-blue" onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#3b82f6'" title="Salvar" download="selfie.jpg" href="#">
                         <i class="fas fa-download" style="font-size:10px"></i>
                     </a>
                     <button type="button" id="photoModalClose" class="btn-secondary inline-flex items-center gap-2">

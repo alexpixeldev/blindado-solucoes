@@ -44,16 +44,16 @@ $stmt->close();
                 extend: {
                     colors: {
                         primary: {
-                            50: '#f0fdf4',
-                            100: '#dcfce7',
-                            200: '#bbf7d0',
-                            300: '#86efac',
-                            400: '#4ade80',
-                            500: '#22c55e',
-                            600: '#16a34a',
-                            700: '#15803d',
-                            800: '#166534',
-                            900: '#14532d',
+                            50: '#EDFBF0',
+                            100: '#D8F5DE',
+                            200: '#B4EAC0',
+                            300: '#8ADF9E',
+                            400: '#5BD077',
+                            500: '#3BBE55',
+                            600: '#25A937',
+                            700: '#1E8C2E',
+                            800: '#186F24',
+                            900: '#114A19',
                         }
                     }
                 }
@@ -90,7 +90,7 @@ $stmt->close();
                             <input type="text" name="search" class="form-input pl-11" placeholder="Buscar por nome ou login..." value="<?= htmlspecialchars($search) ?>">
                         </div>
                         <?php if ($search): ?>
-                            <a href="acoes_disciplinares.php" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;text-decoration:none" title="Limpar Filtros"><i class="fas fa-sync-alt" style="font-size:10px"></i></a>
+                            <a href="acoes_disciplinares.php" class="icon-btn" title="Limpar Filtros"><i class="fas fa-sync-alt" style="font-size:10px"></i></a>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -122,7 +122,7 @@ $stmt->close();
                                             <td class="font-bold text-slate-900"><?= htmlspecialchars(!empty($colab['nome_real']) ? $colab['nome_real'] : 'N/A') ?></td>
                                             <td class="text-slate-500"><?= htmlspecialchars($colab['nome']) ?></td>
                                             <td class="text-right">
-                                                <a href="registrar_acao_disciplinar.php?id=<?= $colab['id'] ?>" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#ef4444;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;text-decoration:none" title="Registrar Disciplina"><i class="fas fa-gavel" style="font-size:10px"></i></a>
+                                                <a href="registrar_acao_disciplinar.php?id=<?= $colab['id'] ?>" class="icon-btn-red" title="Registrar Disciplina"><i class="fas fa-gavel" style="font-size:10px"></i></a>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>

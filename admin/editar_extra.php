@@ -97,8 +97,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 extend: {
                     colors: {
                         primary: {
-                            50: '#f0fdf4', 100: '#dcfce7', 200: '#bbf7d0', 300: '#86efac', 400: '#4ade80',
-                            500: '#22c55e', 600: '#16a34a', 700: '#15803d', 800: '#166534', 900: '#14532d',
+                            50: '#EDFBF0', 100: '#D8F5DE', 200: '#B4EAC0', 300: '#8ADF9E', 400: '#5BD077',
+                            500: '#3BBE55', 600: '#25A937', 700: '#1E8C2E', 800: '#186F24', 900: '#114A19',
                         }
                     }
                 }
@@ -122,7 +122,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <!-- Page Header -->
                 <div class="mb-8 animate-fade-in max-w-3xl mx-auto">
                     <div class="flex items-center gap-4">
-                        <a href="ver_extras.php?id=<?= $extra['usuario_id'] ?>" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;text-decoration:none" title="Voltar"><i class="fas fa-arrow-left" style="font-size:10px"></i></a>
+                        <a href="ver_extras.php?id=<?= $extra['usuario_id'] ?>" class="icon-btn" title="Voltar"><i class="fas fa-arrow-left" style="font-size:10px"></i></a>
                         <div>
                             <h1 class="text-2xl font-bold text-slate-900 sm:text-3xl">Editar Hora Extra</h1>
                             <p class="mt-1 text-slate-500">Colaborador: <span class="font-bold text-slate-900"><?= htmlspecialchars($extra['nome_real']) ?></span></p>
@@ -164,7 +164,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <div class="flex items-center justify-between">
                                     <label class="form-label">Documento Anexo</label>
                                     <?php if ($extra['arquivo']): ?>
-                                        <a href="../uploads/extras/<?= htmlspecialchars($extra['arquivo']) ?>" target="_blank" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#3b82f6;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;text-decoration:none" onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#3b82f6'" title="Visualizar"><i class="fas fa-external-link-alt" style="font-size:10px"></i></a>
+                                        <a href="../uploads/extras/<?= htmlspecialchars($extra['arquivo']) ?>" target="_blank" class="icon-btn-blue" onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#3b82f6'" title="Visualizar"><i class="fas fa-external-link-alt" style="font-size:10px"></i></a>
                                     <?php endif; ?>
                                 </div>
                                 
@@ -181,7 +181,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             </div>
 
                             <div class="pt-6 border-t border-slate-100 flex flex-col sm:flex-row gap-3">
-                                <button type="submit" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#22c55e;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Salvar"><i class="fas fa-save" style="font-size:10px"></i></button>
+                                <button type="submit" class="icon-btn-green" title="Salvar"><i class="fas fa-save" style="font-size:10px"></i></button>
                                 <a href="ver_extras.php?id=<?= $extra['usuario_id'] ?>" class="btn-secondary text-center">
                                     <span>Cancelar</span>
                                 </a>

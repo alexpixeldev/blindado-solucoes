@@ -101,8 +101,8 @@ $bases = $conn->query("SELECT id, nome FROM bases ORDER BY nome")->fetch_all(MYS
                 extend: {
                     colors: {
                         primary: {
-                            50: '#f0fdf4', 100: '#dcfce7', 200: '#bbf7d0', 300: '#86efac', 400: '#4ade80',
-                            500: '#22c55e', 600: '#16a34a', 700: '#15803d', 800: '#166534', 900: '#14532d',
+                            50: '#EDFBF0', 100: '#D8F5DE', 200: '#B4EAC0', 300: '#8ADF9E', 400: '#5BD077',
+                            500: '#3BBE55', 600: '#25A937', 700: '#1E8C2E', 800: '#186F24', 900: '#114A19',
                         }
                     }
                 }
@@ -113,16 +113,16 @@ $bases = $conn->query("SELECT id, nome FROM bases ORDER BY nome")->fetch_all(MYS
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style_modern.css">
     <style>
-        .plantao-card { background: white; border-radius: 1.5rem; border: 1px solid #f1f5f9; margin-bottom: 2rem; overflow: hidden; transition: all 0.3s ease; }
-        .plantao-card:hover { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); }
-        .plantao-header { background: #f8fafc; padding: 1.5rem; border-bottom: 1px solid #f1f5f9; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .plantao-card { background: var(--bg-card); border-radius: 1.5rem; border: 1px solid var(--border); margin-bottom: 2rem; overflow: hidden; transition: all 0.3s ease; box-shadow: 0 8px 32px var(--shadow); }
+        .plantao-card:hover { box-shadow: 0 12px 28px var(--shadow); }
+        .plantao-header { background: var(--bg-secondary); padding: 1.5rem; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
         .relatorio-body { padding: 2.5rem; }
-        .mention { background: #dcfce7; color: #15803d; padding: 2px 6px; border-radius: 4px; font-weight: 600; text-decoration: none; }
-        .prose p { margin-bottom: 1rem; line-height: 1.7; font-size: 1.05rem; color: #475569; }
-        .prose img, .prose video { max-width: 240px !important; max-height: 180px !important; border-radius: 10px !important; margin: 0.5rem 0 !important; box-shadow: 0 2px 6px rgba(0,0,0,0.1); cursor: zoom-in; border: 1.5px solid #e2e8f0; display: block; transition: border-color 0.15s, box-shadow 0.15s; }
-        .prose img:hover, .prose video:hover { border-color: #3b82f6; box-shadow: 0 4px 12px rgba(59,130,246,0.15); }
+        .mention { background: #D8F5DE; color: #1E8C2E; padding: 2px 6px; border-radius: 4px; font-weight: 600; text-decoration: none; }
+        .prose p { margin-bottom: 1rem; line-height: 1.7; font-size: 1.05rem; color: var(--text-secondary); }
+        .prose img, .prose video { max-width: 240px !important; max-height: 180px !important; border-radius: 10px !important; margin: 0.5rem 0 !important; box-shadow: 0 2px 6px rgba(0,0,0,0.3); cursor: zoom-in; border: 1px solid var(--border); display: block; transition: border-color 0.15s, box-shadow 0.15s; }
+        .prose img:hover, .prose video:hover { border-color: var(--secondary-hover); box-shadow: 0 4px 12px rgba(7, 146, 242, 0.2); }
         .prose audio { max-width: 340px; width: 100%; margin: 0.5rem 0; display: block; }
-        .prose a.media-link { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; background: #f1f5f9; border-radius: 8px; font-size: 0.85rem; color: #2563eb; text-decoration: none; }
+        .prose a.media-link { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; font-size: 0.85rem; color: var(--secondary-light); text-decoration: none; }
         .lightbox { position: fixed; inset: 0; background: rgba(15,23,42,0.92); display: none; align-items: center; justify-content: center; z-index: 9999; padding: 24px; }
         .lightbox.open { display: flex; }
         .lightbox img { max-width: 92vw; max-height: 88vh; border-radius: 8px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
@@ -145,7 +145,7 @@ $bases = $conn->query("SELECT id, nome FROM bases ORDER BY nome")->fetch_all(MYS
                             <h1 class="text-3xl font-bold text-slate-900">Livro de Ocorrências</h1>
                             <p class="text-slate-500">Histórico de plantões e registros operacionais.</p>
                         </div>
-                        <a href="registrar_ocorrencia.php" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#22c55e;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Novo Registro"><i class="fas fa-plus" style="font-size:10px"></i></a>
+                        <a href="registrar_ocorrencia.php" class="icon-btn-green" title="Novo Registro"><i class="fas fa-plus" style="font-size:10px"></i></a>
                     </div>
 
                     <!-- Filtros Modernos -->
@@ -224,11 +224,11 @@ $bases = $conn->query("SELECT id, nome FROM bases ORDER BY nome")->fetch_all(MYS
                                                     </div>
                                                     <?php if ($reg['usuario_id'] == $_SESSION['usuario_id'] || $usuario_categoria === 'gerente'): ?>
                                                         <div class="flex gap-2">
-                                                            <a href="editar_ocorrencia.php?id=<?= $reg['id'] ?>" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Editar"><i class="fas fa-edit" style="font-size:10px"></i></a>
+                                                            <a href="editar_ocorrencia.php?id=<?= $reg['id'] ?>" class="icon-btn" title="Editar"><i class="fas fa-edit" style="font-size:10px"></i></a>
                                                             <?php if ($usuario_categoria === 'gerente'): ?>
                                                                 <form method="POST" onsubmit="return confirm('Excluir este registro?');" class="inline">
                                                                     <input type="hidden" name="id_delete" value="<?= $reg['id'] ?>">
-                                                                    <button type="submit" name="delete_ocorrencia" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#ef4444;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Excluir"><i class="fas fa-trash-alt" style="font-size:10px"></i></button>
+                                                                    <button type="submit" name="delete_ocorrencia" class="icon-btn-red" title="Excluir"><i class="fas fa-trash-alt" style="font-size:10px"></i></button>
                                                                 </form>
                                                             <?php endif; ?>
                                                         </div>

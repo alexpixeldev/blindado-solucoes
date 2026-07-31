@@ -209,7 +209,7 @@ if ($id) {
             theme: {
                 extend: {
                     colors: {
-                        primary: { 50: '#f0fdf4', 100: '#dcfce7', 200: '#bbf7d0', 300: '#86efac', 400: '#4ade80', 500: '#22c55e', 600: '#16a34a', 700: '#15803d', 800: '#166534', 900: '#14532d' }
+                        primary: { 50: '#EDFBF0', 100: '#D8F5DE', 200: '#B4EAC0', 300: '#8ADF9E', 400: '#5BD077', 500: '#3BBE55', 600: '#25A937', 700: '#1E8C2E', 800: '#186F24', 900: '#114A19' }
                     }
                 }
             }
@@ -220,25 +220,25 @@ if ($id) {
     <link rel="stylesheet" href="style_modern.css">
     <style>
         .loc-card {
-            background: #FFFFFF;
-            border: 1px solid #e2e8f0;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
             border-radius: 1rem;
-            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -4px rgba(0,0,0,0.05);
+            box-shadow: 0 8px 24px var(--shadow);
         }
         .loc-card-header {
             display: flex;
             align-items: center;
             gap: 0.75rem;
             padding: 0.75rem 1rem;
-            background: #FFFFFF;
-            border-bottom: 1px solid #e2e8f0;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
             border-radius: 1rem 1rem 0 0;
         }
         .loc-card-body {
             padding: 1rem;
         }
         .loc-section + .loc-section {
-            border-top: 1px solid #e2e8f0;
+            border-top: 1px solid var(--border);
             margin-top: 12px;
             padding-top: 12px;
         }
@@ -252,7 +252,7 @@ if ($id) {
             <main class="flex-1 overflow-y-auto p-4 sm:p-8 custom-scrollbar">
                 <div class="mb-8 animate-fade-in">
                     <div class="flex items-center gap-4">
-                        <a href="controle_dados.php?tipo=<?= $tipo ?>" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;text-decoration:none" title="Voltar"><i class="fas fa-arrow-left" style="font-size:10px"></i></a>
+                        <a href="controle_dados.php?tipo=<?= $tipo ?>" class="icon-btn" title="Voltar"><i class="fas fa-arrow-left" style="font-size:10px"></i></a>
                         <div>
                             <h1 class="text-2xl font-bold text-slate-900 sm:text-3xl"><?= $id ? 'Editar' : 'Novo' ?> Registro: <?= ucfirst($tipo) ?></h1>
                             <p class="mt-1 text-slate-500">Preencha as informações técnicas abaixo.</p>
@@ -462,8 +462,8 @@ if ($id) {
 
                             <div class="loc-section">
                                 <div class="flex flex-col sm:flex-row gap-3">
-                                    <button type="submit" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#22c55e;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Salvar"><i class="fas fa-save" style="font-size:10px"></i></button>
-                                    <a href="controle_dados.php?tipo=<?= $tipo ?>" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;text-decoration:none" title="Cancelar"><i class="fas fa-times" style="font-size:10px"></i></a>
+                                    <button type="submit" class="icon-btn-green" title="Salvar"><i class="fas fa-save" style="font-size:10px"></i></button>
+                                    <a href="controle_dados.php?tipo=<?= $tipo ?>" class="icon-btn" title="Cancelar"><i class="fas fa-times" style="font-size:10px"></i></a>
                                 </div>
                             </div>
                         </form>

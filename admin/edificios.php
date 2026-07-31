@@ -306,16 +306,16 @@ unset($_SESSION['mensagem'], $_SESSION['mensagem_tipo']);
                 extend: {
                     colors: {
                         primary: {
-                            50: '#f0fdf4',
-                            100: '#dcfce7',
-                            200: '#bbf7d0',
-                            300: '#86efac',
-                            400: '#4ade80',
-                            500: '#22c55e',
-                            600: '#16a34a',
-                            700: '#15803d',
-                            800: '#166534',
-                            900: '#14532d',
+                            50: '#EDFBF0',
+                            100: '#D8F5DE',
+                            200: '#B4EAC0',
+                            300: '#8ADF9E',
+                            400: '#5BD077',
+                            500: '#3BBE55',
+                            600: '#25A937',
+                            700: '#1E8C2E',
+                            800: '#186F24',
+                            900: '#114A19',
                         }
                     }
                 }
@@ -357,7 +357,7 @@ unset($_SESSION['mensagem'], $_SESSION['mensagem_tipo']);
                             ];
                             $current_add = $add_links[$tab] ?? $add_links['edificios'];
                         ?>
-                        <a href="<?= $current_add['url'] ?>" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#22c55e;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="<?= $current_add['label'] ?>"><i class="fas fa-plus" style="font-size:10px"></i></a>
+                        <a href="<?= $current_add['url'] ?>" class="icon-btn-green" title="<?= $current_add['label'] ?>"><i class="fas fa-plus" style="font-size:10px"></i></a>
                     <?php endif; ?>
                 </div>
 
@@ -409,7 +409,7 @@ unset($_SESSION['mensagem'], $_SESSION['mensagem_tipo']);
                                 </div>
                             </div>
 
-                            <a href="?tab=edificios" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Limpar Filtros"><i class="fas fa-sync-alt" style="font-size:10px"></i></a>
+                            <a href="?tab=edificios" class="icon-btn" title="Limpar Filtros"><i class="fas fa-sync-alt" style="font-size:10px"></i></a>
                         </form>
                     </div>
                 </div>
@@ -540,12 +540,12 @@ unset($_SESSION['mensagem'], $_SESSION['mensagem_tipo']);
                                                 <div class="text-sm text-slate-500">Base responsável: <span class="font-semibold text-slate-900"><?= render_card_value($item['nome_base'] ?? 'Base não informada') ?></span></div>
                                                 <div class="flex gap-2">
                                                     <?php if ($pode_editar): ?>
-                                                    <a href="editar_edificio.php?id=<?= $item['id'] ?>" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Editar"><i class="fas fa-edit" style="font-size:10px"></i></a>
+                                                    <a href="editar_edificio.php?id=<?= $item['id'] ?>" class="icon-btn" title="Editar"><i class="fas fa-edit" style="font-size:10px"></i></a>
                                                         <form method="POST" class="inline" onsubmit="return confirm('Tem certeza que deseja excluir este edifício?');">
                                                             <input type="hidden" name="id_delete" value="<?= $item['id'] ?>">
                                                             <input type="hidden" name="tipo_delete" value="edificio">
                                                             <input type="hidden" name="current_tab" value="<?= $tab ?>">
-                                                            <button type="submit" name="delete_item" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#ef4444;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Excluir"><i class="fas fa-trash-alt" style="font-size:10px"></i></button>
+                                                            <button type="submit" name="delete_item" class="icon-btn-red" title="Excluir"><i class="fas fa-trash-alt" style="font-size:10px"></i></button>
                                                         </form>
                                                     <?php endif; ?>
                                                 </div>

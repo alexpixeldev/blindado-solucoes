@@ -53,9 +53,9 @@ $stmt->close();
                     <div class="admin-card">
                         <form method="GET" class="flex gap-4">
                             <input type="text" name="search" class="form-input flex-1" placeholder="Buscar por nome, data ou local..." value="<?= htmlspecialchars($search) ?>">
-                            <button type="submit" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Buscar"><i class="fas fa-search" style="font-size:10px"></i></button>
+                            <button type="submit" class="icon-btn" title="Buscar"><i class="fas fa-search" style="font-size:10px"></i></button>
                             <?php if ($search): ?>
-                                <a href="ver_todos_extras.php" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;text-decoration:none" title="Limpar"><i class="fas fa-sync-alt" style="font-size:10px"></i></a>
+                                <a href="ver_todos_extras.php" class="icon-btn" title="Limpar"><i class="fas fa-sync-alt" style="font-size:10px"></i></a>
                             <?php endif; ?>
                         </form>
                     </div>
@@ -89,7 +89,7 @@ $stmt->close();
                                             <td class="px-4 py-3"><?= htmlspecialchars($e['registrador']) ?></td>
                                             <td class="px-4 py-3 text-center">
                                                 <?php if (!empty($e['arquivo'])): ?>
-                                                    <a href="../uploads/extras/<?= htmlspecialchars($e['arquivo']) ?>" target="_blank" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#3b82f6;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;text-decoration:none" title="Ver Anexo"><i class="fas fa-paperclip" style="font-size:10px"></i></a>
+                                                    <a href="../uploads/extras/<?= htmlspecialchars($e['arquivo']) ?>" target="_blank" class="icon-btn-blue" title="Ver Anexo"><i class="fas fa-paperclip" style="font-size:10px"></i></a>
                                                 <?php else: ?>
                                                     <span class="text-xs text-slate-400">—</span>
                                                 <?php endif; ?>

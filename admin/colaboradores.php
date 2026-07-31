@@ -87,16 +87,16 @@ function calcular_horas($inicio, $fim) {
                 extend: {
                     colors: {
                         primary: {
-                            50: '#f0fdf4',
-                            100: '#dcfce7',
-                            200: '#bbf7d0',
-                            300: '#86efac',
-                            400: '#4ade80',
-                            500: '#22c55e',
-                            600: '#16a34a',
-                            700: '#15803d',
-                            800: '#166534',
-                            900: '#14532d',
+                            50: '#EDFBF0',
+                            100: '#D8F5DE',
+                            200: '#B4EAC0',
+                            300: '#8ADF9E',
+                            400: '#5BD077',
+                            500: '#3BBE55',
+                            600: '#25A937',
+                            700: '#1E8C2E',
+                            800: '#186F24',
+                            900: '#114A19',
                         }
                     }
                 }
@@ -126,7 +126,7 @@ function calcular_horas($inicio, $fim) {
                     <div class="h-10 w-10 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center font-bold">
                         <?= strtoupper(substr($primeiro_nome, 0, 1)) ?>
                     </div>
-                    <a href="logout.php" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#ef4444;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Sair"><i class="fas fa-sign-out-alt" style="font-size:10px"></i></a>
+                    <a href="logout.php" class="icon-btn-red" title="Sair"><i class="fas fa-sign-out-alt" style="font-size:10px"></i></a>
                 </div>
             </header>
             
@@ -137,7 +137,7 @@ function calcular_horas($inicio, $fim) {
                         <h1 class="text-2xl font-bold text-slate-900 sm:text-3xl">Olá, <?= htmlspecialchars($primeiro_nome) ?> 👋</h1>
                         <p class="mt-1 text-slate-500">Bem-vindo ao seu portal do colaborador. Aqui você encontra suas informações profissionais.</p>
                     </div>
-                    <a href="alterar_senha_colaborador.php" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#3b82f6;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Alterar Senha"><i class="fas fa-key" style="font-size:10px"></i></a>
+                    <a href="alterar_senha_colaborador.php" class="icon-btn-blue" title="Alterar Senha"><i class="fas fa-key" style="font-size:10px"></i></a>
                 </div>
 
                 <!-- Stats Grid -->
@@ -197,7 +197,7 @@ function calcular_horas($inicio, $fim) {
                                                         <td class="font-bold text-slate-900"><?= $meses[$c['mes']] ?> / <?= $c['ano'] ?></td>
                                                         <td class="text-slate-500"><?= htmlspecialchars($c['descricao'] ?: 'Contracheque Mensal') ?></td>
                                                         <td class="text-right">
-                                                            <a href="../uploads/contracheques/<?= $c['arquivo'] ?>" target="_blank" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#3b82f6;color:#fff;font-size:10px;cursor:pointer;vertical-align:middle;padding:0;line-height:1;flex-shrink:0;text-decoration:none" onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#3b82f6'" title="Baixar PDF">
+                                                            <a href="../uploads/contracheques/<?= $c['arquivo'] ?>" target="_blank" class="icon-btn-blue" onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#3b82f6'" title="Baixar PDF">
                                                                 <i class="fas fa-download" style="font-size:10px"></i>
                                                             </a>
                                                         </td>

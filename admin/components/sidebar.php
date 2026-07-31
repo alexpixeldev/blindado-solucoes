@@ -18,7 +18,7 @@ $is_operador = ($usuario_categoria === 'operador');
 
 // Função auxiliar para verificar se o item está ativo
 function isActive($page, $current_page) {
-    return $page === $current_page ? 'bg-primary-600 text-white shadow-lg shadow-primary-600/20' : 'text-slate-300 hover:bg-white/10 hover:text-white';
+    return $page === $current_page ? 'nav-item nav-active' : 'nav-item';
 }
 
 // Get first letter for avatar
@@ -37,7 +37,7 @@ $categoria_labels = [
 $categoria_label = $categoria_labels[$usuario_categoria] ?? 'Usuário';
 ?>
 
-<aside id="admin-sidebar" class="fixed inset-y-0 left-0 z-40 w-72 -translate-x-full flex flex-col bg-slate-900 text-white transition-transform duration-300 ease-in-out lg:static lg:flex lg:translate-x-0 min-h-screen">
+<aside id="admin-sidebar" class="fixed inset-y-0 left-0 z-40 w-72 -translate-x-full flex flex-col text-white transition-transform duration-300 ease-in-out lg:static lg:flex lg:translate-x-0 min-h-screen" style="background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-primary) 100%); border-right: 1px solid var(--border);">
     <!-- Sidebar Header -->
     <div class="flex h-20 items-center justify-between border-b border-white/10 px-6">
         <a href="index.php" class="flex items-center justify-center w-full">
@@ -45,7 +45,7 @@ $categoria_label = $categoria_labels[$usuario_categoria] ?? 'Usuário';
                 <img src="../img/logo-blindado-branco.svg" alt="Blindado" class="h-full w-auto object-contain">
             </div>
         </a>
-        <button id="mobile-sidebar-close" class="lg:hidden" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Fechar"><i class="fas fa-times" style="font-size:10px"></i></button>
+        <button id="mobile-sidebar-close" class="lg:hidden icon-btn" title="Fechar"><i class="fas fa-times"></i></button>
     </div>
 
     <!-- Sidebar Navigation -->
@@ -127,7 +127,7 @@ $categoria_label = $categoria_labels[$usuario_categoria] ?? 'Usuário';
             <p class="mb-2 px-4 text-[10px] font-bold uppercase tracking-widest text-slate-500">Recursos Humanos</p>
             <div class="space-y-1">
                 <?php if ($is_administrativo || $is_gerente || $is_diretor): ?>
-                    <a href="listar_colaboradores.php" class="group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all <?php echo in_array($current_page, ['listar_colaboradores.php', 'criar_colaborador.php', 'editar_colaborador.php']) ? 'bg-primary-600 text-white shadow-lg shadow-primary-600/20' : 'text-slate-300 hover:bg-white/10 hover:text-white'; ?>">
+                    <a href="listar_colaboradores.php" class="group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all <?php echo in_array($current_page, ['listar_colaboradores.php', 'criar_colaborador.php', 'editar_colaborador.php']) ? 'nav-item nav-active' : 'nav-item'; ?>">
                         <i class="fas fa-users text-lg"></i>
                         <span>Colaboradores</span>
                     </a>
@@ -152,7 +152,7 @@ $categoria_label = $categoria_labels[$usuario_categoria] ?? 'Usuário';
                         <span>Extras</span>
                     </a>
                 <?php elseif ($is_supervisor): ?>
-                    <a href="listar_colaboradores.php" class="group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all <?php echo in_array($current_page, ['listar_colaboradores.php', 'criar_colaborador.php', 'editar_colaborador.php']) ? 'bg-primary-600 text-white shadow-lg shadow-primary-600/20' : 'text-slate-300 hover:bg-white/10 hover:text-white'; ?>">
+                    <a href="listar_colaboradores.php" class="group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all <?php echo in_array($current_page, ['listar_colaboradores.php', 'criar_colaborador.php', 'editar_colaborador.php']) ? 'nav-item nav-active' : 'nav-item'; ?>">
                         <i class="fas fa-users text-lg"></i>
                         <span>Colaboradores</span>
                     </a>
@@ -209,7 +209,7 @@ $categoria_label = $categoria_labels[$usuario_categoria] ?? 'Usuário';
 </aside>
 
 <!-- Overlay for mobile -->
-<div id="sidebar-overlay" class="fixed inset-0 z-30 hidden bg-slate-900/50 backdrop-blur-sm lg:hidden"></div>
+<div id="sidebar-overlay" class="fixed inset-0 z-30 hidden backdrop-blur-sm lg:hidden" style="background: rgba(1, 11, 30, 0.6);"></div>
 
 <style>
     .sidebar-scroll::-webkit-scrollbar {

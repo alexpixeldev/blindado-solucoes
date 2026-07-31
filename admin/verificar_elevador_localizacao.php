@@ -12,14 +12,15 @@ echo "<meta charset='UTF-8'>";
 echo "<meta name='viewport' content='width=device-width, initial-scale=1.0'>";
 echo "<title>Verificar Elevador e Localização</title>";
 echo "<style>";
-echo "body { font-family: Arial, sans-serif; padding: 20px; background-color: #f5f5f5; }";
-echo "table { width: 100%; border-collapse: collapse; background-color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }";
-echo "th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }";
-echo "th { background-color: #16a34a; color: white; }";
-echo "tr:hover { background-color: #f5f5f5; }";
-echo ".empty { color: #999; font-style: italic; }";
-echo ".has-data { color: #16a34a; font-weight: bold; }";
-echo "h1 { color: #16a34a; margin-bottom: 20px; }";
+echo "body { font-family: Arial, sans-serif; padding: 20px; background-color: #010B1E; color: #F2F2F3; }";
+echo "table { width: 100%; border-collapse: collapse; background-color: #122542; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 2px 8px rgba(0,0,0,0.35); }";
+echo "th, td { padding: 12px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.08); }";
+echo "th { background-color: #061328; color: #F2F2F3; }";
+echo "tr:hover { background-color: rgba(255,255,255,0.06); }";
+echo ".empty { color: #A3A3A7; font-style: italic; }";
+echo ".has-data { color: #25A937; font-weight: bold; }";
+echo "h1 { color: #25A937; margin-bottom: 20px; }";
+echo "a { color: #0792F2; }";
 echo "</style>";
 echo "</head>";
 echo "<body>";
@@ -72,7 +73,7 @@ if ($result && $result->num_rows > 0) {
     echo "<p>Nenhum edifício encontrado.</p>";
 }
 
-echo "<p style='margin-top: 20px;'><a href='edificios.php?tab=edificios' style='color: #16a34a; text-decoration: none; font-weight: bold;'>← Voltar para Edifícios</a></p>";
+echo "<p style='margin-top: 20px;'><a href='edificios.php?tab=edificios' style='color: #25A937; text-decoration: none; font-weight: bold;'>← Voltar para Edifícios</a></p>";
 echo "</body>";
 echo "</html>";
 

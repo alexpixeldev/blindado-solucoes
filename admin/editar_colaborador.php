@@ -78,16 +78,16 @@ if (!$usuario) { header("Location: listar_colaboradores.php"); exit(); }
                 extend: {
                     colors: {
                         primary: {
-                            50: '#f0fdf4',
-                            100: '#dcfce7',
-                            200: '#bbf7d0',
-                            300: '#86efac',
-                            400: '#4ade80',
-                            500: '#22c55e',
-                            600: '#16a34a',
-                            700: '#15803d',
-                            800: '#166534',
-                            900: '#14532d',
+                            50: '#EDFBF0',
+                            100: '#D8F5DE',
+                            200: '#B4EAC0',
+                            300: '#8ADF9E',
+                            400: '#5BD077',
+                            500: '#3BBE55',
+                            600: '#25A937',
+                            700: '#1E8C2E',
+                            800: '#186F24',
+                            900: '#114A19',
                         }
                     }
                 }
@@ -111,7 +111,7 @@ if (!$usuario) { header("Location: listar_colaboradores.php"); exit(); }
                 <!-- Page Header -->
                 <div class="mb-8 animate-fade-in">
                     <div class="flex items-center gap-4">
-                        <a href="listar_colaboradores.php" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Voltar"><i class="fas fa-arrow-left" style="font-size:10px"></i></a>
+                        <a href="listar_colaboradores.php" class="icon-btn" title="Voltar"><i class="fas fa-arrow-left" style="font-size:10px"></i></a>
                         <div>
                             <h1 class="text-2xl font-bold text-slate-900 sm:text-3xl">Editar Colaborador</h1>
                             <p class="mt-1 text-slate-500">Atualize as informações de <?= htmlspecialchars($usuario['nome_real'] ?? $usuario['nome']) ?>.</p>
@@ -236,8 +236,8 @@ if (!$usuario) { header("Location: listar_colaboradores.php"); exit(); }
                                                             <div class="relative group">
                                                                 <img src="../uploads/colaboradores/<?= htmlspecialchars($usuario['foto_colaborador']) ?>" alt="Foto atual" class="w-full h-32 object-cover rounded-lg border-2 border-slate-200">
                                                                 <div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
-                                                                    <button type="button" onclick="viewImage('../uploads/colaboradores/<?= htmlspecialchars($usuario['foto_colaborador']) ?>')" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#3b82f6;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Visualizar"><i class="fas fa-eye" style="font-size:10px"></i></button>
-                                                                    <button type="button" onclick="removerArquivo('foto_colaborador')" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#ef4444;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Remover"><i class="fas fa-trash" style="font-size:10px"></i></button>
+                                                                    <button type="button" onclick="viewImage('../uploads/colaboradores/<?= htmlspecialchars($usuario['foto_colaborador']) ?>')" class="icon-btn-blue" title="Visualizar"><i class="fas fa-eye" style="font-size:10px"></i></button>
+                                                                    <button type="button" onclick="removerArquivo('foto_colaborador')" class="icon-btn-red" title="Remover"><i class="fas fa-trash" style="font-size:10px"></i></button>
                                                                 </div>
                                                             </div>
                                                         <?php endif; ?>
@@ -266,8 +266,8 @@ if (!$usuario) { header("Location: listar_colaboradores.php"); exit(); }
                                                                     <img src="../uploads/colaboradores/<?= htmlspecialchars($usuario['arquivo_cpf']) ?>" alt="CPF atual" class="w-full h-32 object-cover rounded-lg border-2 border-slate-200">
                                                                 <?php endif; ?>
                                                                 <div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
-                                                                    <button type="button" onclick="viewImage('../uploads/colaboradores/<?= htmlspecialchars($usuario['arquivo_cpf']) ?>')" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#3b82f6;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Visualizar"><i class="fas fa-eye" style="font-size:10px"></i></button>
-                                                                    <button type="button" onclick="removerArquivo('arquivo_cpf')" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#ef4444;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Remover"><i class="fas fa-trash" style="font-size:10px"></i></button>
+                                                                    <button type="button" onclick="viewImage('../uploads/colaboradores/<?= htmlspecialchars($usuario['arquivo_cpf']) ?>')" class="icon-btn-blue" title="Visualizar"><i class="fas fa-eye" style="font-size:10px"></i></button>
+                                                                    <button type="button" onclick="removerArquivo('arquivo_cpf')" class="icon-btn-red" title="Remover"><i class="fas fa-trash" style="font-size:10px"></i></button>
                                                                 </div>
                                                             </div>
                                                         <?php endif; ?>
@@ -296,8 +296,8 @@ if (!$usuario) { header("Location: listar_colaboradores.php"); exit(); }
                                                                     <img src="../uploads/colaboradores/<?= htmlspecialchars($usuario['arquivo_rg']) ?>" alt="RG atual" class="w-full h-32 object-cover rounded-lg border-2 border-slate-200">
                                                                 <?php endif; ?>
                                                                 <div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
-                                                                    <button type="button" onclick="viewImage('../uploads/colaboradores/<?= htmlspecialchars($usuario['arquivo_rg']) ?>')" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#3b82f6;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Visualizar"><i class="fas fa-eye" style="font-size:10px"></i></button>
-                                                                    <button type="button" onclick="removerArquivo('arquivo_rg')" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#ef4444;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Remover"><i class="fas fa-trash" style="font-size:10px"></i></button>
+                                                                    <button type="button" onclick="viewImage('../uploads/colaboradores/<?= htmlspecialchars($usuario['arquivo_rg']) ?>')" class="icon-btn-blue" title="Visualizar"><i class="fas fa-eye" style="font-size:10px"></i></button>
+                                                                    <button type="button" onclick="removerArquivo('arquivo_rg')" class="icon-btn-red" title="Remover"><i class="fas fa-trash" style="font-size:10px"></i></button>
                                                                 </div>
                                                             </div>
                                                         <?php endif; ?>
@@ -316,8 +316,8 @@ if (!$usuario) { header("Location: listar_colaboradores.php"); exit(); }
                             </div>
 
                             <div class="flex flex-col gap-4 pt-6 border-t border-slate-100 sm:flex-row sm:items-center sm:justify-end">
-                    <a href="listar_colaboradores.php" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Cancelar"><i class="fas fa-times" style="font-size:10px"></i></a>
-                                <button type="submit" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#22c55e;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Salvar"><i class="fas fa-save" style="font-size:10px"></i></button>
+                    <a href="listar_colaboradores.php" class="icon-btn" title="Cancelar"><i class="fas fa-times" style="font-size:10px"></i></a>
+                                <button type="submit" class="icon-btn-green" title="Salvar"><i class="fas fa-save" style="font-size:10px"></i></button>
                             </div>
                         </form>
                     </div>
@@ -338,7 +338,7 @@ if (!$usuario) { header("Location: listar_colaboradores.php"); exit(); }
             <div class="p-6">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-lg font-semibold text-slate-900">Visualizar Documento</h3>
-                    <button onclick="closeImageModal()" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Fechar"><i class="fas fa-times" style="font-size:10px"></i></button>
+                    <button onclick="closeImageModal()" class="icon-btn" title="Fechar"><i class="fas fa-times" style="font-size:10px"></i></button>
                 </div>
                 <div id="imagePreview" class="flex justify-center p-4">
                     <!-- A imagem será carregada aqui -->

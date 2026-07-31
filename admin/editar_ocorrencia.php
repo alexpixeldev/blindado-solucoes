@@ -84,8 +84,8 @@ $midias = $conn->query("SELECT * FROM ocorrencias_midia WHERE ocorrencia_id = $i
                 extend: {
                     colors: {
                         primary: {
-                            50: '#f0fdf4', 100: '#dcfce7', 200: '#bbf7d0', 300: '#86efac', 400: '#4ade80',
-                            500: '#22c55e', 600: '#16a34a', 700: '#15803d', 800: '#166534', 900: '#14532d',
+                            50: '#EDFBF0', 100: '#D8F5DE', 200: '#B4EAC0', 300: '#8ADF9E', 400: '#5BD077',
+                            500: '#3BBE55', 600: '#25A937', 700: '#1E8C2E', 800: '#186F24', 900: '#114A19',
                         }
                     }
                 }
@@ -97,35 +97,31 @@ $midias = $conn->query("SELECT * FROM ocorrencias_midia WHERE ocorrencia_id = $i
     <link rel="stylesheet" href="style_modern.css">
     <style>
         .inline-media-toolbar { display: flex; align-items: center; gap: 6px; padding: 6px 0; flex-wrap: wrap; }
-        .toolbar-btn { display: inline-flex; align-items: center; gap: 4px; padding: 5px 12px; border: 1px solid #e2e8f0; border-radius: 6px; background: #fff; color: #475569; font-size: 0.78rem; font-weight: 500; cursor: pointer; transition: all 0.15s; }
-        .toolbar-btn:hover { border-color: #3b82f6; color: #3b82f6; background: #f0f4ff; }
-        .toolbar-btn.loading { opacity: 0.6; pointer-events: none; }
-        .toolbar-btn i { font-size: 0.82rem; }
 
-        .toast { position: fixed; bottom: 20px; right: 20px; z-index: 99999; padding: 12px 18px; border-radius: 8px; color: #fff; font-size: 0.85rem; font-weight: 600; box-shadow: 0 4px 16px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 10px; opacity: 0; transform: translateY(10px); transition: opacity 0.25s, transform 0.25s; max-width: 340px; }
+        .toast { position: fixed; bottom: 20px; right: 20px; z-index: 99999; padding: 12px 18px; border-radius: 8px; color: #fff; font-size: 0.85rem; font-weight: 600; box-shadow: 0 8px 24px var(--shadow); display: flex; align-items: center; gap: 10px; opacity: 0; transform: translateY(10px); transition: opacity 0.25s, transform 0.25s; max-width: 340px; }
         .toast.show { opacity: 1; transform: translateY(0); }
-        .toast.success { background: #16a34a; }
-        .toast.error { background: #dc2626; }
-        .toast.loading { background: #2563eb; }
+        .toast.success { background: var(--primary); }
+        .toast.error { background: var(--danger-hover); }
+        .toast.loading { background: var(--secondary); }
         .toast i { font-size: 1rem; }
 
-        .upload-progress-wrap { margin: 2px 0 8px; height: 8px; border-radius: 5px; background: #e2e8f0; overflow: hidden; position: relative; display: none; }
+        .upload-progress-wrap { margin: 2px 0 8px; height: 8px; border-radius: 5px; background: rgba(255, 255, 255, 0.1); overflow: hidden; position: relative; display: none; }
         .upload-progress-wrap.active { display: block; }
-        .upload-progress-fill { height: 100%; width: 0; background: #3b82f6; transition: width 0.2s; border-radius: 5px; }
-        .upload-progress-wrap.done .upload-progress-fill { background: #16a34a; }
+        .upload-progress-fill { height: 100%; width: 0; background: var(--secondary); transition: width 0.2s; border-radius: 5px; }
+        .upload-progress-wrap.done .upload-progress-fill { background: var(--primary); }
 
-        .descricao-editor { width: 100%; min-height: 320px; padding: 18px 22px; border: 1.5px solid #e2e8f0; border-radius: 10px; font-size: 0.95rem; line-height: 1.7; color: #1a1a2e; background: #fff; outline: none; font-family: inherit; transition: border-color 0.15s, box-shadow 0.15s; box-sizing: border-box; overflow-y: auto; position: relative; }
-        .descricao-editor:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.08); }
-        .descricao-editor:empty::before { content: attr(data-placeholder); color: #a0afbe; pointer-events: none; }
-        .editor-media-remove { position: absolute; width: 24px; height: 24px; border: none; border-radius: 50%; background: #ef4444; color: #fff; font-size: 14px; line-height: 1; cursor: pointer; display: none; align-items: center; justify-content: center; z-index: 50; box-shadow: 0 2px 8px rgba(0,0,0,0.3); padding: 0; }
+        .descricao-editor { width: 100%; min-height: 320px; padding: 18px 22px; border: 1px solid var(--border); border-radius: 10px; font-size: 0.95rem; line-height: 1.7; color: var(--text-primary); background: var(--bg-secondary); outline: none; font-family: inherit; transition: border-color 0.15s, box-shadow 0.15s; box-sizing: border-box; overflow-y: auto; position: relative; }
+        .descricao-editor:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 169, 55, 0.12); }
+        .descricao-editor:empty::before { content: attr(data-placeholder); color: var(--text-secondary); opacity: 0.7; pointer-events: none; }
+        .editor-media-remove { position: absolute; width: 24px; height: 24px; border: none; border-radius: 50%; background: var(--danger); color: #fff; font-size: 14px; line-height: 1; cursor: pointer; display: none; align-items: center; justify-content: center; z-index: 50; box-shadow: 0 2px 8px rgba(0,0,0,0.4); padding: 0; }
         .editor-media-remove.show { display: flex; }
-        .editor-media-remove:hover { background: #dc2626; }
-        .descricao-editor img.media-thumb { max-width: 140px; max-height: 110px; border-radius: 6px; margin: 6px 2px; cursor: zoom-in; border: 1.5px solid #e2e8f0; vertical-align: middle; transition: max-width 0.2s, max-height 0.2s, border-color 0.2s; }
-        .descricao-editor img.media-thumb:hover { border-color: #3b82f6; }
-        .descricao-editor img.media-thumb.expanded { max-width: 100%; max-height: none; cursor: zoom-out; border-color: #bfdbfe; }
-        .descricao-editor video.media-thumb { max-width: 200px; max-height: 130px; border-radius: 6px; margin: 6px 2px; cursor: pointer; border: 1.5px solid #e2e8f0; background: #0f172a; vertical-align: middle; transition: max-width 0.2s, max-height 0.2s, border-color 0.2s; }
-        .descricao-editor video.media-thumb:hover { border-color: #3b82f6; }
-        .descricao-editor video.media-thumb.expanded { max-width: 100%; max-height: 100%; border-color: #bfdbfe; }
+        .editor-media-remove:hover { background: var(--danger-hover); }
+        .descricao-editor img.media-thumb { max-width: 140px; max-height: 110px; border-radius: 6px; margin: 6px 2px; cursor: zoom-in; border: 1px solid var(--border); vertical-align: middle; transition: max-width 0.2s, max-height 0.2s, border-color 0.2s; }
+        .descricao-editor img.media-thumb:hover { border-color: var(--primary); }
+        .descricao-editor img.media-thumb.expanded { max-width: 100%; max-height: none; cursor: zoom-out; border-color: rgba(7, 146, 242, 0.6); }
+        .descricao-editor video.media-thumb { max-width: 200px; max-height: 130px; border-radius: 6px; margin: 6px 2px; cursor: pointer; border: 1px solid var(--border); background: #0b1d3f; vertical-align: middle; transition: max-width 0.2s, max-height 0.2s, border-color 0.2s; }
+        .descricao-editor video.media-thumb:hover { border-color: var(--primary); }
+        .descricao-editor video.media-thumb.expanded { max-width: 100%; max-height: 100%; border-color: rgba(7, 146, 242, 0.6); }
         .descricao-editor audio.media-audio { width: 100%; max-width: 340px; margin: 6px 2px; display: block; }
     </style>
 </head>
@@ -139,7 +135,7 @@ $midias = $conn->query("SELECT * FROM ocorrencias_midia WHERE ocorrencia_id = $i
                 <div class="max-w-[1000px] mx-auto">
                     <div class="mb-8 flex items-center justify-between animate-fade-in">
                         <div class="flex items-center gap-4">
-                            <a href="consultar_ocorrencia.php" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Voltar"><i class="fas fa-arrow-left" style="font-size:10px"></i></a>
+                            <a href="consultar_ocorrencia.php" class="icon-btn" title="Voltar"><i class="fas fa-arrow-left" style="font-size:10px"></i></a>
                             <h1 class="text-3xl font-bold text-slate-900">Editar Registro</h1>
                         </div>
                     </div>

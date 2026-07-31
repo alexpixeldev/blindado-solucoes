@@ -39,13 +39,14 @@ function renderModernCalendar($name, $value = '', $label = 'Selecione a Data') {
         .modern-calendar-dropdown {
             position: fixed !important;
             z-index: 999999 !important;
-            background: white;
+            background: var(--bg-card, #122542);
             border-radius: 1rem;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-            border: 1px solid #f1f5f9;
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--border, rgba(255,255,255,0.08));
             overflow: hidden;
             width: 320px;
             animation: fadeIn 0.2s ease-out;
+            color: var(--text-primary, #F2F2F3);
         }
 
         .modern-calendar-dropdown.hidden {
@@ -65,17 +66,17 @@ function renderModernCalendar($name, $value = '', $label = 'Selecione a Data') {
             position: relative;
         }
         .calendar-day:hover:not(.empty) {
-            background-color: var(--primary-50, #f0fdf4);
-            color: var(--primary-600, #16a34a);
+            background-color: var(--primary-50, #EDFBF0);
+            color: var(--primary-600, #25A937);
         }
         .calendar-day.selected {
-            background-color: var(--primary-600, #16a34a) !important;
+            background-color: var(--primary-600, #25A937) !important;
             color: white !important;
             font-weight: 700;
             box-shadow: 0 4px 12px rgba(22, 163, 74, 0.2);
         }
         .calendar-day.today:not(.selected) {
-            color: var(--primary-600, #16a34a);
+            color: var(--primary-600, #25A937);
             font-weight: 700;
         }
         .calendar-day.today:not(.selected)::after {
@@ -85,7 +86,7 @@ function renderModernCalendar($name, $value = '', $label = 'Selecione a Data') {
             width: 4px;
             height: 4px;
             border-radius: 50%;
-            background-color: var(--primary-600, #16a34a);
+            background-color: var(--primary-600, #25A937);
         }
         .calendar-day.empty {
             cursor: default;
@@ -106,14 +107,14 @@ function renderModernCalendar($name, $value = '', $label = 'Selecione a Data') {
             dropdown.className = 'modern-calendar-dropdown hidden';
             
             dropdown.innerHTML = `
-                <div class="p-4 border-b border-slate-50 flex items-center justify-between bg-slate-50/50" style="border-bottom: 1px solid #f1f5f9;">
-                    <button type="button" onclick="changeModernMonth('${id}', -1)" class="p-2 hover:bg-white rounded-lg transition-colors text-slate-600" style="background: transparent; border: none; cursor: pointer;">
+                <div class="p-4 border-b flex items-center justify-between" style="border-bottom: 1px solid var(--border, rgba(255,255,255,0.08)); background-color: var(--bg-secondary, #061328);">
+                    <button type="button" onclick="changeModernMonth('${id}', -1)" class="p-2 hover:bg-white/10 rounded-lg transition-colors text-slate-400" style="background: transparent; border: none; cursor: pointer; color: #A3A3A7;">
                         <i class="fas fa-chevron-left text-xs"></i>
                     </button>
-                    <div class="text-sm font-bold text-slate-800 uppercase tracking-wider" id="month_year_${id}" style="font-size: 0.875rem; font-weight: 700; color: #1e293b; text-transform: uppercase; letter-spacing: 0.05em;">
+                    <div class="text-sm font-bold uppercase tracking-wider" id="month_year_${id}" style="font-size: 0.875rem; font-weight: 700; color: #F2F2F3; text-transform: uppercase; letter-spacing: 0.05em;">
                         Janeiro 2026
                     </div>
-                    <button type="button" onclick="changeModernMonth('${id}', 1)" class="p-2 hover:bg-white rounded-lg transition-colors text-slate-600" style="background: transparent; border: none; cursor: pointer;">
+                    <button type="button" onclick="changeModernMonth('${id}', 1)" class="p-2 hover:bg-white/10 rounded-lg transition-colors text-slate-400" style="background: transparent; border: none; cursor: pointer; color: #A3A3A7;">
                         <i class="fas fa-chevron-right text-xs"></i>
                     </button>
                 </div>
@@ -131,11 +132,11 @@ function renderModernCalendar($name, $value = '', $label = 'Selecione a Data') {
                         <!-- Dias gerados via JS -->
                     </div>
                 </div>
-                <div class="p-3 bg-slate-50 border-t border-slate-100 flex justify-between" style="padding: 0.75rem; background-color: #f8fafc; border-top: 1px solid #f1f5f9; display: flex; justify-content: space-between;">
-                    <button type="button" onclick="setModernToday('${id}')" class="text-xs font-bold text-primary-600 hover:text-primary-700 transition-colors" style="background: none; border: none; cursor: pointer; font-size: 0.75rem; font-weight: 700; color: #16a34a;">
+                <div class="p-3 border-t flex justify-between" style="padding: 0.75rem; background-color: var(--bg-secondary, #061328); border-top: 1px solid var(--border, rgba(255,255,255,0.08)); display: flex; justify-content: space-between;">
+                    <button type="button" onclick="setModernToday('${id}')" class="text-xs font-bold transition-colors" style="background: none; border: none; cursor: pointer; font-size: 0.75rem; font-weight: 700; color: #25A937;">
                         HOJE
                     </button>
-                    <button type="button" onclick="toggleModernCalendar('${id}')" class="text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors" style="background: none; border: none; cursor: pointer; font-size: 0.75rem; font-weight: 700; color: #cbd5e1;">
+                    <button type="button" onclick="toggleModernCalendar('${id}')" class="text-xs font-bold transition-colors" style="background: none; border: none; cursor: pointer; font-size: 0.75rem; font-weight: 700; color: #A3A3A7;">
                         FECHAR
                     </button>
                 </div>
@@ -280,8 +281,8 @@ function renderModernCalendar($name, $value = '', $label = 'Selecione a Data') {
 
                 dayEl.onmouseover = function() {
                     if (!this.classList.contains('empty')) {
-                        this.style.backgroundColor = '#f0fdf4';
-                        this.style.color = '#16a34a';
+                        this.style.backgroundColor = '#EDFBF0';
+                        this.style.color = '#25A937';
                     }
                 };
                 dayEl.onmouseout = function() {

@@ -96,8 +96,8 @@ $lista_ferias = $conn->query("
                 extend: {
                     colors: {
                         primary: {
-                            50: '#f0fdf4', 100: '#dcfce7', 200: '#bbf7d0', 300: '#86efac', 400: '#4ade80',
-                            500: '#22c55e', 600: '#16a34a', 700: '#15803d', 800: '#166534', 900: '#14532d',
+                            50: '#EDFBF0', 100: '#D8F5DE', 200: '#B4EAC0', 300: '#8ADF9E', 400: '#5BD077',
+                            500: '#3BBE55', 600: '#25A937', 700: '#1E8C2E', 800: '#186F24', 900: '#114A19',
                         }
                     }
                 }
@@ -177,7 +177,7 @@ $lista_ferias = $conn->query("
                                     </div>
                                 </div>
 
-                                <button type="submit" name="upload_ferias" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#22c55e;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Salvar"><i class="fas fa-save" style="font-size:10px"></i></button>
+                                <button type="submit" name="upload_ferias" class="icon-btn-green" title="Salvar"><i class="fas fa-save" style="font-size:10px"></i></button>
                             </form>
                         </div>
                     </div>
@@ -220,11 +220,11 @@ $lista_ferias = $conn->query("
                                                     <td class="text-xs text-slate-400"><?php echo date('d/m/Y H:i', strtotime($f['criado_em'])); ?></td>
                                                     <td class="text-right">
                                                         <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                                                            <a href="../uploads/ferias/<?php echo htmlspecialchars($f['arquivo']); ?>" target="_blank" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#3b82f6;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;text-decoration:none" title="Ver Documento"><i class="fas fa-file-pdf" style="font-size:10px"></i></a>
-                                                            <a href="editar_ferias.php?id=<?php echo $f['id']; ?>" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;text-decoration:none" title="Editar"><i class="fas fa-edit" style="font-size:10px"></i></a>
+                                                            <a href="../uploads/ferias/<?php echo htmlspecialchars($f['arquivo']); ?>" target="_blank" class="icon-btn-blue" title="Ver Documento"><i class="fas fa-file-pdf" style="font-size:10px"></i></a>
+                                                            <a href="editar_ferias.php?id=<?php echo $f['id']; ?>" class="icon-btn" title="Editar"><i class="fas fa-edit" style="font-size:10px"></i></a>
                                                             <form method="POST" class="inline" onsubmit="return confirm('Tem certeza que deseja excluir este registro de férias?');">
                                                                 <input type="hidden" name="ferias_id" value="<?php echo $f['id']; ?>">
-                                                                <button type="submit" name="deletar_ferias" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#ef4444;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Excluir"><i class="fas fa-trash-alt" style="font-size:10px"></i></button>
+                                                                <button type="submit" name="deletar_ferias" class="icon-btn-red" title="Excluir"><i class="fas fa-trash-alt" style="font-size:10px"></i></button>
                                                             </form>
                                                         </div>
                                                     </td>

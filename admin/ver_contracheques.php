@@ -56,16 +56,16 @@ $meses = [
                 extend: {
                     colors: {
                         primary: {
-                            50: '#f0fdf4',
-                            100: '#dcfce7',
-                            200: '#bbf7d0',
-                            300: '#86efac',
-                            400: '#4ade80',
-                            500: '#22c55e',
-                            600: '#16a34a',
-                            700: '#15803d',
-                            800: '#166534',
-                            900: '#14532d',
+                            50: '#EDFBF0',
+                            100: '#D8F5DE',
+                            200: '#B4EAC0',
+                            300: '#8ADF9E',
+                            400: '#5BD077',
+                            500: '#3BBE55',
+                            600: '#25A937',
+                            700: '#1E8C2E',
+                            800: '#186F24',
+                            900: '#114A19',
                         }
                     }
                 }
@@ -89,14 +89,14 @@ $meses = [
                 <!-- Page Header -->
                 <div class="mb-8 animate-fade-in flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div class="flex items-center gap-4">
-                        <a href="visualizar_colaborador.php?id=<?= $id ?>" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;text-decoration:none" title="Voltar"><i class="fas fa-arrow-left" style="font-size:10px"></i></a>
+                        <a href="visualizar_colaborador.php?id=<?= $id ?>" class="icon-btn" title="Voltar"><i class="fas fa-arrow-left" style="font-size:10px"></i></a>
                         <div>
                             <h1 class="text-2xl font-bold text-slate-900 sm:text-3xl">Contracheques</h1>
                             <p class="mt-1 text-slate-500">Colaborador: <span class="font-bold text-slate-900"><?= htmlspecialchars($colaborador['nome_real']) ?></span></p>
                         </div>
                     </div>
                     <div class="flex gap-3">
-                        <a href="adicionar_contracheque.php?id=<?= $id ?>" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#22c55e;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;text-decoration:none" title="Adicionar Novo"><i class="fas fa-plus" style="font-size:10px"></i></a>
+                        <a href="adicionar_contracheque.php?id=<?= $id ?>" class="icon-btn-green" title="Adicionar Novo"><i class="fas fa-plus" style="font-size:10px"></i></a>
                     </div>
                 </div>
 
@@ -131,11 +131,11 @@ $meses = [
                                                 <span class="text-sm font-medium text-slate-600"><?= htmlspecialchars($meses[$cc['mes']]) ?></span>
                                             </td>
                                             <td class="px-6 py-4">
-                                                <a href="../uploads/contracheques/<?= htmlspecialchars($cc['arquivo']) ?>" target="_blank" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#3b82f6;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;text-decoration:none" onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#3b82f6'" title="Visualizar"><i class="fas fa-external-link-alt" style="font-size:10px"></i></a>
+                                                <a href="../uploads/contracheques/<?= htmlspecialchars($cc['arquivo']) ?>" target="_blank" class="icon-btn-blue" onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#3b82f6'" title="Visualizar"><i class="fas fa-external-link-alt" style="font-size:10px"></i></a>
                                             </td>
                                             <td class="px-6 py-4">
                                                 <div class="flex items-center justify-center gap-2">
-                                                    <a href="editar_contracheque.php?id=<?= $cc['id'] ?>" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#3b82f6;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;text-decoration:none" title="Trocar Arquivo"><i class="fas fa-exchange-alt" style="font-size:10px"></i></a>
+                                                    <a href="editar_contracheque.php?id=<?= $cc['id'] ?>" class="icon-btn-blue" title="Trocar Arquivo"><i class="fas fa-exchange-alt" style="font-size:10px"></i></a>
                                                 </div>
                                             </td>
                                         </tr>

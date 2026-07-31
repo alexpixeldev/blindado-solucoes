@@ -43,16 +43,16 @@ $stmt->close();
                 extend: {
                     colors: {
                         primary: {
-                            50: '#f0fdf4',
-                            100: '#dcfce7',
-                            200: '#bbf7d0',
-                            300: '#86efac',
-                            400: '#4ade80',
-                            500: '#22c55e',
-                            600: '#16a34a',
-                            700: '#15803d',
-                            800: '#166534',
-                            900: '#14532d',
+                            50: '#EDFBF0',
+                            100: '#D8F5DE',
+                            200: '#B4EAC0',
+                            300: '#8ADF9E',
+                            400: '#5BD077',
+                            500: '#3BBE55',
+                            600: '#25A937',
+                            700: '#1E8C2E',
+                            800: '#186F24',
+                            900: '#114A19',
                         }
                     }
                 }
@@ -92,9 +92,9 @@ $stmt->close();
                                 <input type="text" name="search" class="form-input pl-11" placeholder="Buscar por nome ou usuário..." value="<?= htmlspecialchars($search) ?>">
                             </div>
                             <div class="flex gap-2">
-                                <button type="submit" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Buscar"><i class="fas fa-search" style="font-size:10px"></i></button>
+                                <button type="submit" class="icon-btn" title="Buscar"><i class="fas fa-search" style="font-size:10px"></i></button>
                                 <?php if ($search): ?>
-                                    <a href="contracheque.php" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;text-decoration:none" title="Limpar Busca"><i class="fas fa-sync-alt" style="font-size:10px"></i></a>
+                                    <a href="contracheque.php" class="icon-btn" title="Limpar Busca"><i class="fas fa-sync-alt" style="font-size:10px"></i></a>
                                 <?php endif; ?>
                             </div>
                         </form>
@@ -143,7 +143,7 @@ $stmt->close();
                                                             <i class="fas fa-plus"></i>
                                                             <span>Adicionar</span>
                                                         </a>
-                                                        <a href="ver_contracheques.php?id=<?= $colab['id'] ?>" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#3b82f6;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;text-decoration:none" onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#3b82f6'" title="Visualizar">
+                                                        <a href="ver_contracheques.php?id=<?= $colab['id'] ?>" class="icon-btn-blue" onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#3b82f6'" title="Visualizar">
                                                             <i class="fas fa-eye" style="font-size:10px"></i>
                                                         </a>
                                                     </div>

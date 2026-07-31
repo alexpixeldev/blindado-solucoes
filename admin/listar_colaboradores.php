@@ -44,16 +44,16 @@ $stmt->close();
                 extend: {
                     colors: {
                         primary: {
-                            50: '#f0fdf4',
-                            100: '#dcfce7',
-                            200: '#bbf7d0',
-                            300: '#86efac',
-                            400: '#4ade80',
-                            500: '#22c55e',
-                            600: '#16a34a',
-                            700: '#15803d',
-                            800: '#166534',
-                            900: '#14532d',
+                            50: '#EDFBF0',
+                            100: '#D8F5DE',
+                            200: '#B4EAC0',
+                            300: '#8ADF9E',
+                            400: '#5BD077',
+                            500: '#3BBE55',
+                            600: '#25A937',
+                            700: '#1E8C2E',
+                            800: '#186F24',
+                            900: '#114A19',
                         }
                     }
                 }
@@ -124,12 +124,12 @@ $stmt->close();
                                             <td class="font-bold text-slate-900"><?= htmlspecialchars(!empty($colab['nome_real']) ? $colab['nome_real'] : 'N/A') ?></td>
                                             <td class="text-slate-500"><?= htmlspecialchars($colab['nome']) ?></td>
                                             <td class="text-right flex justify-end gap-2">
-                                                <a href="visualizar_colaborador.php?id=<?= $colab['id'] ?>" class="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 rounded-xl font-bold text-xs hover:bg-slate-200 transition-all">
+                                                <a href="visualizar_colaborador.php?id=<?= $colab['id'] ?>" class="btn btn-secondary btn-sm">
                                                     <i class="fas fa-eye"></i>
                                                     <span>Ver Detalhes</span>
                                                 </a>
                                                 <?php if ($_SESSION['usuario_categoria'] === 'administrativo'): ?>
-                                                <a href="registrar_acao_disciplinar.php?id=<?= $colab['id'] ?>" class="inline-flex items-center gap-2 px-4 py-2 bg-red-50 text-red-700 rounded-xl font-bold text-xs hover:bg-red-600 hover:text-white transition-all">
+                                                <a href="registrar_acao_disciplinar.php?id=<?= $colab['id'] ?>" class="btn btn-danger btn-sm">
                                                     <i class="fas fa-gavel"></i>
                                                     <span>Registrar Disciplina</span>
                                                 </a>

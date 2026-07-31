@@ -51,38 +51,39 @@ if ($current_page !== 'index') {
 }
 ?>
 
-<header class="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-slate-200 bg-white/80 px-4 backdrop-blur-md sm:px-8">
-    <div class="flex items-center gap-4">
-        <button id="mobile-sidebar-toggle" class="inline-flex items-center justify-center rounded-lg p-2 text-slate-600 hover:bg-slate-100 lg:hidden" aria-label="Abrir menu">
-            <i class="fas fa-bars text-xl"></i>
+<header class="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b px-4 sm:px-8"
+        style="border-color: var(--border); background: rgba(6, 19, 40, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);">
+    <div class="flex items-center gap-3">
+        <button id="mobile-sidebar-toggle" class="icon-btn lg:hidden" aria-label="Abrir menu">
+            <i class="fas fa-bars"></i>
         </button>
 
-        <nav class="hidden items-center gap-2 text-sm font-medium text-slate-500 sm:flex" aria-label="Breadcrumb">
+        <nav class="hidden items-center gap-2 text-sm font-medium sm:flex" style="color: var(--text-secondary);" aria-label="Breadcrumb">
             <?php foreach ($breadcrumbs as $index => $crumb): ?>
                 <div class="flex items-center gap-2">
                     <?php if ($crumb['url']): ?>
-                        <a href="<?php echo $crumb['url']; ?>" class="transition-colors hover:text-primary-600">
+                        <a href="<?php echo $crumb['url']; ?>" class="transition-colors" style="color: var(--text-secondary);" onmouseover="this.style.color='var(--primary-light)'" onmouseout="this.style.color='var(--text-secondary)'">
                             <?php echo $crumb['label']; ?>
                         </a>
                     <?php else: ?>
-                        <span class="text-slate-900"><?php echo $crumb['label']; ?></span>
+                        <span style="color: var(--text-primary);"><?php echo $crumb['label']; ?></span>
                     <?php endif; ?>
-                    
+
                     <?php if ($index < count($breadcrumbs) - 1): ?>
-                        <i class="fas fa-chevron-right text-[10px] text-slate-400"></i>
+                        <i class="fas fa-chevron-right text-[10px]" style="color: var(--text-secondary); opacity: 0.6;"></i>
                     <?php endif; ?>
                 </div>
             <?php endforeach; ?>
         </nav>
     </div>
 
-    <div class="flex items-center gap-1 sm:gap-2">
-        <a href="perfil.php" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Meu Perfil"><i class="fas fa-user-circle" style="font-size:10px"></i></a>
+    <div class="flex items-center gap-2">
+        <a href="perfil.php" class="icon-btn" title="Meu Perfil"><i class="fas fa-user-circle"></i></a>
 
-        <button style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#94a3b8;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;position:relative" title="Notificações"><i class="fas fa-bell" style="font-size:10px"></i><span style="position:absolute;right:-2px;top:-2px;width:6px;height:6px;border-radius:50%;background:#ef4444;border:2px solid #fff"></span></button>
+        <button class="icon-btn" title="Notificações"><i class="fas fa-bell"></i><span style="position:absolute;right:8px;top:8px;width:7px;height:7px;border-radius:50%;background:var(--danger);border:2px solid var(--bg-card)"></span></button>
 
-        <div class="mx-1 h-6 w-px bg-slate-200 sm:mx-2"></div>
+        <div class="mx-1 h-6 w-px sm:mx-2" style="background: var(--border);"></div>
 
-        <a href="logout.php" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:3px;background:#ef4444;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0" title="Sair"><i class="fas fa-sign-out-alt" style="font-size:10px"></i></a>
+        <a href="logout.php" class="icon-btn-red" title="Sair"><i class="fas fa-sign-out-alt"></i></a>
     </div>
 </header>

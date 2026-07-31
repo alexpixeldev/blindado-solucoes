@@ -84,7 +84,7 @@ if (Auth::isOneOf(['gerente', 'supervisor'])) {
             theme: {
                 extend: {
                     colors: {
-                        primary: { 50: '#f0fdf4', 100: '#dcfce7', 200: '#bbf7d0', 300: '#86efac', 400: '#4ade80', 500: '#22c55e', 600: '#16a34a', 700: '#15803d', 800: '#166534', 900: '#14532d' }
+                        primary: { 50: '#EDFBF0', 100: '#D8F5DE', 200: '#B4EAC0', 300: '#8ADF9E', 400: '#5BD077', 500: '#3BBE55', 600: '#25A937', 700: '#1E8C2E', 800: '#186F24', 900: '#114A19' }
                     }
                 }
             }
@@ -199,7 +199,7 @@ if (Auth::isOneOf(['gerente', 'supervisor'])) {
                     toolbar: { show: false }
                 },
                 stroke: { curve: 'smooth', width: 3 },
-                markers: { size: 5, colors: ['#22c55e'] },
+                markers: { size: 5, colors: ['#3BBE55'] },
                 xaxis: {
                     categories: Array.from({length: diasNoMes}, (_, i) => i + 1)
                 }
