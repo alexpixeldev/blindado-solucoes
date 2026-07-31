@@ -1,5 +1,5 @@
 <?php
-require_once '../admin/conexao.php';
+require_once '../blindadosync/conexao.php';
 
 // Definir cabeçalho para resposta JSON se for AJAX
 $is_ajax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
@@ -7,7 +7,7 @@ $is_ajax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTT
 // Iniciar buffer de saída para capturar avisos/mensagens inesperadas
 ob_start();
 
-$debugLogPath = __DIR__ . '/../admin/debug_locacao.log';
+$debugLogPath = __DIR__ . '/../blindadosync/debug_locacao.log';
 error_reporting(E_ALL);
 ini_set('display_errors', '0');
 ini_set('log_errors', '1');
@@ -134,7 +134,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         sendJsonError('Erro de conexão com o banco de dados. Tente novamente mais tarde.');
     }
     // DEBUG LOG: registrar resumo do POST/FILES para diagnosticar problemas de upload/JSON
-    $debugLogPath = __DIR__ . '/../admin/debug_locacao.log';
+    $debugLogPath = __DIR__ . '/../blindadosync/debug_locacao.log';
     $logEntry = "[" . date('Y-m-d H:i:s') . "] Início de request POST\n";
     $logEntry .= "POST keys: " . implode(', ', array_keys($_POST)) . "\n";
     $filesSummary = [];

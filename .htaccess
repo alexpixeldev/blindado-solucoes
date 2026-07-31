@@ -54,6 +54,6 @@ DirectoryIndex index.php index.html
     RewriteCond %{REQUEST_URI} !/$
     RewriteRule ^(.+)$ %{REQUEST_URI}/ [R=301,L]
 
-    # Força /blindado/formulario para /blindado/formulario/
-    RewriteRule ^formulario$ /blindado/formulario/ [R=301,L]
+    # Força /formulario para /formulario/
+    RewriteRule ^formulario$ formulario/ [R=301,L]
 </IfModule>

@@ -2,9 +2,9 @@
 ini_set('display_errors', 0);
 error_reporting(E_ALL);
 
-require_once '../admin/conexao.php';
+require_once '../blindadosync/conexao.php';
 
-$fpdf_path = '../admin/fpdf/fpdf.php';
+$fpdf_path = '../blindadosync/fpdf/fpdf.php';
 if (!file_exists($fpdf_path)) {
     die("Erro: Biblioteca FPDF nao encontrada.");
 }

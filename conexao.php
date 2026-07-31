@@ -1,7 +1,7 @@
 <?php
 /**
  * Arquivo de conexão centralizado e seguro.
- * Utiliza PDO para melhor suporte a Prepared Statements e segurança.
+ * Utiliza MySQLi (compatível com todo o código legado).
  */
 
 // Detectar ambiente (local vs produção)
@@ -45,20 +45,6 @@ if ($isLocalhost) {
 }
 
 try {
-    // Log para debug (remover em produção se necessário)
-    error_log("Ambiente: " . ($isLocalhost ? "DESENVOLVIMENTO (XAMPP)" : "PRODUÇÃO"));
-    error_log("Conectando ao banco: $dbname@$host:$port com usuário: $user");
-    
-    // Conexão via PDO (Recomendado para segurança moderna)
-    $dsn = "mysql:host=$host;dbname=$dbname;port=$port;charset=utf8mb4";
-    $options = [
-        PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-        PDO::ATTR_EMULATE_PREPARES   => false,
-    ];
-    $pdo = new PDO($dsn, $user, $pass, $options);
-
-    // Manter compatibilidade com código legado que usa mysqli ($conn)
     $conn = new mysqli($host, $user, $pass, $dbname, $port);
     if ($conn->connect_error) {
         throw new Exception("Erro na conexão MySQLi: " . $conn->connect_error);
