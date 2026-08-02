@@ -183,18 +183,38 @@ $stmt->close();
                 btn.disabled = false;
             }
 
+            function getPosicao() {
+                return new Promise((resolve, reject) => {
+                    const fallback = () => {
+                        navigator.geolocation.getCurrentPosition(
+                            resolve,
+                            reject,
+                            { enableHighAccuracy: false, timeout: 20000, maximumAge: 30000 }
+                        );
+                    };
+                    try {
+                        navigator.geolocation.getCurrentPosition(
+                            resolve,
+                            fallback,
+                            { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+                        );
+                    } catch (e) {
+                        fallback();
+                    }
+                });
+            }
+
             if (!navigator.geolocation) {
                 gpsMsg.textContent = 'Seu navegador não suporta geolocalização.';
                 return;
             }
 
-            navigator.geolocation.getCurrentPosition(
+            getPosicao().then(
                 pos => enableBtn(pos.coords.latitude, pos.coords.longitude),
-                err => {
+                () => {
                     gpsMsg.textContent = 'Não foi possível obter a localização. Verifique se o GPS está ativado e tente novamente.';
                     gpsMsg.classList.add('text-red-400');
-                },
-                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                }
             );
         });
     </script>

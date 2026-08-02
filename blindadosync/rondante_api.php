@@ -48,6 +48,60 @@ function ronda_ativa($conn, $usuario_id) {
     return $r;
 }
 
+function normalizar_whatsapp($telefone) {
+    $t = preg_replace('/\D/', '', $telefone);
+    if (strlen($t) === 0) return '';
+    if (strlen($t) <= 11 && strpos($t, '55') !== 0) {
+        $t = '55' . $t;
+    }
+    return $t;
+}
+
+function montar_relatorio_ronda($conn, $ronda_id) {
+    $stmt = $conn->prepare("SELECT r.*, u.nome AS usuario_login, u.nome_real AS usuario_nome, b.nome AS base_nome
+                            FROM rondas r
+                            JOIN usuarios u ON r.usuario_id = u.id
+                            LEFT JOIN bases b ON r.base_id = b.id
+                            WHERE r.id = ?");
+    $stmt->bind_param('i', $ronda_id);
+    $stmt->execute();
+    $ronda = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+    if (!$ronda) return '';
+
+    $stmt = $conn->prepare("SELECT e.nome AS edificio_nome, re.escaneado_em
+                            FROM ronda_escaneamentos re
+                            JOIN edificios e ON re.edificio_id = e.id
+                            WHERE re.ronda_id = ?
+                            ORDER BY re.escaneado_em ASC");
+    $stmt->bind_param('i', $ronda_id);
+    $stmt->execute();
+    $escans = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    $stmt->close();
+
+    $rondante = $ronda['usuario_nome'] ?: $ronda['usuario_login'];
+    $msg = "*RELATÓRIO DE RONDA*\n\n";
+    $msg .= "*Rondante:* " . $rondante . "\n";
+    $msg .= "*Data:* " . date('d/m/Y', strtotime($ronda['data_ronda'])) . "\n";
+    $msg .= "*Início:* " . date('H:i:s', strtotime($ronda['hora_inicio'])) . "\n";
+    if ($ronda['hora_fim']) {
+        $msg .= "*Término:* " . date('H:i:s', strtotime($ronda['hora_fim'])) . "\n";
+    }
+    if ($ronda['base_nome']) {
+        $msg .= "*Base:* " . $ronda['base_nome'] . "\n";
+    }
+    $msg .= "*Edifícios escaneados:* " . count($escans) . "\n\n";
+
+    if (count($escans) === 0) {
+        $msg .= "Nenhum edifício foi escaneado nesta ronda.\n";
+    } else {
+        foreach ($escans as $esc) {
+            $msg .= "✅ " . $esc['edificio_nome'] . " — " . date('H:i:s', strtotime($esc['escaneado_em'])) . "\n";
+        }
+    }
+    return $msg;
+}
+
 $action = $_POST['action'] ?? '';
 
 switch ($action) {
@@ -122,11 +176,28 @@ switch ($action) {
         $stmt = $conn->prepare("UPDATE rondas SET status = 'finalizada', hora_fim = NOW() WHERE id = ?");
         $stmt->bind_param('i', $ronda['id']);
         if ($stmt->execute()) {
-            echo json_encode(['success' => true, 'message' => 'Ronda finalizada com sucesso!']);
+            $relatorio = montar_relatorio_ronda($conn, $ronda['id']);
+
+            $stmt = $conn->prepare("SELECT whatsapp FROM usuarios WHERE categoria = 'gerente' AND gerente_ronda = 1 AND whatsapp IS NOT NULL AND whatsapp != ''");
+            $stmt->execute();
+            $gerentes = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+            $stmt->close();
+
+            $whatsapp_links = [];
+            foreach ($gerentes as $g) {
+                $tel = normalizar_whatsapp($g['whatsapp']);
+                if ($tel === '') continue;
+                $whatsapp_links[] = 'https://api.whatsapp.com/send?phone=' . $tel . '&text=' . rawurlencode($relatorio);
+            }
+
+            echo json_encode([
+                'success' => true,
+                'message' => 'Ronda finalizada com sucesso!',
+                'whatsapp_links' => $whatsapp_links
+            ]);
         } else {
             echo json_encode(['success' => false, 'message' => 'Erro ao finalizar ronda: ' . $conn->error]);
         }
-        $stmt->close();
         break;
 
     case 'escanear':

@@ -14,13 +14,14 @@ $mensagem_tipo = 'info';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['nome'], $_POST['categoria'], $_POST['senha'])) {
     $nome = trim($_POST['nome']);
     $nome_real = trim($_POST['nome_real'] ?? '');
+    $whatsapp = trim($_POST['whatsapp'] ?? '');
     // Supervisor só pode criar usuários do tipo Colaborador
     $categoria = $usuario_categoria === 'supervisor' ? 'colaborador' : $_POST['categoria'];
     $base_id = !empty($_POST['base_id']) ? intval($_POST['base_id']) : null;
     $senha = password_hash($_POST['senha'], PASSWORD_DEFAULT);
 
-    $stmt = $conn->prepare("INSERT INTO usuarios (nome, nome_real, categoria, base_id, senha) VALUES (?, ?, ?, ?, ?)");
-    $stmt->bind_param("sssis", $nome, $nome_real, $categoria, $base_id, $senha);
+    $stmt = $conn->prepare("INSERT INTO usuarios (nome, nome_real, whatsapp, categoria, base_id, senha) VALUES (?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("ssssis", $nome, $nome_real, $whatsapp, $categoria, $base_id, $senha);
     if ($stmt->execute()) {
         $mensagem = "Usuário '$nome' criado com sucesso!";
         $mensagem_tipo = "success";
@@ -123,6 +124,10 @@ if (isset($_SESSION['mensagem'])) {
                                 <div class="space-y-2">
                                     <label class="form-label">Nome de Usuário (Login)</label>
                                     <input type="text" name="nome" class="form-input" required placeholder="Ex: admin_base">
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="form-label">WhatsApp</label>
+                                    <input type="tel" name="whatsapp" class="form-input" placeholder="Ex: (11) 99999-9999">
                                 </div>
                                 <div class="space-y-2">
                                     <label class="form-label">Senha</label>

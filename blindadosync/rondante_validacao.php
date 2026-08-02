@@ -11,6 +11,27 @@ if (!in_array($usuario_categoria, ['gerente', 'diretor'])) {
 $data_filtro = $_GET['data'] ?? date('Y-m-d');
 $rondante_id = isset($_GET['rondante_id']) ? intval($_GET['rondante_id']) : 0;
 
+// Excluir relatório de ronda
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['excluir_ronda'])) {
+    $ronda_id = intval($_POST['excluir_ronda']);
+    $stmt = $conn->prepare("DELETE FROM ronda_escaneamentos WHERE ronda_id = ?");
+    $stmt->bind_param('i', $ronda_id);
+    $stmt->execute();
+    $stmt->close();
+    $stmt = $conn->prepare("DELETE FROM rondas WHERE id = ?");
+    $stmt->bind_param('i', $ronda_id);
+    if ($stmt->execute()) {
+        $_SESSION['mensagem'] = 'Relatório de ronda excluído com sucesso!';
+        $_SESSION['mensagem_tipo'] = 'success';
+    } else {
+        $_SESSION['mensagem'] = 'Erro ao excluir relatório: ' . $conn->error;
+        $_SESSION['mensagem_tipo'] = 'error';
+    }
+    $stmt->close();
+    header("Location: rondante_validacao.php?data=" . urlencode($data_filtro) . "&rondante_id=" . $rondante_id);
+    exit();
+}
+
 // Lista de rondantes para o filtro
 $rondantes = $conn->query("SELECT id, nome_real, nome FROM usuarios WHERE categoria = 'rondante' ORDER BY nome_real")->fetch_all(MYSQLI_ASSOC);
 if ($rondante_id === 0 && !empty($rondantes)) {
@@ -111,7 +132,16 @@ $total_escaneados_total = array_sum(array_map('count', $escaneamentos_por_ronda)
                     <?php endif; ?>
                     <a href="rondante_qrcodes.php" class="px-6 py-3 text-sm font-bold transition-all border-b-2 border-transparent text-slate-500 hover:text-slate-700">QR Codes</a>
                     <a href="rondante_validacao.php" class="px-6 py-3 text-sm font-bold transition-all border-b-2 border-primary-500 text-primary-600">Validação de Ronda</a>
+                    <a href="rondante_gerentes.php" class="px-6 py-3 text-sm font-bold transition-all border-b-2 border-transparent text-slate-500 hover:text-slate-700">Gerentes de Ronda</a>
                 </div>
+
+                <?php if (isset($_SESSION['mensagem'])): ?>
+                    <div class="mb-6 p-4 <?php echo $_SESSION['mensagem_tipo'] === 'success' ? 'bg-green-50 border-green-500 text-green-700' : 'bg-red-50 border-red-500 text-red-700'; ?> border-l-4 rounded-r-xl flex items-start gap-3 animate-fade-in">
+                        <i class="fas <?php echo $_SESSION['mensagem_tipo'] === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'; ?> mt-0.5"></i>
+                        <div class="text-sm font-medium"><?php echo htmlspecialchars($_SESSION['mensagem']); ?></div>
+                    </div>
+                    <?php unset($_SESSION['mensagem'], $_SESSION['mensagem_tipo']); ?>
+                <?php endif; ?>
 
                 <!-- Filtros -->
                 <div class="mb-6 animate-slide-up">
@@ -224,6 +254,14 @@ $total_escaneados_total = array_sum(array_map('count', $escaneamentos_por_ronda)
                                             <?php else: ?>
                                                 <p class="px-5 py-6 text-center text-sm text-slate-500 italic">Esta ronda não possui escaneamentos registrados.</p>
                                             <?php endif; ?>
+                                        </div>
+                                        <div class="flex justify-end border-t border-slate-100 bg-white px-5 py-3">
+                                            <form method="POST" onsubmit="return confirm('Deseja realmente excluir este relatório de ronda? Esta ação não pode ser desfeita.');" class="inline">
+                                                <input type="hidden" name="excluir_ronda" value="<?= $ronda_id ?>">
+                                                <button type="submit" class="inline-flex items-center gap-2 rounded-lg bg-red-50 px-3 py-2 text-xs font-bold text-red-600 hover:bg-red-100 transition-all">
+                                                    <i class="fas fa-trash-alt" style="font-size:10px"></i> Excluir relatório
+                                                </button>
+                                            </form>
                                         </div>
                                     </div>
                                 <?php endforeach; ?>

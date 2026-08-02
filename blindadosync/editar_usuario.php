@@ -13,6 +13,7 @@ if (!$id) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nome = $_POST['nome'];
     $nome_real = trim($_POST['nome_real'] ?? '');
+    $whatsapp = trim($_POST['whatsapp'] ?? '');
     $categoria = $_POST['categoria'];
     $base_id = !empty($_POST['base_id']) ? intval($_POST['base_id']) : null;
     $senha = $_POST['senha'];
@@ -20,12 +21,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!empty($senha)) {
         // Se a senha foi preenchida, atualiza com hash
         $senhaHash = password_hash($senha, PASSWORD_DEFAULT);
-        $stmt = $conn->prepare("UPDATE usuarios SET nome = ?, nome_real = ?, categoria = ?, base_id = ?, senha = ? WHERE id = ?");
-        $stmt->bind_param("sssssi", $nome, $nome_real, $categoria, $base_id, $senhaHash, $id);
+        $stmt = $conn->prepare("UPDATE usuarios SET nome = ?, nome_real = ?, whatsapp = ?, categoria = ?, base_id = ?, senha = ? WHERE id = ?");
+        $stmt->bind_param("ssssssi", $nome, $nome_real, $whatsapp, $categoria, $base_id, $senhaHash, $id);
     } else {
         // Se a senha está vazia, mantém a antiga
-        $stmt = $conn->prepare("UPDATE usuarios SET nome = ?, nome_real = ?, categoria = ?, base_id = ? WHERE id = ?");
-        $stmt->bind_param("ssssi", $nome, $nome_real, $categoria, $base_id, $id);
+        $stmt = $conn->prepare("UPDATE usuarios SET nome = ?, nome_real = ?, whatsapp = ?, categoria = ?, base_id = ? WHERE id = ?");
+        $stmt->bind_param("sssssi", $nome, $nome_real, $whatsapp, $categoria, $base_id, $id);
     }
 
     if ($stmt->execute()) {
@@ -104,6 +105,11 @@ $bases = $conn->query("SELECT id, nome FROM bases WHERE status = 'ativo' ORDER B
                             <div class="space-y-2">
                                 <label class="form-label">Nome Completo</label>
                                 <input type="text" name="nome_real" class="form-input" value="<?= htmlspecialchars($usuario['nome_real'] ?? '') ?>" placeholder="Ex: João Silva">
+                            </div>
+                            
+                            <div class="space-y-2">
+                                <label class="form-label">WhatsApp</label>
+                                <input type="tel" name="whatsapp" class="form-input" value="<?= htmlspecialchars($usuario['whatsapp'] ?? '') ?>" placeholder="Ex: (11) 99999-9999">
                             </div>
                             
                             <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">

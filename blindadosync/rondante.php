@@ -91,6 +91,7 @@ $total_escaneados = count(array_filter($checklist, fn($c) => !empty($c['escanead
                     <?php endif; ?>
                     <?php if ($usuario_categoria === 'gerente' || $usuario_categoria === 'diretor'): ?>
                     <a href="rondante_validacao.php" class="px-6 py-3 text-sm font-bold transition-all border-b-2 border-transparent text-slate-500 hover:text-slate-700">Validação de Ronda</a>
+                    <a href="rondante_gerentes.php" class="px-6 py-3 text-sm font-bold transition-all border-b-2 border-transparent text-slate-500 hover:text-slate-700">Gerentes de Ronda</a>
                     <?php endif; ?>
                 </div>
 
@@ -248,8 +249,28 @@ $total_escaneados = count(array_filter($checklist, fn($c) => !empty($c['escanead
                     reject(new Error('Seu navegador não suporta geolocalização.'));
                     return;
                 }
-                navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
+                const opcoes = { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 };
+                const fallback = () => {
+                    navigator.geolocation.getCurrentPosition(
+                        resolve,
+                        reject,
+                        { enableHighAccuracy: false, timeout: 20000, maximumAge: 30000 }
+                    );
+                };
+                try {
+                    navigator.geolocation.getCurrentPosition(resolve, fallback, opcoes);
+                } catch (e) {
+                    fallback();
+                }
             });
+        }
+
+        function erroLocalizacao(err) {
+            if (!err || !err.code) return 'Não foi possível obter a localização. Verifique se o GPS está ativado.';
+            if (err.code === err.PERMISSION_DENIED) return 'Permissão de localização negada. Habilite o acesso à localização no navegador.';
+            if (err.code === err.TIMEOUT) return 'O GPS demorou para responder. Tente novamente.';
+            if (err.code === err.POSITION_UNAVAILABLE) return 'Localização indisponível. Verifique se o GPS está ativado.';
+            return 'Não foi possível obter a localização. Tente novamente.';
         }
 
         async function iniciarRonda() {
@@ -273,7 +294,7 @@ $total_escaneados = count(array_filter($checklist, fn($c) => !empty($c['escanead
                     btn.disabled = false;
                 }
             } catch (e) {
-                setStatus('<i class="fas fa-exclamation-circle mr-2"></i>Não foi possível obter a localização. Verifique se o GPS está ativado.', 'error');
+                setStatus('<i class="fas fa-exclamation-circle mr-2"></i>' + erroLocalizacao(e), 'error');
                 btn.disabled = false;
             }
         }
@@ -293,13 +314,20 @@ $total_escaneados = count(array_filter($checklist, fn($c) => !empty($c['escanead
                 const data = await res.json();
                 if (data.success) {
                     setStatus('<i class="fas fa-check-circle mr-2"></i>' + (data.message || 'Ronda finalizada!'), 'success');
-                    setTimeout(() => location.reload(), 1200);
+                    if (data.whatsapp_links && data.whatsapp_links.length) {
+                        setStatus('<i class="fas fa-paper-plane mr-2"></i>Enviando relatório para o WhatsApp dos gerentes...', 'success');
+                        const openLink = (url, i) => {
+                            setTimeout(() => window.open(url, '_blank'), i * 800);
+                        };
+                        data.whatsapp_links.forEach(openLink);
+                    }
+                    setTimeout(() => location.reload(), 2000);
                 } else {
                     setStatus('<i class="fas fa-exclamation-circle mr-2"></i>' + data.message, 'error');
                     btn.disabled = false;
                 }
             } catch (e) {
-                setStatus('<i class="fas fa-exclamation-circle mr-2"></i>Não foi possível obter a localização. Verifique se o GPS está ativado.', 'error');
+                setStatus('<i class="fas fa-exclamation-circle mr-2"></i>' + erroLocalizacao(e), 'error');
                 btn.disabled = false;
             }
         }
@@ -434,7 +462,7 @@ $total_escaneados = count(array_filter($checklist, fn($c) => !empty($c['escanead
                     }, 2500);
                 }
             } catch (e) {
-                msg.textContent = 'Não foi possível obter a localização. Verifique o GPS.';
+                msg.textContent = erroLocalizacao(e);
                 msg.classList.remove('text-slate-500');
                 msg.classList.add('text-red-600');
                 setTimeout(() => {
