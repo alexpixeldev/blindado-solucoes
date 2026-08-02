@@ -73,317 +73,313 @@ if ($tabela_existe && $is_gerente_ou_diretor) {
     $feedbacks_todos = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     $stmt->close();
 }
+
+function getTipoFeedbackLabel($tipo) {
+    $labels = [
+        'sugestao' => 'Sugestão',
+        'duvida' => 'Dúvida',
+        'problema' => 'Problema',
+        'elogio' => 'Elogio',
+        'outro' => 'Outro'
+    ];
+    return $labels[$tipo] ?? 'Outro';
+}
+
+function getTipoFeedbackIcon($tipo) {
+    $icons = [
+        'sugestao' => 'fa-lightbulb',
+        'duvida' => 'fa-question-circle',
+        'problema' => 'fa-exclamation-triangle',
+        'elogio' => 'fa-thumbs-up',
+        'outro' => 'fa-file-alt'
+    ];
+    return $icons[$tipo] ?? 'fa-file-alt';
+}
+
+function getTipoFeedbackClass($tipo) {
+    $classes = [
+        'sugestao' => 'tag-sugestao',
+        'duvida' => 'tag-duvida',
+        'problema' => 'tag-problema',
+        'elogio' => 'tag-elogio',
+        'outro' => 'tag-outro'
+    ];
+    return $classes[$tipo] ?? 'tag-outro';
+}
+
+function getCategoriaLabel($categoria) {
+    $labels = [
+        'gerente' => 'Gerente',
+        'diretor' => 'Diretor',
+        'tecnico' => 'Técnico',
+        'administrativo' => 'Administrativo',
+        'colaborador' => 'Colaborador',
+        'supervisor' => 'Supervisor',
+        'operador' => 'Operador',
+        'rondante' => 'Rondante'
+    ];
+    return $labels[$categoria] ?? 'Usuário';
+}
 ?>
 <!DOCTYPE html>
-<html lang="pt-br" class="h-full bg-slate-50">
+<html lang="pt-br" class="h-full">
 <head>
+    <link rel="icon" type="image/png" href="../img/escudo.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Feedback | Blindado Soluções</title>
-    <link rel="icon" type="image/png" href="../img/escudo.png">
-
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: {
-                            50: '#f0fdf4',
-                            100: '#dcfce7',
-                            200: '#bbf7d0',
-                            300: '#86efac',
-                            400: '#4ade80',
-                            500: '#22c55e',
-                            600: '#16a34a',
-                            700: '#15803d',
-                            800: '#166534',
-                            900: '#14532d',
-                        }
-                    },
-                    animation: {
-                        'fade-in': 'fadeIn 0.5s ease-out forwards',
-                        'slide-up': 'slideUp 0.5s ease-out forwards',
-                    },
-                    keyframes: {
-                        fadeIn: {
-                            '0%': { opacity: '0' },
-                            '100%': { opacity: '1' },
-                        },
-                        slideUp: {
-                            '0%': { transform: 'translateY(20px)', opacity: '0' },
-                            '100%': { transform: 'translateY(0)', opacity: '1' },
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-
-    <!-- Google Fonts & Font Awesome -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style_modern.css">
     <link rel="stylesheet" href="assets/css/tailwind.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; background: var(--bg-primary); color: var(--text-primary); margin: 0; padding: 0; }
+        .page-wrapper { width: 100%; display: flex; flex-direction: column; min-height: 100vh; background: var(--bg-primary); }
+        .page-content { width: 100%; max-width: 1400px; background: var(--bg-card); margin: 24px auto 80px auto; padding: 32px 36px; border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 8px 32px var(--shadow); }
+        .notion-header-static { font-size: 1.6rem; font-weight: 700; margin-bottom: 1.8rem; color: var(--text-primary); padding: 0 0 16px 0; line-height: 1.3; border-bottom: 1px solid var(--border); }
+        .notion-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 32px; margin-bottom: 28px; padding: 20px 24px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 12px; }
+        .meta-row { display: flex; align-items: center; gap: 10px; }
+        .meta-label { color: var(--text-secondary); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; min-width: 90px; display: flex; align-items: center; gap: 6px; }
+        .meta-value { flex: 1; }
+        .meta-value input, .meta-value select, .meta-value textarea { width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg-secondary); font-size: 0.9rem; font-weight: 500; color: var(--text-primary); outline: none; transition: border-color 0.15s, box-shadow 0.15s; box-sizing: border-box; }
+        .meta-value input:focus, .meta-value select:focus, .meta-value textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 169, 55, 0.18); }
+        .meta-value input:hover, .meta-value select:hover, .meta-value textarea:hover { border-color: rgba(255, 255, 255, 0.25); }
+        .meta-value .relative { position: relative; }
+        .meta-value .absolute { position: absolute; }
+        .meta-value .inset-y-0 { top: 0; bottom: 0; }
+        .meta-value .left-0 { left: 0; }
+        .meta-value .pl-4 { padding-left: 1rem; }
+        .meta-value .pl-11 { padding-left: 2.75rem; }
+        .meta-value .pr-4 { padding-right: 1rem; }
+        .meta-value .flex { display: flex; }
+        .meta-value .items-center { align-items: center; }
+        .meta-value .pointer-events-none { pointer-events: none; }
+        .meta-value .text-slate-400 { color: #94a3b8; }
+        .meta-value .text-sm { font-size: 0.875rem; }
+        .meta-value .text-xs { font-size: 0.75rem; }
+        .top-bar { position: sticky; top: 0; z-index: 1000; background: rgba(6, 19, 40, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 14px 32px; display: flex; justify-content: space-between; align-items: center; }
+        .top-bar-left { display: flex; align-items: center; gap: 8px; }
+        .top-bar-left i { color: var(--primary-light); font-size: 1.1rem; }
+        .top-bar-left span { font-weight: 600; font-size: 0.95rem; color: var(--text-primary); }
+        .form-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 10px; margin-top: 28px; padding-top: 22px; border-top: 1px solid var(--border); }
+        
+        .feedback-grid { display: grid; grid-template-columns: 1fr; gap: 24px; }
+        .feedback-card { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 12px; padding: 24px; }
+        .feedback-card-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 16px; color: var(--text-primary); padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+        .feedback-list { max-height: 400px; overflow-y: auto; }
+        .feedback-item { padding: 12px; border-radius: 8px; background: var(--bg-primary); margin-bottom: 10px; border: 1px solid var(--border); }
+        .feedback-item-date { font-size: 0.75rem; color: var(--text-secondary); font-weight: 600; text-transform: uppercase; margin-bottom: 4px; }
+        .feedback-item-assunto { font-size: 0.85rem; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
+        .feedback-item-desc { font-size: 0.8rem; color: var(--text-secondary); line-height: 1.4; }
+        .feedback-tag { display: inline-flex; align-items: center; gap: 6px; padding: 3px 8px; border-radius: 5px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; }
+        .feedback-tag i { font-size: 0.9rem; }
+        .tag-sugestao { background: rgba(59, 130, 246, 0.15); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3); }
+        .tag-duvida { background: rgba(234, 179, 8, 0.15); color: #eab308; border: 1px solid rgba(234, 179, 8, 0.3); }
+        .tag-problema { background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
+        .tag-elogio { background: rgba(34, 197, 94, 0.15); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.3); }
+        .tag-outro { background: rgba(100, 116, 139, 0.15); color: #64748b; border: 1px solid rgba(100, 116, 139, 0.3); }
+        
+        .success-message { background: rgba(37, 169, 55, 0.15); border: 1px solid rgba(37, 169, 55, 0.3); color: var(--primary-light); padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem; font-weight: 500; }
+        .error-message { background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem; font-weight: 500; }
+        .warning-message { background: rgba(234, 179, 8, 0.15); border: 1px solid rgba(234, 179, 8, 0.3); color: #eab308; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem; font-weight: 500; }
+        
+        .pagination { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
+        .pagination-btn { padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-secondary); color: var(--text-primary); font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+        .pagination-btn:hover { background: rgba(255, 255, 255, 0.1); border-color: rgba(255, 255, 255, 0.3); }
+        .pagination-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .pagination-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        @media (max-width: 768px) {
+            .page-content { padding: 20px 16px !important; margin: 12px !important; }
+            .notion-meta { grid-template-columns: 1fr !important; }
+        }
+    </style>
 </head>
-<body class="h-full text-slate-800 antialiased">
+<body>
     <div class="flex min-h-screen">
         <?php include 'components/sidebar.php'; ?>
-
-        <div class="flex min-w-0 flex-1 flex-col">
-            <?php include 'components/header.php'; ?>
-
-            <main class="min-w-0 flex-1 p-4 sm:p-8 custom-scrollbar">
-                <!-- Page Header -->
-                <div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between animate-fade-in">
-                    <div>
-                        <h1 class="text-2xl font-bold text-slate-900 sm:text-3xl">Feedback</h1>
-                        <p class="mt-1 text-slate-500">Envie suas sugestões, dúvidas ou reporte problemas para melhorar nosso sistema.</p>
-                    </div>
+        <div class="flex-1 flex flex-col page-wrapper">
+            <header class="top-bar">
+                <div class="top-bar-left">
+                    <i class="fas fa-comment-dots"></i>
+                    <span>Feedback</span>
                 </div>
-
+                <div class="top-bar-right">
+                </div>
+            </header>
+            <main class="page-content">
                 <?php if ($mensagem): ?>
-                    <div class="mb-6 p-4 <?php echo $mensagem_tipo === 'success' ? 'bg-green-50 border-green-500 text-green-700' : 'bg-red-50 border-red-500 text-red-700'; ?> border-l-4 rounded-r-xl flex items-start gap-3 animate-fade-in">
-                        <i class="fas <?php echo $mensagem_tipo === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'; ?> mt-0.5"></i>
-                        <div class="text-sm font-medium"><?php echo htmlspecialchars($mensagem); ?></div>
+                    <div class="<?php echo $mensagem_tipo === 'success' ? 'success-message' : ($mensagem_tipo === 'error' ? 'error-message' : 'warning-message'); ?>">
+                        <?php echo htmlspecialchars($mensagem); ?>
                     </div>
                 <?php endif; ?>
 
                 <?php if (!$tabela_existe): ?>
-                    <div class="mb-6 p-4 bg-yellow-50 border-yellow-500 text-yellow-700 border-l-4 rounded-r-xl flex items-start gap-3 animate-fade-in">
-                        <i class="fas fa-exclamation-triangle mt-0.5"></i>
-                        <div class="text-sm">
-                            <p class="font-medium">Tabela de feedbacks não encontrada</p>
-                            <p class="mt-1">A funcionalidade de feedback requer a criação da tabela no banco de dados. <a href="migrar_feedback.php" class="underline font-bold">Clique aqui para executar a migration</a>.</p>
-                        </div>
+                    <div class="warning-message">
+                        <p><strong>Tabela de feedbacks não encontrada</strong></p>
+                        <p style="margin-top: 8px;">A funcionalidade de feedback requer a criação da tabela no banco de dados. <a href="migrar_feedback.php" style="color: inherit; text-decoration: underline;">Clique aqui para executar a migration</a>.</p>
                     </div>
                 <?php endif; ?>
 
-                <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                <h1 class="notion-header-static">Feedback</h1>
+
+                <div class="feedback-grid">
                     <!-- Formulário de Feedback -->
-                    <div class="animate-slide-up">
-                        <div class="admin-card">
-                            <div class="mb-6">
-                                <h2 class="text-lg font-bold text-slate-900">Novo Feedback</h2>
-                                <p class="text-sm text-slate-500">Preencha o formulário abaixo para enviar seu feedback.</p>
+                    <div class="feedback-card">
+                        <div class="feedback-card-title">Novo Feedback</div>
+                        <form method="POST" action="" class="space-y-4">
+                            <div>
+                                <label class="meta-label">Tipo de Feedback</label>
+                                <div class="meta-value">
+                                    <div class="relative">
+                                        <select name="tipo" class="appearance-none pr-10" required>
+                                            <option value="">Selecione o tipo...</option>
+                                            <option value="sugestao">Sugestão</option>
+                                            <option value="duvida">Dúvida</option>
+                                            <option value="problema">Problema/Erro</option>
+                                            <option value="elogio">Elogio</option>
+                                            <option value="outro">Outro</option>
+                                        </select>
+                                        <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+                                            <i class="fas fa-chevron-down text-slate-400 text-xs"></i>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
-                            <form method="POST" action="" class="space-y-4">
-                                <div>
-                                    <label for="tipo" class="block text-sm font-medium text-slate-700 mb-1">Tipo de Feedback *</label>
-                                    <select id="tipo" name="tipo" required class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none transition-all">
-                                        <option value="">Selecione o tipo...</option>
-                                        <option value="sugestao">💡 Sugestão</option>
-                                        <option value="duvida">❓ Dúvida</option>
-                                        <option value="problema">⚠️ Problema/Erro</option>
-                                        <option value="elogio">👍 Elogio</option>
-                                        <option value="outro">📝 Outro</option>
-                                    </select>
+                            <div>
+                                <label class="meta-label">Assunto</label>
+                                <div class="meta-value">
+                                    <div class="relative">
+                                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                            <i class="fas fa-heading text-slate-400 text-sm"></i>
+                                        </div>
+                                        <input type="text" name="assunto" class="pl-11" required placeholder="Resumo do seu feedback">
+                                    </div>
                                 </div>
+                            </div>
 
-                                <div>
-                                    <label for="assunto" class="block text-sm font-medium text-slate-700 mb-1">Assunto *</label>
-                                    <input type="text" id="assunto" name="assunto" required placeholder="Resumo do seu feedback" class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none transition-all">
+                            <div>
+                                <label class="meta-label">Mensagem</label>
+                                <div class="meta-value">
+                                    <div class="relative">
+                                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none" style="top: 8px;">
+                                            <i class="fas fa-align-left text-slate-400 text-sm"></i>
+                                        </div>
+                                        <textarea name="mensagem" class="pl-11" required rows="5" placeholder="Descreva detalhadamente seu feedback..."></textarea>
+                                    </div>
                                 </div>
+                            </div>
 
-                                <div>
-                                    <label for="mensagem" class="block text-sm font-medium text-slate-700 mb-1">Mensagem *</label>
-                                    <textarea id="mensagem" name="mensagem" required rows="5" placeholder="Descreva detalhadamente seu feedback..." class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none transition-all resize-none"></textarea>
-                                </div>
-
-                                <button type="submit" name="enviar_feedback" <?php echo !$tabela_existe ? 'disabled class="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-400 px-6 py-3 text-sm font-bold text-white cursor-not-allowed w-full sm:w-auto"' : 'class="inline-flex items-center justify-center gap-2 rounded-xl bg-primary-600 px-6 py-3 text-sm font-bold text-white hover:bg-primary-500 transition-all shadow-sm w-full sm:w-auto"'; ?>>
-                                    <i class="fas fa-paper-plane"></i>
-                                    <?= !$tabela_existe ? 'Tabela não criada - Execute a migration' : 'Enviar Feedback' ?>
+                            <div class="form-actions">
+                                <button type="submit" name="enviar_feedback" class="pagination-btn" style="background: var(--primary); color: white; border-color: var(--primary);">
+                                    <i class="fas fa-paper-plane"></i> Enviar Feedback
                                 </button>
-                            </form>
-                        </div>
+                            </div>
+                        </form>
                     </div>
 
                     <!-- Feedbacks Anteriores -->
-                    <div class="animate-slide-up" style="animation-delay: 0.1s;">
-                        <div class="admin-card">
-                            <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
-                                <h2 class="text-lg font-bold text-slate-900">Seus Feedbacks Recentes</h2>
-                                <span class="inline-flex items-center gap-2 rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-700">
-                                    <?= count($feedbacks_anteriores) ?> feedback(s)
-                                </span>
+                    <div class="feedback-card">
+                        <div class="feedback-card-title">Seus Feedbacks Recentes</div>
+                        <?php if (empty($feedbacks_anteriores)): ?>
+                            <div style="text-align: center; padding: 40px 20px; color: var(--text-secondary); font-style: italic;">
+                                <i class="fas fa-comment-slash" style="font-size: 3rem; margin-bottom: 10px; color: var(--text-secondary); opacity: 0.3;"></i>
+                                <p>Nenhum feedback enviado ainda.</p>
                             </div>
-
-                            <?php if (empty($feedbacks_anteriores)): ?>
-                                <div class="text-center py-10 text-slate-500 italic">
-                                    <i class="fas fa-comment-slash text-4xl mb-3 text-slate-300"></i>
-                                    <p>Nenhum feedback enviado ainda.</p>
-                                </div>
-                            <?php else: ?>
-                                <div class="space-y-3 max-h-96 overflow-y-auto custom-scrollbar">
-                                    <?php foreach ($feedbacks_anteriores as $feedback): ?>
-                                        <div class="rounded-lg border border-slate-200 bg-slate-50 p-4">
-                                            <div class="flex items-start justify-between gap-2 mb-2">
-                                                <span class="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-bold <?= getTipoFeedbackClass($feedback['tipo']) ?>">
-                                                    <?= getTipoFeedbackIcon($feedback['tipo']) ?>
-                                                    <?= getTipoFeedbackLabel($feedback['tipo']) ?>
-                                                </span>
-                                                <span class="text-xs text-slate-400">
-                                                    <?= date('d/m/Y H:i', strtotime($feedback['data_criacao'])) ?>
-                                                </span>
-                                            </div>
-                                            <h3 class="font-semibold text-slate-900 text-sm mb-1"><?= htmlspecialchars($feedback['assunto']) ?></h3>
-                                            <p class="text-sm text-slate-600 line-clamp-2"><?= htmlspecialchars($feedback['mensagem']) ?></p>
+                        <?php else: ?>
+                            <div class="feedback-list">
+                                <?php foreach ($feedbacks_anteriores as $feedback): ?>
+                                    <div class="feedback-item">
+                                        <div class="feedback-item-date">
+                                            <?php echo date('d/m/Y H:i', strtotime($feedback['data_criacao'])); ?>
                                         </div>
-                                    <?php endforeach; ?>
-                                </div>
-                            <?php endif; ?>
-
-                            <!-- Feedbacks de Todos (apenas para gerentes e diretores) -->
-                            <?php if ($is_gerente_ou_diretor): ?>
-                            <div class="mt-6 pt-6 border-t border-slate-200">
-                                <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
-                                    <h2 class="text-lg font-bold text-slate-900">Feedbacks da Equipe</h2>
-                                    <div class="flex items-center gap-2">
-                                        <span class="inline-flex items-center gap-2 rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-700">
-                                            <?= $total_feedbacks ?? 0 ?> feedback(s) total
-                                        </span>
-                                        <?php if (isset($total_paginas) && $total_paginas > 1): ?>
-                                            <span class="inline-flex items-center gap-2 rounded-lg bg-primary-100 px-3 py-1.5 text-xs font-bold text-primary-700">
-                                                Página <?= $pagina ?> de <?= $total_paginas ?>
-                                            </span>
-                                        <?php endif; ?>
-                                    </div>
-                                </div>
-
-                                <?php if (empty($feedbacks_todos)): ?>
-                                    <div class="text-center py-10 text-slate-500 italic">
-                                        <i class="fas fa-comments text-4xl mb-3 text-slate-300"></i>
-                                        <p>Nenhum feedback enviado pela equipe ainda.</p>
-                                    </div>
-                                <?php else: ?>
-                                    <div class="space-y-3 max-h-96 overflow-y-auto custom-scrollbar">
-                                        <?php foreach ($feedbacks_todos as $feedback): ?>
-                                            <div class="rounded-lg border border-slate-200 bg-slate-50 p-4">
-                                                <div class="flex items-start justify-between gap-2 mb-2">
-                                                    <div class="flex items-center gap-2">
-                                                        <span class="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-bold <?= getTipoFeedbackClass($feedback['tipo']) ?>">
-                                                            <?= getTipoFeedbackIcon($feedback['tipo']) ?>
-                                                            <?= getTipoFeedbackLabel($feedback['tipo']) ?>
-                                                        </span>
-                                                        <span class="inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-bold bg-slate-200 text-slate-700">
-                                                            <?= getCategoriaLabel($feedback['usuario_categoria']) ?>
-                                                        </span>
-                                                    </div>
-                                                    <span class="text-xs text-slate-400">
-                                                        <?= date('d/m/Y H:i', strtotime($feedback['data_criacao'])) ?>
-                                                    </span>
-                                                </div>
-                                                <div class="mb-2">
-                                                    <span class="text-xs font-medium text-slate-500"><?= htmlspecialchars($feedback['usuario_nome']) ?></span>
-                                                </div>
-                                                <h3 class="font-semibold text-slate-900 text-sm mb-1"><?= htmlspecialchars($feedback['assunto']) ?></h3>
-                                                <p class="text-sm text-slate-600 line-clamp-2"><?= htmlspecialchars($feedback['mensagem']) ?></p>
-                                            </div>
-                                        <?php endforeach; ?>
-                                    </div>
-
-                                    <!-- Paginação -->
-                                    <?php if (isset($total_paginas) && $total_paginas > 1): ?>
-                                    <div class="mt-4 flex flex-wrap items-center justify-between gap-2 pt-4 border-t border-slate-200">
-                                        <div class="text-sm text-slate-500">
-                                            Mostrando <?= min($por_pagina, count($feedbacks_todos)) ?> de <?= $total_feedbacks ?> feedbacks
+                                        <div class="feedback-item-assunto">
+                                            <?php echo htmlspecialchars($feedback['assunto']); ?>
                                         </div>
-                                        <div class="flex items-center gap-2">
-                                            <?php if ($pagina > 1): ?>
-                                                <a href="?pagina=<?= $pagina - 1 ?>" class="inline-flex items-center gap-2 rounded-lg bg-slate-100 px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-200 transition-all">
-                                                    <i class="fas fa-chevron-left"></i>
-                                                    Anterior
-                                                </a>
-                                            <?php endif; ?>
-                                            
-                                            <div class="flex items-center gap-1">
-                                                <?php for ($i = 1; $i <= $total_paginas; $i++): ?>
-                                                    <?php if ($i == $pagina): ?>
-                                                        <span class="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-primary-600 text-white text-sm font-bold">
-                                                            <?= $i ?>
-                                                        </span>
-                                                    <?php elseif (abs($i - $pagina) <= 2 || $i == 1 || $i == $total_paginas): ?>
-                                                        <a href="?pagina=<?= $i ?>" class="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-slate-100 text-slate-700 text-sm font-bold hover:bg-slate-200 transition-all">
-                                                            <?= $i ?>
-                                                        </a>
-                                                    <?php elseif (abs($i - $pagina) == 3): ?>
-                                                        <span class="text-slate-400">...</span>
-                                                    <?php endif; ?>
-                                                <?php endfor; ?>
-                                            </div>
-                                            
-                                            <?php if ($pagina < $total_paginas): ?>
-                                                <a href="?pagina=<?= $pagina + 1 ?>" class="inline-flex items-center gap-2 rounded-lg bg-slate-100 px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-200 transition-all">
-                                                    Próximo
-                                                    <i class="fas fa-chevron-right"></i>
-                                                </a>
-                                            <?php endif; ?>
+                                        <div class="feedback-item-desc">
+                                            <?php echo htmlspecialchars(substr($feedback['mensagem'], 0, 100)); ?>...
                                         </div>
                                     </div>
-                                    <?php endif; ?>
-                                <?php endif; ?>
+                                <?php endforeach; ?>
                             </div>
-                            <?php endif; ?>
-                        </div>
+                        <?php endif; ?>
                     </div>
                 </div>
+
+                <!-- Feedbacks da Equipe (apenas para gerentes e diretores) -->
+                <?php if ($is_gerente_ou_diretor): ?>
+                <div class="feedback-card" style="margin-top: 24px;">
+                    <div class="feedback-card-title">Feedbacks da Equipe</div>
+                    <?php if (empty($feedbacks_todos)): ?>
+                        <div style="text-align: center; padding: 40px 20px; color: var(--text-secondary); font-style: italic;">
+                            <i class="fas fa-comments" style="font-size: 3rem; margin-bottom: 10px; color: var(--text-secondary); opacity: 0.3;"></i>
+                            <p>Nenhum feedback enviado pela equipe ainda.</p>
+                        </div>
+                    <?php else: ?>
+                        <div class="feedback-list">
+                            <?php foreach ($feedbacks_todos as $feedback): ?>
+                                <div class="feedback-item">
+                                    <div class="feedback-item-date">
+                                        <?php echo date('d/m/Y H:i', strtotime($feedback['data_criacao'])); ?>
+                                    </div>
+                                    <div class="feedback-item-assunto">
+                                        <?php echo htmlspecialchars($feedback['assunto']); ?>
+                                    </div>
+                                    <div class="feedback-item-desc">
+                                        <?php echo htmlspecialchars(substr($feedback['mensagem'], 0, 100)); ?>...
+                                    </div>
+                                    <div style="margin-top: 6px;">
+                                        <span class="feedback-tag <?php echo getTipoFeedbackClass($feedback['tipo']); ?>">
+                                            <i class="fas <?php echo getTipoFeedbackIcon($feedback['tipo']); ?>"></i>
+                                            <?php echo getTipoFeedbackLabel($feedback['tipo']); ?>
+                                        </span>
+                                        <span class="feedback-tag" style="background: rgba(100, 116, 139, 0.15); color: #64748b; border: 1px solid rgba(100, 116, 139, 0.3);">
+                                            <?php echo getCategoriaLabel($feedback['usuario_categoria']); ?>
+                                        </span>
+                                    </div>
+                                    <div style="margin-top: 4px;">
+                                        <span style="font-size: 0.75rem; color: var(--primary-light); font-weight: 500;">
+                                            <?php echo htmlspecialchars($feedback['usuario_nome']); ?>
+                                        </span>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+
+                        <!-- Paginação -->
+                        <?php if ($total_paginas > 1): ?>
+                        <div class="pagination">
+                            <?php if ($pagina > 1): ?>
+                                <a href="?pagina=<?php echo $pagina - 1; ?>" class="pagination-btn">
+                                    <i class="fas fa-chevron-left"></i> Anterior
+                                </a>
+                            <?php endif; ?>
+                            
+                            <?php for ($i = 1; $i <= $total_paginas; $i++): ?>
+                                <?php if ($i == $pagina): ?>
+                                    <span class="pagination-btn active"><?php echo $i; ?></span>
+                                <?php elseif (abs($i - $pagina) <= 2 || $i == 1 || $i == $total_paginas): ?>
+                                    <a href="?pagina=<?php echo $i; ?>" class="pagination-btn"><?php echo $i; ?></a>
+                                <?php elseif (abs($i - $pagina) == 3): ?>
+                                    <span style="color: var(--text-secondary);">...</span>
+                                <?php endif; ?>
+                            <?php endfor; ?>
+                            
+                            <?php if ($pagina < $total_paginas): ?>
+                                <a href="?pagina=<?php echo $pagina + 1; ?>" class="pagination-btn">
+                                    Próximo <i class="fas fa-chevron-right"></i>
+                                </a>
+                            <?php endif; ?>
+                        </div>
+                        <?php endif; ?>
+                    <?php endif; ?>
+                </div>
+                <?php endif; ?>
             </main>
         </div>
     </div>
-
-    <?php
-    function getTipoFeedbackLabel($tipo) {
-        $labels = [
-            'sugestao' => 'Sugestão',
-            'duvida' => 'Dúvida',
-            'problema' => 'Problema',
-            'elogio' => 'Elogio',
-            'outro' => 'Outro'
-        ];
-        return $labels[$tipo] ?? 'Outro';
-    }
-
-    function getTipoFeedbackIcon($tipo) {
-        $icons = [
-            'sugestao' => '💡',
-            'duvida' => '❓',
-            'problema' => '⚠️',
-            'elogio' => '👍',
-            'outro' => '📝'
-        ];
-        return $icons[$tipo] ?? '📝';
-    }
-
-    function getTipoFeedbackClass($tipo) {
-        $classes = [
-            'sugestao' => 'bg-blue-100 text-blue-700',
-            'duvida' => 'bg-yellow-100 text-yellow-700',
-            'problema' => 'bg-red-100 text-red-700',
-            'elogio' => 'bg-green-100 text-green-700',
-            'outro' => 'bg-slate-200 text-slate-700'
-        ];
-        return $classes[$tipo] ?? 'bg-slate-200 text-slate-700';
-    }
-
-    function getCategoriaLabel($categoria) {
-        $labels = [
-            'gerente' => 'Gerente',
-            'diretor' => 'Diretor',
-            'tecnico' => 'Técnico',
-            'administrativo' => 'Administrativo',
-            'colaborador' => 'Colaborador',
-            'supervisor' => 'Supervisor',
-            'operador' => 'Operador',
-            'rondante' => 'Rondante'
-        ];
-        return $labels[$categoria] ?? 'Usuário';
-    }
-    ?>
 </body>
 </html>
 <?php $conn->close(); ?>
