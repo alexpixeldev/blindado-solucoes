@@ -61,6 +61,10 @@ $categoria_label = $categoria_labels[$usuario_categoria] ?? 'Usuário';
                         <i class="fas fa-motorcycle text-lg"></i>
                         <span>Ronda Atual</span>
                     </a>
+                    <a href="feedback.php" class="group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all <?php echo isActive('feedback.php', $current_page); ?>">
+                        <i class="fas fa-comment-dots text-lg"></i>
+                        <span>Feedback</span>
+                    </a>
                 </div>
             </div>
         <?php else: ?>
@@ -87,6 +91,10 @@ $categoria_label = $categoria_labels[$usuario_categoria] ?? 'Usuário';
                     <a href="consultar_ocorrencia.php" class="group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all <?php echo isActive('consultar_ocorrencia.php', $current_page); ?>">
                         <i class="fas fa-search text-lg"></i>
                         <span>Consultar Ocorrências</span>
+                    </a>
+                    <a href="feedback.php" class="group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all <?php echo isActive('feedback.php', $current_page); ?>">
+                        <i class="fas fa-comment-dots text-lg"></i>
+                        <span>Feedback</span>
                     </a>
                 <?php endif; ?>
                 <?php if (in_array($usuario_categoria, ['rondante', 'gerente', 'diretor'])): ?>
