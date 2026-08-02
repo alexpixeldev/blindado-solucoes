@@ -50,30 +50,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['salvar_plantao'])) {
 
     $conn->begin_transaction();
     try {
-        $base_id = $usuario_base_id ?? 0;
-        $stmt = $conn->prepare("INSERT INTO ocorrencias (usuario_id, supervisor_nome, operadores_nomes, edificio_id, base_id, descricao, periodo_dia, data_ocorrencia) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt = $conn->prepare("INSERT INTO ocorrencias (usuario_id, supervisor_nome, operadores_nomes, edificio_id, base_id, locais_ids, descricao, periodo_dia, data_ocorrencia) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
         $count = 0;
-        foreach ($locais_edificios as $i => $edificios_block) {
+        $indices = array_unique(array_merge(array_keys($locais_edificios), array_keys($descricoes)));
+        foreach ($indices as $i) {
             $descricao = trim($descricoes[$i] ?? '');
-            $descricao_completa = $descricao;
             if (!$descricao) continue;
 
+            $edificios_block = $locais_edificios[$i] ?? [];
             if (!is_array($edificios_block)) $edificios_block = [$edificios_block];
+
+            $locais = [];
             foreach ($edificios_block as $raw) {
                 $raw = trim($raw);
-                if (empty($raw)) continue;
-                if (strpos($raw, 'b_') === 0) {
-                    $edificio_id = null;
-                    $base_id = intval(substr($raw, 2));
-                } elseif (strpos($raw, 'e_') === 0) {
-                    $edificio_id = intval(substr($raw, 2));
-                } else {
-                    continue;
+                if (strpos($raw, 'b_') === 0 || strpos($raw, 'e_') === 0) {
+                    $locais[] = $raw;
                 }
-                $stmt->bind_param("issiisss", $usuario_id, $supervisor, $operadores, $edificio_id, $base_id, $descricao_completa, $periodo, $data_plantao);
-                $stmt->execute();
-                $count++;
             }
+            if (empty($locais)) {
+                throw new Exception("Cada relatório precisa de um edifício/base selecionado.");
+            }
+
+            $primeiro = $locais[0];
+            $edificio_id = (strpos($primeiro, 'e_') === 0) ? intval(substr($primeiro, 2)) : null;
+            $base_id = (strpos($primeiro, 'b_') === 0) ? intval(substr($primeiro, 2)) : null;
+            $locais_ids = implode(',', $locais);
+            if ($locais_ids === '') $locais_ids = null;
+
+            $stmt->bind_param("ississsss", $usuario_id, $supervisor, $operadores, $edificio_id, $base_id, $locais_ids, $descricao, $periodo, $data_plantao);
+            $stmt->execute();
+            $count++;
         }
         $conn->commit();
         $mensagem = "$count relatório(s) salvo(s) com sucesso!";
@@ -260,7 +266,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['salvar_plantao'])) {
                                 </select>
                             </div>
                         </div>
-                        <div class="meta-row"><span class="meta-label"><i class="fas fa-user"></i> Operador 2</span><div class="meta-value"><div class="autocomplete-wrap"><input type="text" id="operador2-input" class="autocomplete-input" placeholder="Digite o nome do operador" autocomplete="off"><input type="hidden" name="operador2_nome" id="operador2-nome"><div class="autocomplete-dropdown" id="operador2-dropdown"></div></div></div></div>
+                        <div class="meta-row"><span class="meta-label"><i class="fas fa-user"></i> Operador 2</span><div class="meta-value"><div class="autocomplete-wrap"><input type="text" id="operador2-input" class="autocomplete-input" placeholder="Digite o nome do operador" required autocomplete="off"><input type="hidden" name="operador2_nome" id="operador2-nome"><div class="autocomplete-dropdown" id="operador2-dropdown"></div></div></div></div>
                     </div>
                     <div class="w-full space-y-6">
                         <div id="reports-container">
@@ -930,6 +936,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['salvar_plantao'])) {
 
         function salvarRelatorio() {
             syncContentEditable();
+
+            const campos = [
+                ['supervisor-input', 'supervisor-nome', 'supervisor'],
+                ['operador1-input', 'operador1-nome', 'operador 1'],
+                ['operador2-input', 'operador2-nome', 'operador 2']
+            ];
+            for (const [inputId, hiddenId, label] of campos) {
+                const input = document.getElementById(inputId);
+                const hidden = document.getElementById(hiddenId);
+                if (input.value.trim()) hidden.value = formatName(input.value.trim());
+                if (!hidden.value.trim()) {
+                    showToast('Informe o ' + label + ' antes de salvar o relatório.', 'error');
+                    input.focus();
+                    return;
+                }
+            }
+
+            const blocos = document.querySelectorAll('#reports-container .report-block');
+            for (let bi = 0; bi < blocos.length; bi++) {
+                const sel = blocos[bi].querySelector('.selected-hidden');
+                const temLocal = sel && Array.from(sel.querySelectorAll('input')).some(inp => inp.value.trim());
+                if (!temLocal) {
+                    const locInput = blocos[bi].querySelector('.location-input');
+                    showToast('Selecione um edifício/base no relatório ' + (bi + 1) + ' antes de salvar.', 'error');
+                    if (locInput) locInput.focus();
+                    return;
+                }
+            }
+
             document.getElementById('form-plantao').submit();
         }
 

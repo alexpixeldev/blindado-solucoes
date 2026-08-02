@@ -19,6 +19,8 @@ if (isset($_POST['add_edificio'])) {
     $observacao_ficha_locacao = trim($_POST['observacao_ficha_locacao'] ?? '');
     $elevador_empresa = trim($_POST['elevador_empresa'] ?? '');
     $elevador_contato = trim($_POST['elevador_contato'] ?? '');
+    $latitude = !empty($_POST['latitude']) ? trim($_POST['latitude']) : null;
+    $longitude = !empty($_POST['longitude']) ? trim($_POST['longitude']) : null;
     $sindico_id = null;
     
     if (!empty($nome_edificio) && !empty($base_id)) {
@@ -55,8 +57,8 @@ if (isset($_POST['add_edificio'])) {
             }
         }
         
-        $stmt = $conn->prepare("INSERT INTO edificios (nome, base_id, endereco, localizacao, sindico_nome, sindico_contato, administradora_id, observacao_ficha_locacao, sindico_id, elevador_empresa, elevador_contato) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("sissssissss", $nome_edificio, $base_id, $endereco, $localizacao, $sindico_nome, $sindico_contato, $administradora_id, $observacao_ficha_locacao, $sindico_id, $elevador_empresa, $elevador_contato);
+        $stmt = $conn->prepare("INSERT INTO edificios (nome, base_id, endereco, localizacao, sindico_nome, sindico_contato, administradora_id, observacao_ficha_locacao, sindico_id, elevador_empresa, elevador_contato, latitude, longitude) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("sissssissssdd", $nome_edificio, $base_id, $endereco, $localizacao, $sindico_nome, $sindico_contato, $administradora_id, $observacao_ficha_locacao, $sindico_id, $elevador_empresa, $elevador_contato, $latitude, $longitude);
         if ($stmt->execute()) {
             $_SESSION['mensagem'] = "Edifício '$nome_edificio' adicionado com sucesso!";
             $_SESSION['mensagem_tipo'] = "success";
@@ -198,6 +200,14 @@ if (isset($_SESSION['sindico_duplicado'])) {
                                 <div class="space-y-2 md:col-span-2">
                                     <label class="form-label">Localização (Link do Google Maps)</label>
                                     <input type="text" name="localizacao" class="form-input" placeholder="https://maps.google.com/...">
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="form-label">Latitude</label>
+                                    <input type="text" name="latitude" class="form-input" placeholder="Ex: -20.319386">
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="form-label">Longitude</label>
+                                    <input type="text" name="longitude" class="form-input" placeholder="Ex: -40.337989">
                                 </div>
                                 <div class="space-y-2">
                                     <label class="form-label">Nome do Síndico</label>

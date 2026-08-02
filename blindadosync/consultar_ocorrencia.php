@@ -64,10 +64,10 @@ if ($data_filtro) $query .= " AND o.data_ocorrencia = '$data_filtro'";
 if ($local_filtro) {
     if (strpos($local_filtro, 'b_') === 0) {
         $bid = intval(substr($local_filtro, 2));
-        $query .= " AND o.base_id = $bid";
+        $query .= " AND (o.base_id = $bid OR FIND_IN_SET('b_$bid', o.locais_ids))";
     } else {
         $eid = intval(substr($local_filtro, 2));
-        $query .= " AND o.edificio_id = $eid";
+        $query .= " AND (o.edificio_id = $eid OR FIND_IN_SET('e_$eid', o.locais_ids))";
     }
 }
 
@@ -86,6 +86,27 @@ foreach ($ocorrencias_raw as $row) {
 
 $edificios = $conn->query("SELECT id, nome FROM edificios ORDER BY nome")->fetch_all(MYSQLI_ASSOC);
 $bases = $conn->query("SELECT id, nome FROM bases ORDER BY nome")->fetch_all(MYSQLI_ASSOC);
+
+$edificios_map = [];
+foreach ($edificios as $ed) { $edificios_map[$ed['id']] = $ed['nome']; }
+$bases_map = [];
+foreach ($bases as $b) { $bases_map[$b['id']] = $b['nome']; }
+
+function nomesLocais($locais_ids, $edificios_map, $bases_map) {
+    if (!$locais_ids) return '';
+    $nomes = [];
+    foreach (array_filter(explode(',', $locais_ids)) as $tok) {
+        $tok = trim($tok);
+        if (strpos($tok, 'e_') === 0) {
+            $id = intval(substr($tok, 2));
+            $nomes[] = $edificios_map[$id] ?? ('Ed. #' . $id);
+        } elseif (strpos($tok, 'b_') === 0) {
+            $id = intval(substr($tok, 2));
+            $nomes[] = 'Base: ' . ($bases_map[$id] ?? ('#' . $id));
+        }
+    }
+    return implode(', ', $nomes);
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-br" class="h-full bg-slate-50">
@@ -196,6 +217,11 @@ $bases = $conn->query("SELECT id, nome FROM bases ORDER BY nome")->fetch_all(MYS
                                             <div>
                                                 <h3 class="font-bold text-slate-900 text-lg">Plantão <?= date('d/m/Y', strtotime($meta['data_ocorrencia'])) ?> — <?= ucfirst($meta['periodo_dia']) ?></h3>
                                                 <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">Registrado por <?= htmlspecialchars($meta['autor_nome']) ?></p>
+                                                <p class="text-xs text-slate-500 mt-1">
+                                                    <i class="fas fa-user-tie mr-1 text-slate-400"></i>Supervisor: <?= htmlspecialchars($meta['supervisor_nome']) ?>
+                                                    <span class="mx-1 text-slate-300">•</span>
+                                                    <i class="fas fa-users mr-1 text-slate-400"></i>Equipe: <?= htmlspecialchars($meta['operadores_nomes']) ?>
+                                                </p>
                                             </div>
                                         </div>
                                         <div class="h-8 w-8 rounded-full hover:bg-slate-200 flex items-center justify-center transition-colors" id="btn-icon-<?= $key ?>">
@@ -208,9 +234,12 @@ $bases = $conn->query("SELECT id, nome FROM bases ORDER BY nome")->fetch_all(MYS
                                             <div class="relatorio-body border-b border-slate-50 last:border-0">
                                                 <div class="flex justify-between items-start mb-8">
                                                     <div>
-                                                        <span class="text-[10px] font-bold text-primary-600 uppercase tracking-widest block mb-1">Local do Registro</span>
                                                         <h4 class="text-2xl font-black text-slate-900">
-                                                            <?= htmlspecialchars($reg['edificio_nome'] ?: 'Base: ' . $reg['base_direta_nome']) ?>
+                                                            <?php
+                                                                $nomes = nomesLocais($reg['locais_ids'], $edificios_map, $bases_map);
+                                                                $titulo_local = $nomes !== '' ? $nomes : ($reg['edificio_nome'] ?: 'Base: ' . $reg['base_direta_nome']);
+                                                            ?>
+                                                            <?= htmlspecialchars($titulo_local) ?>
                                                         </h4>
                                                     </div>
                                                     <?php if ($reg['usuario_id'] == $_SESSION['usuario_id'] || $usuario_categoria === 'gerente'): ?>

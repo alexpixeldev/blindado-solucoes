@@ -2,13 +2,20 @@
 require_once 'verifica_login.php';
 require_once 'conexao.php';
 
+$usuario_categoria = $_SESSION['usuario_categoria'] ?? '';
+if (!in_array($usuario_categoria, ['supervisor', 'gerente', 'diretor'])) {
+    header("Location: index.php");
+    exit();
+}
+
 $mensagem = '';
 $mensagem_tipo = 'info';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['nome'], $_POST['categoria'], $_POST['senha'])) {
     $nome = trim($_POST['nome']);
     $nome_real = trim($_POST['nome_real'] ?? '');
-    $categoria = $_POST['categoria'];
+    // Supervisor só pode criar usuários do tipo Colaborador
+    $categoria = $usuario_categoria === 'supervisor' ? 'colaborador' : $_POST['categoria'];
     $base_id = !empty($_POST['base_id']) ? intval($_POST['base_id']) : null;
     $senha = password_hash($_POST['senha'], PASSWORD_DEFAULT);
 
@@ -76,6 +83,11 @@ if (isset($_SESSION['mensagem'])) {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style_modern.css">
     <link rel="stylesheet" href="assets/css/tailwind.css">
+    <style>
+        @media (min-width: 1024px) {
+            .usuario-card { margin-top: 66px; }
+        }
+    </style>
 </head>
 <body class="h-full text-slate-800 antialiased">
     <div class="flex min-h-screen">
@@ -101,7 +113,7 @@ if (isset($_SESSION['mensagem'])) {
                 <div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
                     <!-- New User Form -->
                     <div class="lg:col-span-1 animate-slide-up">
-                        <div class="admin-card sticky top-24">
+                        <div class="admin-card sticky top-24 usuario-card">
                             <h2 class="mb-6 text-lg font-bold text-slate-900">Novo Usuário</h2>
                             <form method="POST" class="space-y-4">
                                 <div class="space-y-2">
@@ -119,15 +131,22 @@ if (isset($_SESSION['mensagem'])) {
                                 <div class="space-y-2">
                                     <label class="form-label">Categoria / Nível</label>
                                     <div class="relative">
-                                        <select name="categoria" class="form-input appearance-none pr-10" required>
-                                            <option value="gerente">Gerente</option>
-                                            <option value="diretor">Diretor</option>
-                                            <option value="tecnico">Técnico</option>
-                                            <option value="supervisor">Supervisor</option>
-                                            <option value="administrativo">Administrativo</option>
-                                            <option value="operador">Operador</option>
-                                            <option value="colaborador">Colaborador</option>
+                                        <select name="categoria" class="form-input appearance-none pr-10" required <?= $usuario_categoria === 'supervisor' ? 'disabled' : '' ?>>
+                                            <option value="colaborador" <?= $usuario_categoria === 'supervisor' ? 'selected' : '' ?>>Colaborador</option>
+                                            <?php if ($usuario_categoria !== 'supervisor'): ?>
+                                                <option value="gerente">Gerente</option>
+                                                <option value="diretor">Diretor</option>
+                                                <option value="tecnico">Técnico</option>
+                                                <option value="supervisor">Supervisor</option>
+                                                <option value="administrativo">Administrativo</option>
+                                                <option value="operador">Operador</option>
+                                                <option value="rondante">Rondante</option>
+                                            <?php endif; ?>
                                         </select>
+                                        <?php if ($usuario_categoria === 'supervisor'): ?>
+                                            <input type="hidden" name="categoria" value="colaborador">
+                                            <p class="mt-2 text-xs text-slate-500">Supervisores podem criar apenas usuários do tipo <strong>Colaborador</strong>.</p>
+                                        <?php endif; ?>
                                         <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
                                             <i class="fas fa-chevron-down text-slate-400 text-xs"></i>
                                         </div>
@@ -183,6 +202,7 @@ if (isset($_SESSION['mensagem'])) {
                                                         'supervisor' => 'bg-blue-100 text-blue-700',
                                                         'administrativo' => 'bg-green-100 text-green-700',
                                                         'operador' => 'bg-orange-100 text-orange-700',
+                                                        'rondante' => 'bg-amber-100 text-amber-700',
                                                         'colaborador' => 'bg-slate-100 text-slate-700'
                                                     ];
                                                     $color = $cat_colors[$usuario['categoria']] ?? 'bg-slate-100 text-slate-700';

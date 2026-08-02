@@ -148,6 +148,7 @@ function column_exists($conn, $table, $column) {
 $has_localizacao = column_exists($conn, 'edificios', 'localizacao');
 $has_elevador = column_exists($conn, 'edificios', 'elevador_empresa');
 $has_selfie_col = column_exists($conn, 'edificios', 'requer_selfie');
+$has_retirada_col = column_exists($conn, 'edificios', 'retirada_lixo');
 
 $has_controle_faciais = table_exists($conn, 'controle_faciais');
 $has_controle_ata = table_exists($conn, 'controle_ata');
@@ -161,6 +162,7 @@ switch ($tab) {
         $extra_cols = '';
         if ($has_localizacao) $extra_cols .= "e.localizacao,";
         if ($has_elevador) $extra_cols .= "e.elevador_empresa, e.elevador_contato,";
+        if ($has_retirada_col) $extra_cols .= "e.retirada_lixo,";
 
         $sub_facial = $has_controle_faciais ? "
             (SELECT cf.marca_equipamento FROM controle_faciais cf WHERE cf.edificio_id = e.id ORDER BY cf.id DESC LIMIT 1) AS facial_marca,
@@ -226,6 +228,16 @@ switch ($tab) {
     case 'faciais_locacao':
         $selfie_col = $has_selfie_col ? 'e.requer_selfie' : '0 AS requer_selfie';
         $query = "SELECT e.id, e.nome, $selfie_col, b.nome AS nome_base
+                  FROM edificios e
+                  JOIN bases b ON e.base_id = b.id
+                  ORDER BY b.nome, e.nome";
+        $result = $conn->query($query);
+        $data = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+        break;
+
+    case 'retirada_lixo':
+        $retirada_col = $has_retirada_col ? 'e.retirada_lixo' : '0 AS retirada_lixo';
+        $query = "SELECT e.id, e.nome, $retirada_col, b.nome AS nome_base
                   FROM edificios e
                   JOIN bases b ON e.base_id = b.id
                   ORDER BY b.nome, e.nome";
@@ -325,12 +337,15 @@ unset($_SESSION['mensagem'], $_SESSION['mensagem_tipo']);
                         <?php if ($tab === 'faciais_locacao'): ?>
                             <h1 class="text-2xl font-bold text-slate-900 sm:text-3xl">Envio de faciais</h1>
                             <p class="mt-1 text-slate-500">Gerencie quais edifícios podem receber fotos de faciais pela ficha de locação.</p>
+                        <?php elseif ($tab === 'retirada_lixo'): ?>
+                            <h1 class="text-2xl font-bold text-slate-900 sm:text-3xl">Retirada de Lixo</h1>
+                            <p class="mt-1 text-slate-500">Configure quais edifícios a ronda deve realizar a retirada de lixo.</p>
                         <?php else: ?>
                             <h1 class="text-2xl font-bold text-slate-900 sm:text-3xl">Gestão de Edifícios</h1>
                             <p class="mt-1 text-slate-500">Gerencie edifícios, bases, administradoras e síndicos.</p>
                         <?php endif; ?>
                     </div>
-                    <?php if ($pode_editar && $tab !== 'faciais_locacao'): ?>
+                    <?php if ($pode_editar && $tab !== 'faciais_locacao' && $tab !== 'retirada_lixo'): ?>
                         <?php
                             $add_links = [
                                 'edificios' => ['url' => 'cadastrar_edificio.php', 'label' => 'Novo Edifício'],
@@ -358,6 +373,9 @@ unset($_SESSION['mensagem'], $_SESSION['mensagem_tipo']);
                     </a>
                     <a href="?tab=faciais_locacao" class="px-6 py-3 text-sm font-bold transition-all border-b-2 <?= $tab === 'faciais_locacao' ? 'border-primary-500 text-primary-600' : 'border-transparent text-slate-500 hover:text-slate-700' ?>">
                         Faciais Locação
+                    </a>
+                    <a href="?tab=retirada_lixo" class="px-6 py-3 text-sm font-bold transition-all border-b-2 <?= $tab === 'retirada_lixo' ? 'border-primary-500 text-primary-600' : 'border-transparent text-slate-500 hover:text-slate-700' ?>">
+                        Retirada de Lixo
                     </a>
                 </div>
 
@@ -428,6 +446,35 @@ unset($_SESSION['mensagem'], $_SESSION['mensagem_tipo']);
                                 </div>
                             <?php endif; ?>
                         </div>
+                    <?php elseif ($tab === 'retirada_lixo'): ?>
+                        <div class="admin-card">
+                            <h2 class="text-lg font-bold text-slate-900 mb-4">Retirada de Lixo por Edifício</h2>
+                            <?php if (empty($data)): ?>
+                                <div class="text-center py-12 text-slate-500 italic">
+                                    Nenhum edifício encontrado.
+                                </div>
+                            <?php else: ?>
+                                <div class="space-y-2">
+                                    <?php foreach ($data as $item): ?>
+                                        <div class="flex items-center justify-between p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors">
+                                            <div>
+                                                <p class="font-semibold text-slate-900"><?= htmlspecialchars($item['nome']) ?></p>
+                                                <p class="text-sm text-slate-500"><?= htmlspecialchars($item['nome_base']) ?></p>
+                                            </div>
+                                            <?php if ($pode_editar): ?>
+                                            <label class="relative inline-flex items-center cursor-pointer">
+                                                <input type="checkbox" class="sr-only peer" onchange="toggleRetirada(<?= $item['id'] ?>, this)" <?= $item['retirada_lixo'] ? 'checked' : '' ?>>
+                                                <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
+                                                <span class="ml-3 text-sm font-medium text-slate-900"><?= $item['retirada_lixo'] ? 'Sim' : 'Não' ?></span>
+                                            </label>
+                                            <?php else: ?>
+                                            <span class="text-sm font-medium <?= $item['retirada_lixo'] ? 'text-green-600' : 'text-slate-400' ?>"><?= $item['retirada_lixo'] ? 'Sim' : 'Não' ?></span>
+                                            <?php endif; ?>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            <?php endif; ?>
+                        </div>
                     <?php elseif (empty($data)): ?>
                             <div class="admin-card text-center py-12 text-slate-500 italic">
                                 Nenhum edifício encontrado.
@@ -454,6 +501,12 @@ unset($_SESSION['mensagem'], $_SESSION['mensagem_tipo']);
                                                 <div class="space-y-1 text-right">
                                                     <span class="text-xs uppercase tracking-[0.3em] text-slate-400">Base</span>
                                                     <p class="text-sm font-semibold text-slate-900"><?= render_card_value($item['nome_base'] ?? 'Base não informada') ?></p>
+                                                    <?php if ($has_retirada_col): ?>
+                                                        <span class="inline-flex items-center gap-1.5 mt-2 rounded-full px-3 py-1 text-xs font-bold <?= ($item['retirada_lixo'] ?? 0) ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500' ?>">
+                                                            <i class="fas <?= ($item['retirada_lixo'] ?? 0) ? 'fa-trash-alt' : 'fa-trash' ?>" style="font-size:10px"></i>
+                                                            Retirada de Lixo: <?= ($item['retirada_lixo'] ?? 0) ? 'Sim' : 'Não' ?>
+                                                        </span>
+                                                    <?php endif; ?>
                                                 </div>
                                             </div>
 
@@ -520,7 +573,6 @@ unset($_SESSION['mensagem'], $_SESSION['mensagem_tipo']);
                                             </div>
 
                                             <div class="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-slate-200">
-                                                <div class="text-sm text-slate-500">Base responsável: <span class="font-semibold text-slate-900"><?= render_card_value($item['nome_base'] ?? 'Base não informada') ?></span></div>
                                                 <div class="flex gap-2">
                                                     <?php if ($pode_editar): ?>
                                                     <a href="editar_edificio.php?id=<?= $item['id'] ?>" class="icon-btn" title="Editar"><i class="fas fa-edit" style="font-size:10px"></i></a>
@@ -555,6 +607,33 @@ unset($_SESSION['mensagem'], $_SESSION['mensagem_tipo']);
             const statusText = checkbox.checked ? 'Habilitado' : 'Desabilitado';
             
             fetch('toggle_selfie.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'edificio_id=' + edificioId + '&valor=' + newValue
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    checkbox.nextElementSibling.nextElementSibling.textContent = statusText;
+                } else {
+                    alert('Erro ao atualizar: ' + data.message);
+                    checkbox.checked = !checkbox.checked;
+                }
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                alert('Erro ao atualizar configuração');
+                checkbox.checked = !checkbox.checked;
+            });
+        }
+
+        function toggleRetirada(edificioId, checkbox) {
+            const newValue = checkbox.checked ? 1 : 0;
+            const statusText = checkbox.checked ? 'Sim' : 'Não';
+            
+            fetch('toggle_retirada_lixo.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',

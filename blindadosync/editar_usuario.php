@@ -121,6 +121,7 @@ $bases = $conn->query("SELECT id, nome FROM bases WHERE status = 'ativo' ORDER B
                                             <option value="supervisor" <?= $usuario['categoria'] == 'supervisor' ? 'selected' : '' ?>>Supervisor</option>
                                             <option value="administrativo" <?= $usuario['categoria'] == 'administrativo' ? 'selected' : '' ?>>Administrativo</option>
                                             <option value="operador" <?= $usuario['categoria'] == 'operador' ? 'selected' : '' ?>>Operador</option>
+                                            <option value="rondante" <?= $usuario['categoria'] == 'rondante' ? 'selected' : '' ?>>Rondante</option>
                                             <option value="colaborador" <?= $usuario['categoria'] == 'colaborador' ? 'selected' : '' ?>>Colaborador</option>
                                         </select>
                                         <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">

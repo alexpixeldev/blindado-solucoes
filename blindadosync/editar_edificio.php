@@ -33,6 +33,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $observacao_ficha_locacao = trim($_POST['observacao_ficha_locacao'] ?? '');
     $elevador_empresa = $_POST['elevador_empresa'] ?? '';
     $elevador_contato = $_POST['elevador_contato'] ?? '';
+    $latitude = !empty($_POST['latitude']) ? $_POST['latitude'] : null;
+    $longitude = !empty($_POST['longitude']) ? $_POST['longitude'] : null;
     $id = $_POST['id'];
 
     if (empty($nome) || empty($base_id)) {
@@ -46,8 +48,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $old_sindico_nome = $old_edificio['sindico_nome'];
         $stmt_old->close();
 
-        $stmt = $conn->prepare("UPDATE edificios SET nome = ?, base_id = ?, endereco = ?, localizacao = ?, sindico_nome = ?, sindico_contato = ?, administradora_id = ?, observacao_ficha_locacao = ?, elevador_empresa = ?, elevador_contato = ? WHERE id = ?");
-        $stmt->bind_param("sissssisssi", $nome, $base_id, $endereco, $localizacao, $sindico_nome, $sindico_contato, $administradora_id, $observacao_ficha_locacao, $elevador_empresa, $elevador_contato, $id);
+        $stmt = $conn->prepare("UPDATE edificios SET nome = ?, base_id = ?, endereco = ?, localizacao = ?, sindico_nome = ?, sindico_contato = ?, administradora_id = ?, observacao_ficha_locacao = ?, elevador_empresa = ?, elevador_contato = ?, latitude = ?, longitude = ? WHERE id = ?");
+        $stmt->bind_param("sissssisssddi", $nome, $base_id, $endereco, $localizacao, $sindico_nome, $sindico_contato, $administradora_id, $observacao_ficha_locacao, $elevador_empresa, $elevador_contato, $latitude, $longitude, $id);
         
         if ($stmt->execute()) {
             // Sincronizar o nome do síndico na tabela sindicos se mudou
@@ -173,6 +175,15 @@ if ($check_adm && $check_adm->num_rows > 0) {
                                 <div class="space-y-2 md:col-span-2">
                                     <label class="form-label">Localização (Link do Google Maps)</label>
                                     <input type="text" name="localizacao" class="form-input" value="<?php echo htmlspecialchars($edificio['localizacao'] ?? ''); ?>" placeholder="https://maps.google.com/...">
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="form-label">Latitude</label>
+                                    <input type="text" name="latitude" class="form-input" placeholder="Ex: -20.319386" value="<?php echo htmlspecialchars($edificio['latitude'] ?? ''); ?>">
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="form-label">Longitude</label>
+                                    <input type="text" name="longitude" class="form-input" placeholder="Ex: -40.337989" value="<?php echo htmlspecialchars($edificio['longitude'] ?? ''); ?>">
+                                    <p class="text-[10px] text-slate-400 italic">Usada para validar o escaneamento do QR code na ronda.</p>
                                 </div>
                                 <div class="space-y-2">
                                     <label class="form-label">Nome do Síndico</label>

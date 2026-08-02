@@ -31,23 +31,50 @@ $mensagem_tipo = 'info';
 $edificios = $conn->query("SELECT e.id, e.nome, b.nome as base_nome FROM edificios e JOIN bases b ON e.base_id = b.id WHERE b.status = 'ativo' ORDER BY e.nome")->fetch_all(MYSQLI_ASSOC);
 $bases = $conn->query("SELECT id, nome FROM bases WHERE status = 'ativo' ORDER BY nome")->fetch_all(MYSQLI_ASSOC);
 
+$edificios_map = [];
+foreach ($edificios as $ed) { $edificios_map[$ed['id']] = $ed['nome']; }
+$bases_map = [];
+foreach ($bases as $b) { $bases_map[$b['id']] = $b['nome']; }
+
+$locais_iniciais = [];
+foreach (array_filter(explode(',', $ocorrencia['locais_ids'] ?? '')) as $tok) {
+    $tok = trim($tok);
+    if (!$tok) continue;
+    if (strpos($tok, 'e_') === 0) {
+        $lid = intval(substr($tok, 2));
+        $label = $edificios_map[$lid] ?? $tok;
+    } elseif (strpos($tok, 'b_') === 0) {
+        $lid = intval(substr($tok, 2));
+        $label = 'Base: ' . ($bases_map[$lid] ?? substr($tok, 2));
+    } else {
+        continue;
+    }
+    $locais_iniciais[] = ['value' => $tok, 'label' => $label];
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $supervisor = trim($_POST['supervisor_nome']);
     $operadores = trim($_POST['operadores_nomes']);
     $periodo = $_POST['periodo_dia'];
     $data_plantao = $_POST['data_ocorrencia'];
-    $local_val = $_POST['local_id'];
-    $descricao = $_POST['descricao']; // HTML rico do TinyMCE
+    $descricao = $_POST['descricao'];
 
-    if (!empty($supervisor) && !empty($operadores) && !empty($local_val) && !empty($descricao)) {
-        $parts = explode('_', $local_val);
-        $tipo = $parts[0];
-        $id_ref = intval($parts[1]);
-        $edificio_id = ($tipo === 'e') ? $id_ref : null;
-        $base_id = ($tipo === 'b') ? $id_ref : null;
+    $locais = $_POST['locais_ids'] ?? [];
+    if (!is_array($locais)) $locais = [$locais];
+    $locais = array_values(array_filter(array_map('trim', $locais)));
 
-        $stmt = $conn->prepare("UPDATE ocorrencias SET supervisor_nome=?, operadores_nomes=?, edificio_id=?, base_id=?, descricao=?, periodo_dia=?, data_ocorrencia=?, atualizado_por=?, data_atualizacao=NOW() WHERE id=?");
-        $stmt->bind_param("ssiisssii", $supervisor, $operadores, $edificio_id, $base_id, $descricao, $periodo, $data_plantao, $usuario_id, $id);
+    if (empty($supervisor) || empty($operadores) || empty($locais) || empty($descricao)) {
+        $mensagem = "Preencha supervisor, equipe, ao menos um local e o relatório.";
+        $mensagem_tipo = "error";
+    } else {
+        $primeiro = $locais[0];
+        $edificio_id = (strpos($primeiro, 'e_') === 0) ? intval(substr($primeiro, 2)) : null;
+        $base_id = (strpos($primeiro, 'b_') === 0) ? intval(substr($primeiro, 2)) : null;
+        $locais_ids = implode(',', $locais);
+        if ($locais_ids === '') $locais_ids = null;
+
+        $stmt = $conn->prepare("UPDATE ocorrencias SET supervisor_nome=?, operadores_nomes=?, edificio_id=?, base_id=?, locais_ids=?, descricao=?, periodo_dia=?, data_ocorrencia=?, atualizado_por=?, data_atualizacao=NOW() WHERE id=?");
+        $stmt->bind_param("ssisssssii", $supervisor, $operadores, $edificio_id, $base_id, $locais_ids, $descricao, $periodo, $data_plantao, $usuario_id, $id);
         
         if ($stmt->execute()) {
             $mensagem = "Ocorrência atualizada com sucesso!";
@@ -58,6 +85,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $ocorrencia['operadores_nomes'] = $operadores;
             $ocorrencia['edificio_id'] = $edificio_id;
             $ocorrencia['base_id'] = $base_id;
+            $ocorrencia['locais_ids'] = $locais_ids;
             $ocorrencia['descricao'] = $descricao;
             $ocorrencia['periodo_dia'] = $periodo;
             $ocorrencia['data_ocorrencia'] = $data_plantao;
@@ -111,6 +139,26 @@ $midias = $conn->query("SELECT * FROM ocorrencias_midia WHERE ocorrencia_id = $i
         .descricao-editor video.media-thumb:hover { border-color: var(--primary); }
         .descricao-editor video.media-thumb.expanded { max-width: 100%; max-height: 100%; border-color: rgba(7, 146, 242, 0.6); }
         .descricao-editor audio.media-audio { width: 100%; max-width: 340px; margin: 6px 2px; display: block; }
+
+        .report-locais { display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 10px; }
+        .header-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; flex: 1; min-width: 100px; }
+        .location-placeholder { color: var(--text-secondary); font-size: 0.9rem; font-weight: 600; }
+        .location-tag { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; background: rgba(1, 103, 219, 0.18); border: 1px solid rgba(7, 146, 242, 0.4); border-radius: 5px; font-size: 0.78rem; font-weight: 500; color: var(--secondary-light); }
+        .tag-remove { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border: none; border-radius: 50%; background: transparent; color: var(--secondary-light); cursor: pointer; font-size: 14px; line-height: 1; padding: 0; opacity: 0.6; transition: opacity 0.1s; }
+        .tag-remove:hover { opacity: 1; background: rgba(255, 255, 255, 0.1); }
+        .header-location-row { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
+        .add-location-btn { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border: 1.5px dashed rgba(255, 255, 255, 0.25); border-radius: 6px; background: transparent; color: var(--text-secondary); cursor: pointer; transition: all 0.15s; font-size: 11px; flex-shrink: 0; }
+        .add-location-btn:hover { border-color: var(--primary-light); color: var(--primary-light); background: rgba(37, 169, 55, 0.1); }
+        .location-autocomplete { position: relative; width: 100%; max-width: 340px; flex-shrink: 0; }
+        .location-input { width: 100%; padding: 6px 9px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg-secondary); font-size: 0.82rem; color: var(--text-primary); outline: none; transition: border-color 0.15s; box-sizing: border-box; }
+        .location-input:focus { border-color: var(--primary); }
+        .location-input::placeholder { color: var(--text-secondary); opacity: 0.7; }
+        .location-dropdown { position: absolute; top: 100%; left: 0; right: 0; background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px; box-shadow: 0 8px 24px var(--shadow); max-height: 200px; overflow-y: auto; display: none; z-index: 100; margin-top: 2px; }
+        .location-dropdown.open { display: block; }
+        .autocomplete-item { padding: 10px 14px; cursor: pointer; font-size: 0.875rem; color: var(--text-primary); transition: background 0.1s; }
+        .autocomplete-item:hover { background: rgba(255, 255, 255, 0.06); }
+        .autocomplete-item.highlighted { background: rgba(255, 255, 255, 0.1); }
+        .autocomplete-loading { padding: 10px 14px; color: var(--text-secondary); font-size: 0.8rem; }
     </style>
 </head>
 <body class="h-full text-slate-800 antialiased">
@@ -176,25 +224,22 @@ $midias = $conn->query("SELECT * FROM ocorrencias_midia WHERE ocorrencia_id = $i
                                 </div>
                             </div>
                             <div class="col-span-1 md:col-span-2 space-y-2">
-                                <label class="form-label">Local</label>
-                                <div class="relative">
-                                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                        <i class="fas fa-map-marker-alt text-slate-400 text-sm"></i>
+                                <label class="form-label">Locais do Registro</label>
+                                <div class="report-locais">
+                                    <div class="header-tags" id="header-tags-edit">
+                                        <?php if (empty($locais_iniciais)): ?>
+                                            <span class="location-placeholder">Busque e adicione os edifícios/bases deste registro</span>
+                                        <?php endif; ?>
+                                        <?php foreach ($locais_iniciais as $li): ?>
+                                            <span class="location-tag"><span><?= htmlspecialchars($li['label']) ?></span><button type="button" class="tag-remove">&times;</button><input type="hidden" name="locais_ids[]" value="<?= htmlspecialchars($li['value']) ?>"></span>
+                                        <?php endforeach; ?>
                                     </div>
-                                    <select name="local_id" class="form-input pl-11 appearance-none pr-10" required>
-                                        <optgroup label="Bases">
-                                            <?php foreach ($bases as $b): ?>
-                                                <option value="b_<?= $b['id'] ?>" <?= $ocorrencia['base_id'] == $b['id'] ? 'selected' : '' ?>>Base: <?= htmlspecialchars($b['nome']) ?></option>
-                                            <?php endforeach; ?>
-                                        </optgroup>
-                                        <optgroup label="Edifícios">
-                                            <?php foreach ($edificios as $ed): ?>
-                                                <option value="e_<?= $ed['id'] ?>" <?= $ocorrencia['edificio_id'] == $ed['id'] ? 'selected' : '' ?>><?= htmlspecialchars($ed['nome']) ?></option>
-                                            <?php endforeach; ?>
-                                        </optgroup>
-                                    </select>
-                                    <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
-                                        <i class="fas fa-chevron-down text-slate-400 text-xs"></i>
+                                    <div class="header-location-row">
+                                        <div class="location-autocomplete">
+                                            <input type="text" class="location-input" placeholder="Buscar local..." autocomplete="off">
+                                            <div class="location-dropdown"></div>
+                                        </div>
+                                        <button type="button" class="add-location-btn" title="Adicionar local"><i class="fas fa-plus"></i></button>
                                     </div>
                                 </div>
                             </div>
@@ -588,12 +633,116 @@ $midias = $conn->query("SELECT * FROM ocorrencias_midia WHERE ocorrencia_id = $i
             document.getElementById('form-editar').submit();
         }
 
+        // ── Múltiplos locais (tags) ──
+        const locaisOptions = [
+            <?php
+            $opts = [];
+            foreach ($bases as $b) { $opts[] = json_encode(['value' => 'b_' . $b['id'], 'label' => 'Base ' . $b['nome']]); }
+            foreach ($edificios as $ed) { $opts[] = json_encode(['value' => 'e_' . $ed['id'], 'label' => $ed['nome']]); }
+            echo implode(',', $opts);
+            ?>
+        ];
+
+        function addTagEdit(value, label) {
+            const tagsContainer = document.getElementById('header-tags-edit');
+            if (Array.from(tagsContainer.querySelectorAll('.location-tag input')).some(inp => inp.value === value)) return;
+            const placeholder = tagsContainer.querySelector('.location-placeholder');
+            if (placeholder) placeholder.remove();
+
+            const tag = document.createElement('span');
+            tag.className = 'location-tag';
+            const labelSpan = document.createElement('span');
+            labelSpan.textContent = label;
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'tag-remove';
+            btn.innerHTML = '&times;';
+            btn.addEventListener('click', function() {
+                tag.remove();
+                if (tagsContainer.querySelectorAll('.location-tag').length === 0) {
+                    const ph = document.createElement('span');
+                    ph.className = 'location-placeholder';
+                    ph.textContent = 'Busque e adicione os edifícios/bases deste registro';
+                    tagsContainer.appendChild(ph);
+                }
+            });
+            const hidden = document.createElement('input');
+            hidden.type = 'hidden';
+            hidden.name = 'locais_ids[]';
+            hidden.value = value;
+            tag.appendChild(labelSpan);
+            tag.appendChild(btn);
+            tag.appendChild(hidden);
+            tagsContainer.appendChild(tag);
+        }
+
+        function initLocationAutocompleteEdit(container) {
+            const input = container.querySelector('.location-input');
+            const dropdown = container.querySelector('.location-dropdown');
+            let timer;
+
+            input.addEventListener('input', function() {
+                const val = this.value.trim();
+                if (val.length < 1) { dropdown.classList.remove('open'); return; }
+                clearTimeout(timer);
+                timer = setTimeout(function() {
+                    const q = val.toLowerCase();
+                    const results = locaisOptions.filter(function(o) { return o.label.toLowerCase().includes(q); });
+                    dropdown.innerHTML = '';
+                    if (results.length === 0) {
+                        dropdown.innerHTML = '<div class="autocomplete-item" style="color:#94a3b8;cursor:default">Nenhum local encontrado</div>';
+                    } else {
+                        results.forEach(function(item, idx) {
+                            const div = document.createElement('div');
+                            div.className = 'autocomplete-item' + (idx === 0 ? ' highlighted' : '');
+                            div.textContent = item.label;
+                            div.dataset.value = item.value;
+                            div.addEventListener('click', function() {
+                                addTagEdit(this.dataset.value, this.textContent);
+                                input.value = '';
+                                dropdown.classList.remove('open');
+                                input.focus();
+                            });
+                            dropdown.appendChild(div);
+                        });
+                    }
+                    dropdown.classList.add('open');
+                }, 150);
+            });
+
+            input.addEventListener('keydown', function(e) {
+                const items = dropdown.querySelectorAll('.autocomplete-item');
+                if (items.length === 0 || !dropdown.classList.contains('open')) return;
+                let idx = Array.from(items).findIndex(function(el) { return el.classList.contains('highlighted'); });
+                if (e.key === 'ArrowDown') { e.preventDefault(); idx = Math.min(idx + 1, items.length - 1); }
+                else if (e.key === 'ArrowUp') { e.preventDefault(); idx = Math.max(idx - 1, 0); }
+                else if (e.key === 'Enter') { e.preventDefault(); if (idx >= 0) items[idx].click(); return; }
+                else return;
+                items.forEach(function(el) { el.classList.remove('highlighted'); });
+                items[idx].classList.add('highlighted');
+                items[idx].scrollIntoView({ block: 'nearest' });
+            });
+
+            input.addEventListener('blur', function() {
+                setTimeout(function() { dropdown.classList.remove('open'); }, 200);
+            });
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             const editor = document.getElementById('descricao-editor');
             initContentEditable(editor);
             normalizeEditorMedia(editor);
             initInlineToolbar(editor);
             initMediaRemoval(editor);
+
+            const ac = document.querySelector('.report-locais .location-autocomplete');
+            initLocationAutocompleteEdit(ac);
+            document.querySelector('.report-locais .add-location-btn').addEventListener('click', function() {
+                const input = ac.querySelector('.location-input');
+                input.focus();
+                input.value = '';
+                input.dispatchEvent(new Event('input'));
+            });
         });
     </script>
     <script src="assets/js/gsm_decoder.js"></script>

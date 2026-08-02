@@ -15,6 +15,7 @@ $is_administrativo = ($usuario_categoria === 'administrativo');
 $is_colaborador = ($usuario_categoria === 'colaborador');
 $is_supervisor = ($usuario_categoria === 'supervisor');
 $is_operador = ($usuario_categoria === 'operador');
+$is_rondante = ($usuario_categoria === 'rondante');
 
 // Função auxiliar para verificar se o item está ativo
 function isActive($page, $current_page) {
@@ -32,7 +33,8 @@ $categoria_labels = [
     'administrativo' => 'Administrativo',
     'colaborador' => 'Colaborador',
     'supervisor' => 'Supervisor',
-    'operador' => 'Operador'
+    'operador' => 'Operador',
+    'rondante' => 'Rondante'
 ];
 $categoria_label = $categoria_labels[$usuario_categoria] ?? 'Usuário';
 ?>
@@ -73,6 +75,12 @@ $categoria_label = $categoria_labels[$usuario_categoria] ?? 'Usuário';
                     <a href="consultar_ocorrencia.php" class="group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all <?php echo isActive('consultar_ocorrencia.php', $current_page); ?>">
                         <i class="fas fa-search text-lg"></i>
                         <span>Consultar Ocorrências</span>
+                    </a>
+                <?php endif; ?>
+                <?php if (in_array($usuario_categoria, ['rondante', 'gerente', 'diretor'])): ?>
+                    <a href="rondante.php" class="group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all <?php echo isActive('rondante.php', $current_page); ?>">
+                        <i class="fas fa-motorcycle text-lg"></i>
+                        <span>Rondante</span>
                     </a>
                 <?php endif; ?>
             </div>
@@ -152,10 +160,6 @@ $categoria_label = $categoria_labels[$usuario_categoria] ?? 'Usuário';
                         <span>Extras</span>
                     </a>
                 <?php elseif ($is_supervisor): ?>
-                    <a href="listar_colaboradores.php" class="group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all <?php echo in_array($current_page, ['listar_colaboradores.php', 'criar_colaborador.php', 'editar_colaborador.php']) ? 'nav-item nav-active' : 'nav-item'; ?>">
-                        <i class="fas fa-users text-lg"></i>
-                        <span>Colaboradores</span>
-                    </a>
                     <a href="extras.php" class="group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all <?php echo isActive('extras.php', $current_page); ?>">
                         <i class="fas fa-plus-circle text-lg"></i>
                         <span>Extras</span>
@@ -184,7 +188,7 @@ $categoria_label = $categoria_labels[$usuario_categoria] ?? 'Usuário';
                     <i class="fas fa-user-circle text-lg"></i>
                     <span>Meu Perfil</span>
                 </a>
-                <?php if ($is_gerente || $is_diretor): ?>
+                <?php if ($is_gerente || $is_diretor || $is_supervisor): ?>
                     <a href="usuarios.php" class="group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all <?php echo isActive('usuarios.php', $current_page); ?>">
                         <i class="fas fa-user-cog text-lg"></i>
                         <span>Gerenciar Usuários</span>
