@@ -1,6 +1,7 @@
 <?php
 require_once 'verifica_login.php';
 require_once 'conexao.php';
+require_once 'localizacao_helper.php';
 
 $usuario_categoria = $_SESSION['usuario_categoria'] ?? '';
 if (!in_array($usuario_categoria, ['supervisor', 'gerente'])) {
@@ -24,16 +25,18 @@ if (!$base_id) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nome = $_POST['nome'];
     $telefone = $_POST['telefone'];
-    $latitude = !empty($_POST['latitude']) ? $_POST['latitude'] : null;
-    $longitude = !empty($_POST['longitude']) ? $_POST['longitude'] : null;
+    $localizacao = trim($_POST['localizacao'] ?? '');
+    $coords = extrair_coordenadas_google_maps($localizacao);
+    $latitude = $coords['latitude'] ?? null;
+    $longitude = $coords['longitude'] ?? null;
     $raio_perimetro = !empty($_POST['raio_perimetro']) ? intval($_POST['raio_perimetro']) : 200;
     $id = $_POST['id'];
 
     if (empty($nome)) {
         $mensagem = "O nome da base não pode ficar em branco.";
     } else {
-        $stmt = $conn->prepare("UPDATE bases SET nome = ?, telefone = ?, latitude = ?, longitude = ?, raio_perimetro = ? WHERE id = ?");
-        $stmt->bind_param("ssddii", $nome, $telefone, $latitude, $longitude, $raio_perimetro, $id);
+        $stmt = $conn->prepare("UPDATE bases SET nome = ?, telefone = ?, latitude = ?, longitude = ?, localizacao = ?, raio_perimetro = ? WHERE id = ?");
+        $stmt->bind_param("ssddsii", $nome, $telefone, $latitude, $longitude, $localizacao, $raio_perimetro, $id);
         
         if ($stmt->execute()) {
             $_SESSION['mensagem'] = "Base atualizada com sucesso!";
@@ -124,20 +127,15 @@ $stmt->close();
                                     <input type="text" name="telefone" class="form-input" value="<?php echo htmlspecialchars($base['telefone']); ?>">
                                 </div>
                             </div>
-                            <div class="grid grid-cols-1 gap-6 sm:grid-cols-3">
-                                <div class="space-y-2">
-                                    <label class="form-label">Latitude</label>
-                                    <input type="text" name="latitude" class="form-input" placeholder="Ex: -20.319386" value="<?php echo htmlspecialchars($base['latitude'] ?? ''); ?>">
-                                </div>
-                                <div class="space-y-2">
-                                    <label class="form-label">Longitude</label>
-                                    <input type="text" name="longitude" class="form-input" placeholder="Ex: -40.337989" value="<?php echo htmlspecialchars($base['longitude'] ?? ''); ?>">
-                                </div>
-                                <div class="space-y-2">
-                                    <label class="form-label">Raio do Perímetro (metros)</label>
-                                    <input type="number" name="raio_perimetro" class="form-input" min="1" value="<?php echo htmlspecialchars($base['raio_perimetro'] ?? '200'); ?>">
-                                    <p class="text-[10px] text-slate-400 italic">Distância máxima da base para iniciar/finalizar a ronda.</p>
-                                </div>
+                            <div class="space-y-2">
+                                <label class="form-label">Localização (Google Maps)</label>
+                                <input type="url" name="localizacao" class="form-input" placeholder="https://maps.app.goo.gl/..." value="<?php echo htmlspecialchars($base['localizacao'] ?? ''); ?>" required>
+                                <p class="text-[10px] text-slate-400 italic">Cole o link de compartilhamento do Google Maps da base. Latitude e longitude são extraídas automaticamente.</p>
+                            </div>
+                            <div class="space-y-2">
+                                <label class="form-label">Raio do Perímetro (metros)</label>
+                                <input type="number" name="raio_perimetro" class="form-input" min="1" value="<?php echo htmlspecialchars($base['raio_perimetro'] ?? '200'); ?>">
+                                <p class="text-[10px] text-slate-400 italic">Distância máxima da base para iniciar/finalizar a ronda.</p>
                             </div>
 
                             <div class="pt-6 border-t border-slate-100 flex flex-col sm:flex-row gap-3">

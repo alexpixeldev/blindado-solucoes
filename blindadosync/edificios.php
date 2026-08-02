@@ -1,6 +1,7 @@
 <?php
 require_once 'verifica_login.php';
 require_once 'conexao.php';
+require_once 'localizacao_helper.php';
 
 $usuario_categoria = $_SESSION['usuario_categoria'] ?? '';
 if ($usuario_categoria === 'colaborador') { header('Location: index.php'); exit(); }
@@ -89,6 +90,34 @@ if ($pode_editar && isset($_POST['deactivate_item'])) {
     }
 
     header("Location: edificios.php?tab=" . $_POST['current_tab']);
+    exit();
+}
+
+if ($pode_editar && isset($_POST['create_base'])) {
+    $nome = trim($_POST['nome'] ?? '');
+    $telefone = trim($_POST['telefone'] ?? '');
+    $localizacao = trim($_POST['localizacao'] ?? '');
+    $coords = extrair_coordenadas_google_maps($localizacao);
+    $latitude = $coords['latitude'] ?? null;
+    $longitude = $coords['longitude'] ?? null;
+    $raio_perimetro = !empty($_POST['raio_perimetro']) ? intval($_POST['raio_perimetro']) : 200;
+
+    if (!empty($nome)) {
+        $stmt = $conn->prepare("INSERT INTO bases (nome, telefone, latitude, longitude, localizacao, raio_perimetro) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("ssddsi", $nome, $telefone, $latitude, $longitude, $localizacao, $raio_perimetro);
+        if ($stmt->execute()) {
+            $_SESSION['mensagem'] = "Base '$nome' cadastrada com sucesso!";
+            $_SESSION['mensagem_tipo'] = "success";
+        } else {
+            $_SESSION['mensagem'] = "Erro ao cadastrar base: " . $conn->error;
+            $_SESSION['mensagem_tipo'] = "error";
+        }
+        $stmt->close();
+    } else {
+        $_SESSION['mensagem'] = "O nome da base é obrigatório.";
+        $_SESSION['mensagem_tipo'] = "error";
+    }
+    header("Location: edificios.php?tab=bases");
     exit();
 }
 
@@ -246,7 +275,7 @@ switch ($tab) {
         break;
         
     case 'bases':
-        $query = "SELECT b.id, b.nome, b.telefone, b.status, COUNT(e.id) as total_edificios
+        $query = "SELECT b.id, b.nome, b.telefone, b.localizacao, b.status, COUNT(e.id) as total_edificios
                   FROM bases b
                   LEFT JOIN edificios e ON b.id = e.base_id";
         if ($search) {
@@ -254,7 +283,7 @@ switch ($tab) {
             $where_clauses[] = "(b.nome LIKE '%$s%' OR b.telefone LIKE '%$s%')";
         }
         if (!empty($where_clauses)) $query .= " WHERE " . implode(" AND ", $where_clauses);
-        $query .= " GROUP BY b.id, b.nome, b.telefone, b.status ORDER BY b.nome";
+        $query .= " GROUP BY b.id, b.nome, b.telefone, b.localizacao, b.status ORDER BY b.nome";
         $data = $conn->query($query)->fetch_all(MYSQLI_ASSOC);
         break;
         
@@ -322,6 +351,11 @@ unset($_SESSION['mensagem'], $_SESSION['mensagem_tipo']);
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style_modern.css">
     <link rel="stylesheet" href="assets/css/tailwind.css">
+    <style>
+        @media (min-width: 1024px) {
+            .usuario-card { margin-top: 66px; }
+        }
+    </style>
 </head>
 <body class="h-full text-slate-800 antialiased">
     <div class="flex min-h-screen">
@@ -370,6 +404,9 @@ unset($_SESSION['mensagem'], $_SESSION['mensagem_tipo']);
                 <div class="mb-8 flex flex-wrap gap-2 border-b border-slate-200 animate-fade-in">
                     <a href="?tab=edificios" class="px-6 py-3 text-sm font-bold transition-all border-b-2 <?= $tab === 'edificios' ? 'border-primary-500 text-primary-600' : 'border-transparent text-slate-500 hover:text-slate-700' ?>">
                         Edifícios
+                    </a>
+                    <a href="?tab=bases" class="px-6 py-3 text-sm font-bold transition-all border-b-2 <?= $tab === 'bases' ? 'border-primary-500 text-primary-600' : 'border-transparent text-slate-500 hover:text-slate-700' ?>">
+                        Bases
                     </a>
                     <a href="?tab=faciais_locacao" class="px-6 py-3 text-sm font-bold transition-all border-b-2 <?= $tab === 'faciais_locacao' ? 'border-primary-500 text-primary-600' : 'border-transparent text-slate-500 hover:text-slate-700' ?>">
                         Faciais Locação
@@ -474,6 +511,116 @@ unset($_SESSION['mensagem'], $_SESSION['mensagem_tipo']);
                                     <?php endforeach; ?>
                                 </div>
                             <?php endif; ?>
+                        </div>
+                    <?php elseif ($tab === 'bases'): ?>
+                        <div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
+                            <!-- Nova Base Form -->
+                            <div class="lg:col-span-1 animate-slide-up">
+                                <div class="admin-card sticky top-24 usuario-card">
+                                    <h2 class="mb-6 text-lg font-bold text-slate-900">Nova Base</h2>
+                                    <?php if (!$pode_editar): ?>
+                                        <p class="text-sm text-slate-500">Você não tem permissão para criar bases.</p>
+                                    <?php else: ?>
+                                        <form method="POST" class="space-y-4">
+                                            <input type="hidden" name="create_base" value="1">
+                                            <div class="space-y-2">
+                                                <label class="form-label">Nome da Base *</label>
+                                                <input type="text" name="nome" class="form-input" placeholder="Ex: Base Centro" required>
+                                            </div>
+                                            <div class="space-y-2">
+                                                <label class="form-label">Telefone de Contato</label>
+                                                <input type="text" name="telefone" class="form-input" placeholder="(00) 0000-0000">
+                                            </div>
+                                            <div class="space-y-2">
+                                                <label class="form-label">Localização (Google Maps)</label>
+                                                <input type="url" name="localizacao" class="form-input" placeholder="https://maps.app.goo.gl/..." required>
+                                                <p class="text-[10px] text-slate-400 italic">Cole o link de compartilhamento do Google Maps da base. Latitude e longitude são extraídas automaticamente.</p>
+                                            </div>
+                                            <div class="space-y-2">
+                                                <label class="form-label">Raio do Perímetro (metros)</label>
+                                                <input type="number" name="raio_perimetro" class="form-input" min="1" value="200">
+                                                <p class="text-[10px] text-slate-400 italic">Distância máxima da base para iniciar/finalizar a ronda.</p>
+                                            </div>
+                                            <button type="submit" name="create_base" class="icon-btn-green" title="Criar Base"><i class="fas fa-save" style="font-size:10px"></i></button>
+                                        </form>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+
+                            <!-- Bases List -->
+                            <div class="lg:col-span-2 animate-slide-up" style="animation-delay: 0.1s;">
+                                <div class="overflow-x-auto">
+                                    <table class="admin-table" data-no-cell-copy>
+                                        <thead>
+                                            <tr>
+                                                <th>Base</th>
+                                                <th>Telefone</th>
+                                                <th>Localização</th>
+                                                <th>Edifícios</th>
+                                                <th>Status</th>
+                                                <th class="text-right">Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php if (empty($data)): ?>
+                                                <tr>
+                                                    <td colspan="6" class="text-center py-10 text-slate-500 italic">Nenhuma base cadastrada.</td>
+                                                </tr>
+                                            <?php endif; ?>
+                                            <?php foreach ($data as $base): ?>
+                                                <tr class="group">
+                                                    <td class="font-bold text-slate-900"><?= htmlspecialchars($base['nome']) ?></td>
+                                                    <td class="text-sm text-slate-500"><?= htmlspecialchars($base['telefone'] ?: '—') ?></td>
+                                                    <td>
+                                                        <?php if (!empty($base['localizacao'])): ?>
+                                                            <a href="<?= htmlspecialchars($base['localizacao']) ?>" target="_blank" class="inline-flex items-center gap-1 text-xs text-primary-600 hover:text-primary-700">
+                                                                <i class="fas fa-map-marker-alt"></i> Ver no Google Maps
+                                                            </a>
+                                                        <?php else: ?>
+                                                            <span class="text-xs text-slate-400">—</span>
+                                                        <?php endif; ?>
+                                                    </td>
+                                                    <td class="text-sm text-slate-500"><?= intval($base['total_edificios']) ?></td>
+                                                    <td>
+                                                        <?php if (($base['status'] ?? 'ativo') === 'ativo'): ?>
+                                                            <span class="inline-flex items-center rounded-lg px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-green-100 text-green-700">
+                                                                <i class="fas fa-check-circle mr-1"></i> Ativo
+                                                            </span>
+                                                        <?php else: ?>
+                                                            <span class="inline-flex items-center rounded-lg px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-500">
+                                                                <i class="fas fa-pause-circle mr-1"></i> Inativo
+                                                            </span>
+                                                        <?php endif; ?>
+                                                    </td>
+                                                    <td class="text-right">
+                                                        <?php if ($pode_editar): ?>
+                                                        <div class="flex justify-end gap-2 opacity-0 transition-opacity group-hover:opacity-100">
+                                                            <a href="editar_base.php?id=<?= $base['id'] ?>" class="icon-btn" title="Editar"><i class="fas fa-edit" style="font-size:10px"></i></a>
+                                                            <form method="POST" class="inline">
+                                                                <input type="hidden" name="id_deactivate" value="<?= $base['id'] ?>">
+                                                                <input type="hidden" name="current_tab" value="bases">
+                                                                <button type="submit" name="deactivate_item" class="icon-btn" title="<?= ($base['status'] ?? 'ativo') === 'ativo' ? 'Desativar' : 'Ativar' ?>">
+                                                                    <i class="fas <?= ($base['status'] ?? 'ativo') === 'ativo' ? 'fa-pause' : 'fa-play' ?>" style="font-size:10px"></i>
+                                                                </button>
+                                                            </form>
+                                                            <form method="POST" class="inline" onsubmit="return confirm('Deseja realmente excluir a base <?= addslashes(htmlspecialchars($base['nome'])) ?>?');">
+                                                                <input type="hidden" name="id_delete" value="<?= $base['id'] ?>">
+                                                                <input type="hidden" name="tipo_delete" value="base">
+                                                                <input type="hidden" name="current_tab" value="bases">
+                                                                <button type="submit" name="delete_item" class="icon-btn-red" title="Excluir"><i class="fas fa-trash-alt" style="font-size:10px"></i></button>
+                                                            </form>
+                                                        </div>
+                                                        <div class="flex justify-end gap-2 sm:hidden">
+                                                            <a href="editar_base.php?id=<?= $base['id'] ?>" class="icon-btn" title="Editar"><i class="fas fa-edit" style="font-size:10px"></i></a>
+                                                        </div>
+                                                        <?php endif; ?>
+                                                    </td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
                     <?php elseif (empty($data)): ?>
                             <div class="admin-card text-center py-12 text-slate-500 italic">

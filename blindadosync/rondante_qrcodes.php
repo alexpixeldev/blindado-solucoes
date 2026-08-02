@@ -67,10 +67,10 @@ $base_url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 
     <div class="flex min-h-screen">
         <?php include 'components/sidebar.php'; ?>
 
-        <div class="flex flex-1 flex-col">
+        <div class="flex min-w-0 flex-1 flex-col">
             <?php include 'components/header.php'; ?>
 
-            <main class="flex-1 p-4 sm:p-8 custom-scrollbar">
+            <main class="min-w-0 flex-1 p-4 sm:p-8 custom-scrollbar">
                 <!-- Page Header -->
                 <div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between animate-fade-in">
                     <div>
@@ -81,7 +81,9 @@ $base_url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 
 
                 <!-- Submenus -->
                 <div class="mb-8 flex flex-wrap gap-2 border-b border-slate-200 animate-fade-in">
+                    <?php if ($usuario_categoria === 'rondante'): ?>
                     <a href="rondante.php" class="px-6 py-3 text-sm font-bold transition-all border-b-2 border-transparent text-slate-500 hover:text-slate-700">Ronda Atual</a>
+                    <?php endif; ?>
                     <a href="rondante_qrcodes.php" class="px-6 py-3 text-sm font-bold transition-all border-b-2 border-primary-500 text-primary-600">QR Codes</a>
                     <a href="rondante_validacao.php" class="px-6 py-3 text-sm font-bold transition-all border-b-2 border-transparent text-slate-500 hover:text-slate-700">Validação de Ronda</a>
                 </div>

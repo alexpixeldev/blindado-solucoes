@@ -17,7 +17,6 @@ if ($usuario_categoria === 'rondante') {
     $pagina_atual = basename($_SERVER['PHP_SELF']);
     $permitidas = [
         'rondante.php',
-        'rondante_validacao.php',
         'rondante_scan.php',
         'rondante_api.php',
         'perfil.php',

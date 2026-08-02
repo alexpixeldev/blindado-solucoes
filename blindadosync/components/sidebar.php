@@ -61,10 +61,6 @@ $categoria_label = $categoria_labels[$usuario_categoria] ?? 'Usuário';
                         <i class="fas fa-motorcycle text-lg"></i>
                         <span>Ronda Atual</span>
                     </a>
-                    <a href="rondante_validacao.php" class="group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all <?php echo isActive('rondante_validacao.php', $current_page); ?>">
-                        <i class="fas fa-clipboard-check text-lg"></i>
-                        <span>Validação de Ronda</span>
-                    </a>
                 </div>
             </div>
         <?php else: ?>
@@ -94,9 +90,9 @@ $categoria_label = $categoria_labels[$usuario_categoria] ?? 'Usuário';
                     </a>
                 <?php endif; ?>
                 <?php if (in_array($usuario_categoria, ['rondante', 'gerente', 'diretor'])): ?>
-                    <a href="rondante.php" class="group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all <?php echo isActive('rondante.php', $current_page); ?>">
-                        <i class="fas fa-motorcycle text-lg"></i>
-                        <span>Rondante</span>
+                    <a href="rondante_validacao.php" class="group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all <?php echo isActive('rondante_validacao.php', $current_page); ?>">
+                        <i class="fas fa-clipboard-check text-lg"></i>
+                        <span>Validação de Ronda</span>
                     </a>
                 <?php endif; ?>
             </div>

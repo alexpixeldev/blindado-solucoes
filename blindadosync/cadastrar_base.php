@@ -1,6 +1,7 @@
 <?php
 require_once 'verifica_login.php';
 require_once 'conexao.php';
+require_once 'localizacao_helper.php';
 
 $usuario_categoria = $_SESSION['usuario_categoria'] ?? '';
 if (!in_array($usuario_categoria, ['supervisor', 'gerente'])) {
@@ -14,13 +15,15 @@ $mensagem_tipo = 'info';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nome = trim($_POST['nome']);
     $telefone = trim($_POST['telefone']);
-    $latitude = !empty($_POST['latitude']) ? $_POST['latitude'] : null;
-    $longitude = !empty($_POST['longitude']) ? $_POST['longitude'] : null;
+    $localizacao = trim($_POST['localizacao'] ?? '');
+    $coords = extrair_coordenadas_google_maps($localizacao);
+    $latitude = $coords['latitude'] ?? null;
+    $longitude = $coords['longitude'] ?? null;
     $raio_perimetro = !empty($_POST['raio_perimetro']) ? intval($_POST['raio_perimetro']) : 200;
 
     if (!empty($nome)) {
-        $stmt = $conn->prepare("INSERT INTO bases (nome, telefone, latitude, longitude, raio_perimetro) VALUES (?, ?, ?, ?, ?)");
-        $stmt->bind_param("ssddi", $nome, $telefone, $latitude, $longitude, $raio_perimetro);
+        $stmt = $conn->prepare("INSERT INTO bases (nome, telefone, latitude, longitude, localizacao, raio_perimetro) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("ssddsi", $nome, $telefone, $latitude, $longitude, $localizacao, $raio_perimetro);
         
         if ($stmt->execute()) {
             $_SESSION['mensagem'] = "Base cadastrada com sucesso!";
@@ -98,20 +101,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <input type="text" name="telefone" class="form-input" placeholder="(00) 0000-0000">
                                 </div>
                             </div>
-                            <div class="grid grid-cols-1 gap-6 sm:grid-cols-3">
-                                <div class="space-y-2">
-                                    <label class="form-label">Latitude</label>
-                                    <input type="text" name="latitude" class="form-input" placeholder="Ex: -20.319386">
-                                </div>
-                                <div class="space-y-2">
-                                    <label class="form-label">Longitude</label>
-                                    <input type="text" name="longitude" class="form-input" placeholder="Ex: -40.337989">
-                                </div>
-                                <div class="space-y-2">
-                                    <label class="form-label">Raio do Perímetro (metros)</label>
-                                    <input type="number" name="raio_perimetro" class="form-input" min="1" value="200">
-                                    <p class="text-[10px] text-slate-400 italic">Distância máxima da base para iniciar/finalizar a ronda.</p>
-                                </div>
+                            <div class="space-y-2">
+                                <label class="form-label">Localização (Google Maps)</label>
+                                <input type="url" name="localizacao" class="form-input" placeholder="https://maps.app.goo.gl/..." required>
+                                <p class="text-[10px] text-slate-400 italic">Cole o link de compartilhamento do Google Maps da base. Latitude e longitude são extraídas automaticamente.</p>
+                            </div>
+                            <div class="space-y-2">
+                                <label class="form-label">Raio do Perímetro (metros)</label>
+                                <input type="number" name="raio_perimetro" class="form-input" min="1" value="200">
+                                <p class="text-[10px] text-slate-400 italic">Distância máxima da base para iniciar/finalizar a ronda.</p>
                             </div>
 
                             <div class="pt-6 border-t border-slate-100 flex flex-col sm:flex-row gap-3">

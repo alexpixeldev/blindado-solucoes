@@ -36,15 +36,7 @@ function dentro_do_perimetro($conn, $lat, $lng) {
 }
 
 function ronda_data_atual() {
-    $h = (int)date('H');
-    $i = (int)date('i');
-    if ($h >= 19) {
-        return date('Y-m-d');
-    }
-    if ($h < 5 || ($h == 5 && $i <= 50)) {
-        return date('Y-m-d', strtotime('-1 day'));
-    }
-    return null; // fora da janela 19:00 - 05:50
+    return date('Y-m-d');
 }
 
 function ronda_ativa($conn, $usuario_id) {
@@ -93,10 +85,6 @@ switch ($action) {
             exit;
         }
         $data_ronda = ronda_data_atual();
-        if (!$data_ronda) {
-            echo json_encode(['success' => false, 'message' => 'As rondas devem ser iniciadas entre 19:00 e 05:50.']);
-            exit;
-        }
         $ronda = ronda_ativa($conn, $usuario_id);
         if ($ronda) {
             echo json_encode(['success' => true, 'ronda_id' => $ronda['id'], 'message' => 'Você já tem uma ronda em andamento.']);
@@ -177,6 +165,53 @@ switch ($action) {
         $stmt = $conn->prepare("INSERT INTO ronda_escaneamentos (ronda_id, edificio_id, escaneado_em, latitude, longitude, interfones_ok, lixo_retirado) VALUES (?, ?, NOW(), ?, ?, ?, ?)
                                 ON DUPLICATE KEY UPDATE escaneado_em = NOW(), latitude = ?, longitude = ?, interfones_ok = ?, lixo_retirado = ?");
         $stmt->bind_param('iiddiiddii', $ronda_id, $edificio_id, $lat, $lng, $interfones, $lixo, $lat, $lng, $interfones, $lixo);
+        if ($stmt->execute()) {
+            echo json_encode(['success' => true, 'message' => 'QR code do edifício ' . $edificio['nome'] . ' escaneado com sucesso!']);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Erro ao registrar escaneamento: ' . $conn->error]);
+        }
+        $stmt->close();
+        break;
+
+    case 'escanear_token':
+        $token = trim($_POST['token'] ?? '');
+        $lat = floatval($_POST['lat'] ?? 0);
+        $lng = floatval($_POST['lng'] ?? 0);
+        $interfones = isset($_POST['interfones']) ? 1 : 0;
+        $lixo = isset($_POST['lixo']) ? 1 : 0;
+
+        if ($token === '') {
+            echo json_encode(['success' => false, 'message' => 'QR code inválido.']);
+            exit;
+        }
+        $stmt = $conn->prepare("SELECT id, nome, latitude, longitude, retirada_lixo FROM edificios WHERE qr_token = ?");
+        $stmt->bind_param('s', $token);
+        $stmt->execute();
+        $edificio = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+        if (!$edificio) {
+            echo json_encode(['success' => false, 'message' => 'QR code não cadastrado.']);
+            exit;
+        }
+        $ronda = ronda_ativa($conn, $usuario_id);
+        if (!$ronda) {
+            echo json_encode(['success' => false, 'message' => 'Nenhuma ronda em andamento. Inicie a ronda antes de escanear.']);
+            exit;
+        }
+        if (!$lat || !$lng) {
+            echo json_encode(['success' => false, 'message' => 'Não foi possível obter sua localização. Habilite o GPS.']);
+            exit;
+        }
+        if ($edificio['latitude'] && $edificio['longitude']) {
+            $d = dist_metros($lat, $lng, floatval($edificio['latitude']), floatval($edificio['longitude']));
+            if ($d > RAIO_SCAN_EDIFICIO) {
+                echo json_encode(['success' => false, 'message' => "Você está a " . round($d, 1) . "m do edifício {$edificio['nome']}. Aproxime-se para escanear (permitido até " . RAIO_SCAN_EDIFICIO . "m)."]);
+                exit;
+            }
+        }
+        $stmt = $conn->prepare("INSERT INTO ronda_escaneamentos (ronda_id, edificio_id, escaneado_em, latitude, longitude, interfones_ok, lixo_retirado) VALUES (?, ?, NOW(), ?, ?, ?, ?)
+                                ON DUPLICATE KEY UPDATE escaneado_em = NOW(), latitude = ?, longitude = ?, interfones_ok = ?, lixo_retirado = ?");
+        $stmt->bind_param('iiddiiddii', $ronda['id'], $edificio['id'], $lat, $lng, $interfones, $lixo, $lat, $lng, $interfones, $lixo);
         if ($stmt->execute()) {
             echo json_encode(['success' => true, 'message' => 'QR code do edifício ' . $edificio['nome'] . ' escaneado com sucesso!']);
         } else {
