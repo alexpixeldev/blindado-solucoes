@@ -315,7 +315,10 @@ $total_escaneados = count(array_filter($checklist, fn($c) => !empty($c['escanead
                 if (data.success) {
                     setStatus('<i class="fas fa-check-circle mr-2"></i>' + (data.message || 'Ronda finalizada!'), 'success');
                     if (data.whatsapp_links && data.whatsapp_links.length) {
-                        setStatus('<i class="fas fa-paper-plane mr-2"></i>Enviando relatório para o WhatsApp dos gerentes...', 'success');
+                        const msg = data.terceira_ronda 
+                            ? '<i class="fas fa-file-alt mr-2"></i>Enviando relatório consolidado das 3 rondas para o WhatsApp dos gerentes...'
+                            : '<i class="fas fa-paper-plane mr-2"></i>Enviando relatório para o WhatsApp dos gerentes...';
+                        setStatus(msg, 'success');
                         const openLink = (url, i) => {
                             setTimeout(() => window.open(url, '_blank'), i * 800);
                         };
