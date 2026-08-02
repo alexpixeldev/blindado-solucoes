@@ -8,17 +8,37 @@ if (!in_array($usuario_categoria, ['rondante', 'gerente', 'diretor', 'supervisor
     exit();
 }
 
-$data_filtro = $_GET['data'] ?? date('Y-m-d');
-$rondante_id = isset($_GET['rondante_id']) ? intval($_GET['rondante_id']) : ($_SESSION['usuario_id'] ?? 0);
+// Para rondante: o plantão dele vai das 19:00 de um dia até as 05:50 do dia seguinte.
+// A data do plantão é a data do dia em que começou (>= 19:00).
+function ronda_data_plantao() {
+    $h = (int)date('H');
+    $i = (int)date('i');
+    if ($h >= 19) {
+        return date('Y-m-d');
+    }
+    if ($h < 5 || ($h == 5 && $i <= 50)) {
+        return date('Y-m-d', strtotime('-1 day'));
+    }
+    return date('Y-m-d', strtotime('-1 day')); // fora da janela: usa o plantão anterior (que iniciou ontem às 19:00)
+}
 
-if ($usuario_categoria === 'rondante') {
+$is_rondante = ($usuario_categoria === 'rondante');
+
+if ($is_rondante) {
     $rondante_id = $_SESSION['usuario_id'];
+    $data_filtro = ronda_data_plantao();
+} else {
+    $data_filtro = $_GET['data'] ?? date('Y-m-d');
+    $rondante_id = isset($_GET['rondante_id']) ? intval($_GET['rondante_id']) : 0;
 }
 
 // Lista de rondantes (para o filtro em gerente/supervisor)
 $rondantes = [];
-if (in_array($usuario_categoria, ['gerente', 'diretor', 'supervisor'])) {
+if (!$is_rondante && in_array($usuario_categoria, ['gerente', 'diretor', 'supervisor'])) {
     $rondantes = $conn->query("SELECT id, nome_real, nome FROM usuarios WHERE categoria = 'rondante' ORDER BY nome_real")->fetch_all(MYSQLI_ASSOC);
+    if ($rondante_id === 0 && !empty($rondantes)) {
+        $rondante_id = intval($rondantes[0]['id']);
+    }
 }
 
 // Edifícios (checklist completo)
@@ -102,10 +122,13 @@ $total_escaneados = count(array_filter(array_map(function($e) use ($scans_por_ed
                 <!-- Submenus -->
                 <div class="mb-8 flex flex-wrap gap-2 border-b border-slate-200 animate-fade-in">
                     <a href="rondante.php" class="px-6 py-3 text-sm font-bold transition-all border-b-2 border-transparent text-slate-500 hover:text-slate-700">Ronda Atual</a>
+                    <?php if (!$is_rondante): ?>
                     <a href="rondante_qrcodes.php" class="px-6 py-3 text-sm font-bold transition-all border-b-2 border-transparent text-slate-500 hover:text-slate-700">QR Codes</a>
+                    <?php endif; ?>
                     <a href="rondante_validacao.php" class="px-6 py-3 text-sm font-bold transition-all border-b-2 border-primary-500 text-primary-600">Validação de Ronda</a>
                 </div>
 
+                <?php if (!$is_rondante): ?>
                 <!-- Filtros -->
                 <div class="mb-6 animate-slide-up">
                     <div class="admin-card">
@@ -128,7 +151,9 @@ $total_escaneados = count(array_filter(array_map(function($e) use ($scans_por_ed
                         </form>
                     </div>
                 </div>
+                <?php endif; ?>
 
+                <?php if (!$is_rondante): ?>
                 <!-- Resumo -->
                 <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 animate-slide-up">
                     <div class="admin-card p-4">
@@ -150,11 +175,19 @@ $total_escaneados = count(array_filter(array_map(function($e) use ($scans_por_ed
                         <p class="mt-1 text-2xl font-bold text-slate-900"><?= count($rondas) ?></p>
                     </div>
                 </div>
+                <?php endif; ?>
 
                 <!-- Checklist -->
                 <div class="animate-slide-up" style="animation-delay: 0.1s;">
                     <div class="admin-card">
-                        <h2 class="mb-4 text-lg font-bold text-slate-900">Checklist de Escaneamento</h2>
+                        <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
+                            <h2 class="text-lg font-bold text-slate-900">Checklist de Escaneamento</h2>
+                            <?php if ($is_rondante): ?>
+                                <span class="inline-flex items-center gap-1.5 rounded-lg bg-primary-50 px-3 py-1.5 text-xs font-bold text-primary-700">
+                                    <i class="fas fa-moon"></i> Plantão de <?= date('d/m/Y', strtotime($data_filtro)) ?> (19:00 às 05:50)
+                                </span>
+                            <?php endif; ?>
+                        </div>
                         <?php if (empty($edificios)): ?>
                             <div class="text-center py-12 text-slate-500 italic">Nenhum edifício cadastrado.</div>
                         <?php else: ?>
@@ -216,6 +249,7 @@ $total_escaneados = count(array_filter(array_map(function($e) use ($scans_por_ed
                     </div>
                 </div>
 
+                <?php if (!$is_rondante): ?>
                 <!-- Rondas -->
                 <div class="mt-6 animate-slide-up" style="animation-delay: 0.2s;">
                     <div class="admin-card">
@@ -263,6 +297,7 @@ $total_escaneados = count(array_filter(array_map(function($e) use ($scans_por_ed
                         <?php endif; ?>
                     </div>
                 </div>
+                <?php endif; ?>
             </main>
 
             <footer class="border-t border-slate-200 bg-white p-4 text-center text-xs text-slate-500">

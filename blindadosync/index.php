@@ -11,6 +11,11 @@ if ($usuario_categoria === 'colaborador') {
     exit();
 }
 
+if ($usuario_categoria === 'rondante') {
+    header('Location: rondante.php');
+    exit();
+}
+
 $stats = [];
 $mes_selecionado = filter_input(INPUT_GET, 'mes', FILTER_VALIDATE_INT) ?: date('n');
 $ano_selecionado = filter_input(INPUT_GET, 'ano', FILTER_VALIDATE_INT) ?: date('Y');

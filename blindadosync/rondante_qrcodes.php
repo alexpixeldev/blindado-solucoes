@@ -3,7 +3,7 @@ require_once 'verifica_login.php';
 require_once 'conexao.php';
 
 $usuario_categoria = $_SESSION['usuario_categoria'] ?? '';
-if (!in_array($usuario_categoria, ['rondante', 'gerente', 'diretor', 'supervisor'])) {
+if (!in_array($usuario_categoria, ['gerente', 'diretor'])) {
     header("Location: index.php");
     exit();
 }
@@ -194,25 +194,25 @@ $base_url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 
                 return;
             }
             var scriptPath = location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1) + 'assets/js/qrcode.js';
-            var cards = selecionados.map(function(el) {
+            var cards = '<div class="qr-print-grid">' + selecionados.map(function(el) {
                 return '<div class="qr-print-card">' +
                     '<h2>' + el.getAttribute('data-nome') + '</h2>' +
                     '<p class="base">' + el.getAttribute('data-base') + '</p>' +
                     '<div class="qr-print" data-qr="' + el.getAttribute('data-qr') + '"></div>' +
                     '</div>';
-            }).join('');
+            }).join('') + '</div>';
 
             var win = window.open('', '_blank');
             win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>QR Codes - Impressão</title>' +
                 '<style>' +
                 'body { font-family: Arial, Helvetica, sans-serif; margin: 10mm; }' +
-                '.qr-print-card { text-align: center; page-break-after: always; }' +
-                '.qr-print-card:last-child { page-break-after: auto; }' +
-                '.qr-print-card h2 { margin: 4mm 0 1mm 0; font-size: 14pt; color: #111; }' +
-                '.qr-print-card p.base { margin: 0 0 3mm 0; font-size: 10pt; color: #555; }' +
+                '.qr-print-grid { display: flex; flex-wrap: wrap; gap: 6mm; }' +
+                '.qr-print-card { width: 8cm; text-align: center; page-break-inside: avoid; margin: 0 auto 4mm auto; }' +
+                '.qr-print-card h2 { margin: 0 0 1mm 0; font-size: 12pt; color: #111; }' +
+                '.qr-print-card p.base { margin: 0 0 2mm 0; font-size: 9pt; color: #555; }' +
                 '.qr-print-card .qr-print { margin: 0 auto; }' +
                 '.qr-print-card .qr-print img { width: 7cm; height: 7cm; display: block; margin: 0 auto; }' +
-                '@media print { @page { size: A4 portrait; margin: 10mm; } }' +
+                '@media print { @page { size: A4 portrait; margin: 8mm; } }' +
                 '</style></head><body>' + cards +
                 '<script src="' + scriptPath + '">' + '<\/script>' +
                 '<script>' +

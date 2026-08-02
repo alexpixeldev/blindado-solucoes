@@ -52,6 +52,22 @@ $categoria_label = $categoria_labels[$usuario_categoria] ?? 'Usuário';
 
     <!-- Sidebar Navigation -->
     <nav class="flex-1 space-y-1 overflow-y-auto px-4 py-6 custom-scrollbar sidebar-scroll" style="max-height: calc(100vh - 180px);">
+        <?php if ($is_rondante): ?>
+            <!-- Rondante: acesso restrito -->
+            <div class="pt-4">
+                <p class="mb-2 px-4 text-[10px] font-bold uppercase tracking-widest text-slate-500">Rondante</p>
+                <div class="space-y-1">
+                    <a href="rondante.php" class="group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all <?php echo isActive('rondante.php', $current_page); ?>">
+                        <i class="fas fa-motorcycle text-lg"></i>
+                        <span>Ronda Atual</span>
+                    </a>
+                    <a href="rondante_validacao.php" class="group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all <?php echo isActive('rondante_validacao.php', $current_page); ?>">
+                        <i class="fas fa-clipboard-check text-lg"></i>
+                        <span>Validação de Ronda</span>
+                    </a>
+                </div>
+            </div>
+        <?php else: ?>
         <!-- Dashboard -->
         <a href="index.php" class="group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all <?php echo isActive('index.php', $current_page); ?>">
             <i class="fas fa-th-large text-lg"></i>
@@ -178,6 +194,7 @@ $categoria_label = $categoria_labels[$usuario_categoria] ?? 'Usuário';
                 <?php endif; ?>
             </div>
         </div>
+        <?php endif; ?>
         <?php endif; ?>
 
         <!-- Sistema Section -->

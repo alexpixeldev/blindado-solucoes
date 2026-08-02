@@ -10,4 +10,22 @@ if (!isset($_SESSION['usuario_id'])) {
     header("Location: login.php");
     exit();
 }
+
+// Rondante tem acesso restrito: apenas as páginas de ronda.
+$usuario_categoria = $_SESSION['usuario_categoria'] ?? '';
+if ($usuario_categoria === 'rondante') {
+    $pagina_atual = basename($_SERVER['PHP_SELF']);
+    $permitidas = [
+        'rondante.php',
+        'rondante_validacao.php',
+        'rondante_scan.php',
+        'rondante_api.php',
+        'perfil.php',
+        'logout.php'
+    ];
+    if (!in_array($pagina_atual, $permitidas)) {
+        header("Location: rondante.php");
+        exit();
+    }
+}
 ?>

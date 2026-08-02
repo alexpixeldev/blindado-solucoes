@@ -20,13 +20,28 @@ $ronda = $stmt->get_result()->fetch_assoc();
 $stmt->close();
 
 $scans_ronda = 0;
+$checklist = [];
 if ($ronda) {
     $stmt = $conn->prepare("SELECT COUNT(*) as c FROM ronda_escaneamentos WHERE ronda_id = ?");
     $stmt->bind_param('i', $ronda['id']);
     $stmt->execute();
     $scans_ronda = intval($stmt->get_result()->fetch_assoc()['c']);
     $stmt->close();
+
+    $stmt = $conn->prepare("SELECT e.id, e.nome, b.nome AS nome_base, e.retirada_lixo,
+                            re.escaneado_em, re.interfones_ok, re.lixo_retirado
+                            FROM edificios e
+                            JOIN bases b ON e.base_id = b.id
+                            LEFT JOIN ronda_escaneamentos re ON re.edificio_id = e.id AND re.ronda_id = ?
+                            ORDER BY b.nome, e.nome");
+    $stmt->bind_param('i', $ronda['id']);
+    $stmt->execute();
+    $checklist = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    $stmt->close();
 }
+
+$total_edificios = count($checklist);
+$total_escaneados = count(array_filter($checklist, fn($c) => !empty($c['escaneado_em'])));
 ?>
 <!DOCTYPE html>
 <html lang="pt-br" class="h-full bg-slate-50">
@@ -68,7 +83,9 @@ if ($ronda) {
                 <!-- Submenus -->
                 <div class="mb-8 flex flex-wrap gap-2 border-b border-slate-200 animate-fade-in">
                     <a href="rondante.php" class="px-6 py-3 text-sm font-bold transition-all border-b-2 border-primary-500 text-primary-600">Ronda Atual</a>
+                    <?php if ($usuario_categoria === 'gerente' || $usuario_categoria === 'diretor'): ?>
                     <a href="rondante_qrcodes.php" class="px-6 py-3 text-sm font-bold transition-all border-b-2 border-transparent text-slate-500 hover:text-slate-700">QR Codes</a>
+                    <?php endif; ?>
                     <a href="rondante_validacao.php" class="px-6 py-3 text-sm font-bold transition-all border-b-2 border-transparent text-slate-500 hover:text-slate-700">Validação de Ronda</a>
                 </div>
 
@@ -112,6 +129,72 @@ if ($ronda) {
                         <div id="ronda-status" class="mt-4 rounded-xl bg-slate-50 p-4 text-sm"></div>
                     </div>
                 </div>
+
+                <!-- Checklist de Escaneamento -->
+                <?php if ($ronda): ?>
+                <div class="mt-6 animate-slide-up" style="animation-delay: 0.1s;">
+                    <div class="admin-card">
+                        <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
+                            <h2 class="text-lg font-bold text-slate-900">Checklist de Escaneamento</h2>
+                            <span class="inline-flex items-center gap-2 rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-700">
+                                <?= $total_escaneados ?>/<?= $total_edificios ?> edifícios
+                            </span>
+                        </div>
+                        <?php if (empty($checklist)): ?>
+                            <div class="text-center py-10 text-slate-500 italic">Nenhum edifício cadastrado.</div>
+                        <?php else: ?>
+                            <div class="overflow-x-auto">
+                                <table class="admin-table" data-no-cell-copy>
+                                    <thead>
+                                        <tr>
+                                            <th>Edifício</th>
+                                            <th>Base</th>
+                                            <th>Status</th>
+                                            <th>Horário</th>
+                                            <th>Detalhes</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach ($checklist as $c): ?>
+                                            <?php $escaneado = !empty($c['escaneado_em']); ?>
+                                            <tr class="<?= $escaneado ? 'bg-green-50/50' : '' ?>">
+                                                <td class="font-semibold text-slate-900"><?= htmlspecialchars($c['nome']) ?></td>
+                                                <td class="text-sm text-slate-500"><?= htmlspecialchars($c['nome_base']) ?></td>
+                                                <td>
+                                                    <?php if ($escaneado): ?>
+                                                        <span class="inline-flex items-center gap-1 rounded-lg bg-green-100 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-green-700">
+                                                            <i class="fas fa-check-circle"></i> Escaneado
+                                                        </span>
+                                                    <?php else: ?>
+                                                        <span class="inline-flex items-center gap-1 rounded-lg bg-red-100 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-red-700">
+                                                            <i class="fas fa-times-circle"></i> Não escaneado
+                                                        </span>
+                                                    <?php endif; ?>
+                                                </td>
+                                                <td class="text-sm text-slate-500">
+                                                    <?= $escaneado ? date('H:i:s', strtotime($c['escaneado_em'])) : '<span class="text-red-500">—</span>' ?>
+                                                </td>
+                                                <td class="text-xs text-slate-500">
+                                                    <?php if ($escaneado): ?>
+                                                        <span class="inline-flex flex-wrap gap-1">
+                                                            <span class="rounded bg-<?= $c['interfones_ok'] ? 'green' : 'slate' ?>-100 px-1.5 py-0.5 text-[10px] font-bold text-<?= $c['interfones_ok'] ? 'green' : 'slate' ?>-700">Interfones: <?= $c['interfones_ok'] ? 'OK' : '—' ?></span>
+                                                            <?php if ($c['retirada_lixo']): ?>
+                                                                <span class="rounded bg-<?= $c['lixo_retirado'] ? 'green' : 'slate' ?>-100 px-1.5 py-0.5 text-[10px] font-bold text-<?= $c['lixo_retirado'] ? 'green' : 'slate' ?>-700">Lixo: <?= $c['lixo_retirado'] ? 'Sim' : 'Não' ?></span>
+                                                            <?php endif; ?>
+                                                        </span>
+                                                    <?php else: ?>
+                                                        —
+                                                    <?php endif; ?>
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                <?php endif; ?>
             </main>
 
             <footer class="border-t border-slate-200 bg-white p-4 text-center text-xs text-slate-500">
