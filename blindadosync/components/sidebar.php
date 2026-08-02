@@ -96,6 +96,16 @@ $categoria_label = $categoria_labels[$usuario_categoria] ?? 'Usuário';
                         <i class="fas fa-comment-dots text-lg"></i>
                         <span>Feedback</span>
                     </a>
+                    <?php if (in_array($usuario_categoria, ['gerente', 'diretor'])): ?>
+                    <a href="relatorios_gerenciais.php" class="group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all <?php echo isActive('relatorios_gerenciais.php', $current_page); ?>">
+                        <i class="fas fa-chart-line text-lg"></i>
+                        <span>Relatórios Gerenciais</span>
+                    </a>
+                    <a href="consultar_relatorios_gerenciais.php" class="group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all <?php echo isActive('consultar_relatorios_gerenciais.php', $current_page); ?>">
+                        <i class="fas fa-search text-lg"></i>
+                        <span>Consulta Relatórios Gerenciais</span>
+                    </a>
+                    <?php endif; ?>
                 <?php endif; ?>
                 <?php if (in_array($usuario_categoria, ['rondante', 'gerente', 'diretor'])): ?>
                     <a href="rondante_validacao.php" class="group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all <?php echo isActive('rondante_validacao.php', $current_page); ?>">
