@@ -2,6 +2,15 @@
 require_once 'verifica_login.php';
 require_once 'conexao.php';
 
+echo "<!DOCTYPE html>";
+echo "<html lang='pt-br'>";
+echo "<head>";
+echo "<meta charset='UTF-8'>";
+echo "<link rel='icon' type='image/png' href='../img/escudo.png'>";
+echo "<title>Migration - Rondas</title>";
+echo "</head>";
+echo "<body>";
+
 if ($_SESSION['usuario_categoria'] !== 'gerente') {
     die("Apenas gerente pode executar esta migration.");
 }
@@ -85,4 +94,8 @@ if ($ok) {
 } else {
     echo "<br><strong>Migration concluída com erros (veja acima).</strong>";
 }
+
+echo "</body>";
+echo "</html>";
+
 $conn->close();

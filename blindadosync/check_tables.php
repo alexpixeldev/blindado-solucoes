@@ -1,6 +1,14 @@
 <?php
 require_once 'conexao.php';
 
+echo "<!DOCTYPE html>";
+echo "<html lang='pt-br'>";
+echo "<head>";
+echo "<meta charset='UTF-8'>";
+echo "<link rel='icon' type='image/png' href='../img/escudo.png'>";
+echo "<title>Estrutura das Tabelas</title>";
+echo "</head>";
+echo "<body>";
 echo "<h2>Estrutura das tabelas</h2>";
 
 $tables = ['controle_faciais', 'controle_ata', 'controle_radio_fibra', 'controle_dvr'];
@@ -14,6 +22,9 @@ foreach ($tables as $table) {
     }
     echo "</table><br>";
 }
+
+echo "</body>";
+echo "</html>";
 
 $conn->close();
 ?>

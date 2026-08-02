@@ -1,6 +1,15 @@
 <?php
 require_once 'conexao.php';
 
+echo "<!DOCTYPE html>";
+echo "<html lang='pt-br'>";
+echo "<head>";
+echo "<meta charset='UTF-8'>";
+echo "<link rel='icon' type='image/png' href='../img/escudo.png'>";
+echo "<title>Adicionar Campo - Requer Selfie</title>";
+echo "</head>";
+echo "<body>";
+
 // Adicionar campo requer_selfie na tabela edificios
 $sql = "ALTER TABLE edificios ADD COLUMN requer_selfie TINYINT(1) DEFAULT 0 AFTER elevador_contato";
 if ($conn->query($sql)) {
@@ -18,6 +27,9 @@ foreach ($edificiosParaAtualizar as $nome) {
     $stmt->close();
     echo "Edifício '$nome' atualizado para requerer selfie.<br>";
 }
+
+echo "</body>";
+echo "</html>";
 
 $conn->close();
 ?>
