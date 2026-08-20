@@ -43,7 +43,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$edificios = $conn->query("SELECT e.id, e.nome, b.nome as base_nome FROM edificios e JOIN bases b ON e.base_id = b.id ORDER BY e.nome")->fetch_all(MYSQLI_ASSOC);
+$usuario_base_id = null;
+if (in_array($usuario_categoria, ['operador', 'supervisor'])) {
+    $stmt_b = $conn->prepare("SELECT base_id FROM usuarios WHERE id = ?");
+    $stmt_b->bind_param("i", $usuario_id);
+    $stmt_b->execute();
+    $row_b = $stmt_b->get_result()->fetch_assoc();
+    $stmt_b->close();
+    $usuario_base_id = $row_b['base_id'] ?? null;
+
+    if (intval($usuario_base_id) > 0) {
+        $edificios = $conn->query("SELECT e.id, e.nome, b.nome as base_nome FROM edificios e JOIN bases b ON e.base_id = b.id WHERE e.base_id = " . intval($usuario_base_id) . " ORDER BY e.nome")->fetch_all(MYSQLI_ASSOC);
+    } else {
+        $edificios = $conn->query("SELECT e.id, e.nome, b.nome as base_nome FROM edificios e JOIN bases b ON e.base_id = b.id ORDER BY e.nome")->fetch_all(MYSQLI_ASSOC);
+    }
+} else {
+    $edificios = $conn->query("SELECT e.id, e.nome, b.nome as base_nome FROM edificios e JOIN bases b ON e.base_id = b.id ORDER BY e.nome")->fetch_all(MYSQLI_ASSOC);
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-br" class="h-full bg-slate-50">

@@ -20,14 +20,14 @@ $row = $result->fetch_assoc();
 $usuario_base_id = $row['base_id'] ?? null;
 $_SESSION['usuario_base_id'] = $usuario_base_id;
 
-if ($usuario_categoria === 'operador') {
+if (in_array($usuario_categoria, ['operador', 'supervisor'])) {
     $bid = intval($usuario_base_id);
     if ($bid > 0) {
         $bases = $conn->query("SELECT id, nome FROM bases WHERE id = $bid")->fetch_all(MYSQLI_ASSOC);
         $edificios = $conn->query("SELECT e.id, e.nome FROM edificios e WHERE e.base_id = $bid ORDER BY e.nome")->fetch_all(MYSQLI_ASSOC);
     } else {
-        $bases = [];
-        $edificios = [];
+        $bases = $conn->query("SELECT id, nome FROM bases ORDER BY nome")->fetch_all(MYSQLI_ASSOC);
+        $edificios = $conn->query("SELECT e.id, e.nome, b.nome as base_nome FROM edificios e LEFT JOIN bases b ON e.base_id = b.id ORDER BY b.nome, e.nome")->fetch_all(MYSQLI_ASSOC);
     }
 } else {
     $bases = $conn->query("SELECT id, nome FROM bases ORDER BY nome")->fetch_all(MYSQLI_ASSOC);
