@@ -155,6 +155,10 @@ $categoria_label = $categoria_labels[$usuario_categoria] ?? 'Usuário';
                     <i class="fas fa-building text-lg"></i>
                     <span>Edifícios</span>
                 </a>
+                <a href="splendia_cadastros.php" class="group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all <?php echo isActive('splendia_cadastros.php', $current_page); ?>">
+                    <i class="fas fa-clipboard-list text-lg"></i>
+                    <span>Cadastros Splendia</span>
+                </a>
             </div>
         </div>
         <?php endif; ?>
