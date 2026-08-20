@@ -28,8 +28,6 @@ if ($token !== '') {
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $edificio) {
     $lat = $_POST['lat'] ?? '';
     $lng = $_POST['lng'] ?? '';
-    $interfones = isset($_POST['interfones']) ? '1' : '0';
-    $lixo = isset($_POST['lixo']) ? '1' : '0';
 
     $ch = curl_init();
     session_write_close();
@@ -43,9 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $edificio) {
             'ronda_id' => $_POST['ronda_id'] ?? 0,
             'edificio_id' => $edificio['id'],
             'lat' => $lat,
-            'lng' => $lng,
-            'interfones' => $interfones,
-            'lixo' => $lixo
+            'lng' => $lng
         ]),
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_TIMEOUT => 10,
@@ -78,8 +74,12 @@ $stmt->close();
     <link rel="icon" type="image/png" href="../img/escudo.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
+<noscript>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</noscript>
     <link rel="stylesheet" href="style_modern.css">
     <link rel="stylesheet" href="assets/css/tailwind.css">
 </head>
@@ -128,16 +128,6 @@ $stmt->close();
                             <input type="hidden" name="ronda_id" value="<?= $ronda_ativa['id'] ?>">
                             <input type="hidden" name="lat" id="lat">
                             <input type="hidden" name="lng" id="lng">
-                            <div class="space-y-3 text-left">
-                                <label class="flex items-center gap-3 rounded-xl bg-white/5 border border-white/10 p-3 cursor-pointer">
-                                    <input type="checkbox" name="interfones" id="interfones" class="h-5 w-5 rounded accent-primary-500">
-                                    <span class="text-sm text-slate-200"><i class="fas fa-phone mr-2 text-primary-400"></i>Interfones testados</span>
-                                </label>
-                                <label class="flex items-center gap-3 rounded-xl bg-white/5 border border-white/10 p-3 cursor-pointer">
-                                    <input type="checkbox" name="lixo" id="lixo" class="h-5 w-5 rounded accent-primary-500">
-                                    <span class="text-sm text-slate-200"><i class="fas fa-trash-alt mr-2 text-primary-400"></i>Lixo retirado</span>
-                                </label>
-                            </div>
                             <button type="submit" id="scan-btn" disabled class="mt-5 w-full flex items-center justify-center gap-2 rounded-xl bg-primary-600 px-5 py-3 text-sm font-bold text-white shadow-lg hover:bg-primary-500 active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed">
                                 <i class="fas fa-qrcode text-xs"></i> Confirmar Escaneamento
                             </button>
@@ -159,9 +149,7 @@ $stmt->close();
 
     <style>
         .glass {
-            background: rgba(18, 37, 66, 0.85);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            background: rgba(18, 37, 66, 0.96);
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
     </style>

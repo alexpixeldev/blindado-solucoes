@@ -158,7 +158,7 @@ function getCategoriaLabel($categoria) {
         .meta-value .text-slate-400 { color: #94a3b8; }
         .meta-value .text-sm { font-size: 0.875rem; }
         .meta-value .text-xs { font-size: 0.75rem; }
-        .top-bar { position: sticky; top: 0; z-index: 1000; background: rgba(6, 19, 40, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 14px 32px; display: flex; justify-content: space-between; align-items: center; }
+        .top-bar { position: sticky; top: 0; z-index: 1000; background: rgba(6, 19, 40, 0.97); border-bottom: 1px solid var(--border); padding: 14px 32px; display: flex; justify-content: space-between; align-items: center; }
         .top-bar-left { display: flex; align-items: center; gap: 8px; }
         .top-bar-left i { color: var(--primary-light); font-size: 1.1rem; }
         .top-bar-left span { font-weight: 600; font-size: 0.95rem; color: var(--text-primary); }

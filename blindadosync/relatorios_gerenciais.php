@@ -102,7 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['salvar_relatorio'])) 
         .meta-value-row { display: flex; align-items: center; gap: 8px; }
         .meta-value-row .modern-calendar-container { flex: 1; }
         .turno-select { width: auto !important; min-width: 110px; flex-shrink: 0; }
-        .top-bar { position: sticky; top: 0; z-index: 1000; background: rgba(6, 19, 40, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 14px 32px; display: flex; justify-content: space-between; align-items: center; }
+        .top-bar { position: sticky; top: 0; z-index: 1000; background: rgba(6, 19, 40, 0.97); border-bottom: 1px solid var(--border); padding: 14px 32px; display: flex; justify-content: space-between; align-items: center; }
 
         .top-bar-left { display: flex; align-items: center; gap: 8px; }
         .top-bar-left i { color: var(--primary-light); font-size: 1.1rem; }

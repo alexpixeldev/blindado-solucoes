@@ -59,18 +59,20 @@ $total_escaneados = count(array_filter($checklist, fn($c) => !empty($c['escanead
 
 
     <!-- Google Fonts & Font Awesome -->
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
+<noscript>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</noscript>
     <link rel="stylesheet" href="style_modern.css">
     <link rel="stylesheet" href="assets/css/tailwind.css">
 </head>
 <body class="h-full text-slate-800 antialiased">
         <div class="flex min-h-screen">
-        <?php include 'components/sidebar.php'; ?>
-
         <div class="flex min-w-0 flex-1 flex-col">
             <?php include 'components/header.php'; ?>
 
@@ -207,16 +209,6 @@ $total_escaneados = count(array_filter($checklist, fn($c) => !empty($c['escanead
                             </div>
                         </div>
                         <p id="scanner-msg" class="mt-4 text-center text-sm text-slate-500">Aponte a câmera para o QR code do edifício.</p>
-                        <div class="mt-4 grid grid-cols-2 gap-3">
-                            <label class="flex items-center gap-2 rounded-xl bg-slate-50 border border-slate-200 p-3 cursor-pointer">
-                                <input type="checkbox" id="scanner-interfones" class="h-4 w-4 rounded accent-primary-500">
-                                <span class="text-xs font-semibold text-slate-700">Interfones testados</span>
-                            </label>
-                            <label class="flex items-center gap-2 rounded-xl bg-slate-50 border border-slate-200 p-3 cursor-pointer">
-                                <input type="checkbox" id="scanner-lixo" class="h-4 w-4 rounded accent-primary-500">
-                                <span class="text-xs font-semibold text-slate-700">Lixo retirado</span>
-                            </label>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -315,10 +307,7 @@ $total_escaneados = count(array_filter($checklist, fn($c) => !empty($c['escanead
                 if (data.success) {
                     setStatus('<i class="fas fa-check-circle mr-2"></i>' + (data.message || 'Ronda finalizada!'), 'success');
                     if (data.whatsapp_links && data.whatsapp_links.length) {
-                        const msg = data.terceira_ronda 
-                            ? '<i class="fas fa-file-alt mr-2"></i>Enviando relatório consolidado das 3 rondas para o WhatsApp dos gerentes...'
-                            : '<i class="fas fa-paper-plane mr-2"></i>Enviando relatório para o WhatsApp dos gerentes...';
-                        setStatus(msg, 'success');
+                        setStatus('<i class="fas fa-file-alt mr-2"></i>Enviando relatório consolidado das 3 rondas para o WhatsApp dos gerentes...', 'success');
                         const openLink = (url, i) => {
                             setTimeout(() => window.open(url, '_blank'), i * 800);
                         };
@@ -347,8 +336,6 @@ $total_escaneados = count(array_filter($checklist, fn($c) => !empty($c['escanead
             document.getElementById('scanner-msg').classList.remove('text-green-600', 'text-red-600');
             document.getElementById('scanner-msg').classList.add('text-slate-500');
             document.getElementById('scanner-loading').style.display = 'flex';
-            document.getElementById('scanner-interfones').checked = false;
-            document.getElementById('scanner-lixo').checked = false;
             scannerProcessed = false;
             abrirCamera();
         }
@@ -438,14 +425,11 @@ $total_escaneados = count(array_filter($checklist, fn($c) => !empty($c['escanead
             const msg = document.getElementById('scanner-msg');
             try {
                 const pos = await getPosicao();
-                const interfones = document.getElementById('scanner-interfones').checked ? 1 : 0;
-                const lixo = document.getElementById('scanner-lixo').checked ? 1 : 0;
                 const res = await fetch('rondante_api.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                     body: 'action=escanear_token&token=' + encodeURIComponent(token) +
-                          '&lat=' + pos.coords.latitude + '&lng=' + pos.coords.longitude +
-                          '&interfones=' + interfones + '&lixo=' + lixo
+                          '&lat=' + pos.coords.latitude + '&lng=' + pos.coords.longitude
                 });
                 const data = await res.json();
                 if (data.success) {

@@ -1,3 +1,3 @@
-    <script src="assets/js/admin.js"></script>
+    <script src="assets/js/admin.js" defer></script>
 </body>
 </html>

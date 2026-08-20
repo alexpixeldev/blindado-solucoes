@@ -122,6 +122,8 @@ function montar_relatorio_consolidado($conn, $usuario_id, $data_ronda) {
     $msg .= "*Data:* " . date('d/m/Y', strtotime($rondas[0]['data_ronda'])) . "\n";
     $msg .= "*Total de rondas:* " . count($rondas) . "\n\n";
 
+    $edificios = $conn->query("SELECT id, nome FROM edificios ORDER BY nome")->fetch_all(MYSQLI_ASSOC);
+
     foreach ($rondas as $idx => $ronda) {
         $num_ronda = $idx + 1;
         $msg .= "━━━━━━━━━━━━━━━━━━━━\n";
@@ -132,7 +134,7 @@ function montar_relatorio_consolidado($conn, $usuario_id, $data_ronda) {
             $msg .= "*Base:* " . $ronda['base_nome'] . "\n";
         }
 
-        $stmt = $conn->prepare("SELECT e.nome AS edificio_nome, re.escaneado_em, re.interfones_ok, re.lixo_retirado
+        $stmt = $conn->prepare("SELECT re.edificio_id, e.nome AS edificio_nome, re.escaneado_em
                                 FROM ronda_escaneamentos re
                                 JOIN edificios e ON re.edificio_id = e.id
                                 WHERE re.ronda_id = ?
@@ -142,19 +144,23 @@ function montar_relatorio_consolidado($conn, $usuario_id, $data_ronda) {
         $escans = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
         $stmt->close();
 
-        $msg .= "*Edifícios escaneados:* " . count($escans) . "\n";
+        $escaneados = [];
+        foreach ($escans as $esc) {
+            $escaneados[$esc['edificio_id']] = $esc;
+        }
 
-        if (count($escans) === 0) {
-            $msg .= "Nenhum edifício foi escaneado nesta ronda.\n";
+        $msg .= "*Escaneados:* " . count($escans) . " de " . count($edificios) . "\n\n";
+
+        if (count($edificios) === 0) {
+            $msg .= "Nenhum edifício cadastrado.\n";
         } else {
-            foreach ($escans as $esc) {
-                $status = [];
-                if ($esc['interfones_ok']) $status[] = '📱 Interfones OK';
-                if ($esc['lixo_retirado']) $status[] = '🗑️ Lixo retirado';
-                $status_str = implode(', ', $status);
-                $msg .= "✅ " . $esc['edificio_nome'] . " — " . date('H:i:s', strtotime($esc['escaneado_em']));
-                if ($status_str) $msg .= " (" . $status_str . ")";
-                $msg .= "\n";
+            foreach ($edificios as $ed) {
+                if (isset($escaneados[$ed['id']])) {
+                    $esc = $escaneados[$ed['id']];
+                    $msg .= "✅ " . $esc['edificio_nome'] . " — " . date('H:i:s', strtotime($esc['escaneado_em'])) . "\n";
+                } else {
+                    $msg .= "❌ " . $ed['nome'] . "\n";
+                }
             }
         }
         $msg .= "\n";
@@ -267,9 +273,9 @@ switch ($action) {
             $mensagem = 'Ronda finalizada com sucesso!';
 
             if ($total_rondas === 3) {
-                // É a terceira ronda - enviar relatório consolidado
+                // É a terceira ronda - enviar UM relatório consolidado das 3 rondas
                 $relatorio = montar_relatorio_consolidado($conn, $usuario_id, $data_ronda);
-                $mensagem = 'Terceira ronda finalizada! Relatório consolidado enviado para os gerentes.';
+                $mensagem = 'Terceira ronda finalizada! Relatório consolidado das 3 rondas enviado para os gerentes.';
                 
                 foreach ($gerentes as $g) {
                     $tel = normalizar_whatsapp($g['whatsapp']);
@@ -277,14 +283,9 @@ switch ($action) {
                     $whatsapp_links[] = 'https://api.whatsapp.com/send?phone=' . $tel . '&text=' . rawurlencode($relatorio);
                 }
             } else {
-                // Enviar relatório individual como antes
-                $relatorio = montar_relatorio_ronda($conn, $ronda['id']);
-                
-                foreach ($gerentes as $g) {
-                    $tel = normalizar_whatsapp($g['whatsapp']);
-                    if ($tel === '') continue;
-                    $whatsapp_links[] = 'https://api.whatsapp.com/send?phone=' . $tel . '&text=' . rawurlencode($relatorio);
-                }
+                // Rondas intermediárias (1ª e 2ª): não enviar relatório individual.
+                // O relatório completo é enviado apenas ao final da 3ª ronda.
+                $mensagem = 'Ronda finalizada com sucesso! O relatório será enviado ao final da 3ª ronda.';
             }
 
             echo json_encode([

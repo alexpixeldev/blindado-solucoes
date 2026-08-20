@@ -108,11 +108,15 @@ if (isset($_SESSION['mensagem'])) {
 
 
     <!-- Google Fonts & Font Awesome -->
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
+<noscript>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</noscript>
     <link rel="stylesheet" href="style_modern.css">
     <link rel="stylesheet" href="assets/css/tailwind.css">
 </head>
@@ -131,12 +135,17 @@ if (isset($_SESSION['mensagem'])) {
                         <p class="mt-1 text-slate-500">Cadastros de moradores do Edifício Splendia enviados pelo formulário.</p>
                     </div>
                     <div class="flex items-center gap-2">
+                        <button type="button" onclick="imprimirStatus()" class="icon-btn" title="Imprimir status dos apartamentos"><i class="fas fa-th-list" style="font-size:10px"></i></button>
                         <button type="button" onclick="imprimirCadastros()" class="icon-btn" title="Imprimir ou salvar em PDF"><i class="fas fa-print" style="font-size:10px"></i></button>
                         <a href="edificios.php" class="icon-btn" title="Voltar"><i class="fas fa-arrow-left" style="font-size:10px"></i></a>
                     </div>
                 </div>
 
                 <script>
+                    function imprimirStatus() {
+                        window.open('splendia_status_print.php', '_blank', 'width=900,height=700');
+                    }
+
                     function imprimirCadastros() {
                         const params = new URLSearchParams(window.location.search);
                         let url = 'splendia_cadastros_print.php';
