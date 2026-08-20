@@ -20,16 +20,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $tabela = ($tipo === 'transportadora') ? 'transportadoras' : 'situacoes_entrega';
         
         if (!empty($nome)) {
-            $stmt = $conn->prepare("INSERT INTO $tabela (nome) VALUES (?)");
-            $stmt->bind_param("s", $nome);
-            if ($stmt->execute()) {
-                $mensagem = "Item adicionado com sucesso!";
-                $mensagem_tipo = "success";
-            } else {
-                $mensagem = "Erro ao adicionar: " . $conn->error;
+            $check = $conn->prepare("SELECT id FROM $tabela WHERE nome = ? LIMIT 1");
+            $check->bind_param("s", $nome);
+            $check->execute();
+            $ja_existe = (bool)$check->get_result()->fetch_assoc();
+            $check->close();
+
+            if ($ja_existe) {
+                $mensagem = "Já existe um item com o nome \"$nome\".";
                 $mensagem_tipo = "error";
+            } else {
+                try {
+                    $stmt = $conn->prepare("INSERT INTO $tabela (nome) VALUES (?)");
+                    $stmt->bind_param("s", $nome);
+                    $stmt->execute();
+                    $stmt->close();
+                    $mensagem = "Item adicionado com sucesso!";
+                    $mensagem_tipo = "success";
+                } catch (Exception $e) {
+                    $mensagem = "Não foi possível adicionar: já existe um item com esse nome.";
+                    $mensagem_tipo = "error";
+                }
             }
-            $stmt->close();
         }
     }
     // Excluir
@@ -51,11 +63,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         $stmt = $conn->prepare("UPDATE $tabela SET nome = ? WHERE id = ?");
         $stmt->bind_param("si", $nome, $id);
-        if ($stmt->execute()) {
+        try {
+            $stmt->execute();
+            $stmt->close();
             $mensagem = "Item atualizado com sucesso!";
             $mensagem_tipo = "success";
+        } catch (Exception $e) {
+            $mensagem = "Não foi possível atualizar: já existe outro item com esse nome.";
+            $mensagem_tipo = "error";
         }
-        $stmt->close();
     }
 }
 
@@ -96,7 +112,7 @@ $situacoes = $result_sit ? fetch_all_assoc($result_sit) : [];
         <div class="flex flex-1 flex-col overflow-hidden">
             <?php include 'components/header.php'; ?>
             
-            <main class="flex-1 overflow-y-auto p-4 sm:p-8 custom-scrollbar">
+            <main class="flex-1 overflow-y-auto p-4 sm:p-8 custom-scrollbar flex flex-col">
                 <!-- Page Header -->
                 <div class="mb-8 animate-fade-in">
                     <h1 class="text-2xl font-bold text-slate-900 sm:text-3xl">Configurações de Entrega</h1>
@@ -110,10 +126,10 @@ $situacoes = $result_sit ? fetch_all_assoc($result_sit) : [];
                     </div>
                 <?php endif; ?>
 
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 flex-1 items-stretch">
                     <!-- Transportadoras -->
-                    <div class="animate-slide-up">
-                        <div class="admin-card">
+                    <div class="animate-slide-up h-full">
+                        <div class="admin-card h-full flex flex-col">
                             <h2 class="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2">
                                 <i class="fas fa-truck text-primary-600"></i>
                                 Transportadoras
@@ -125,7 +141,7 @@ $situacoes = $result_sit ? fetch_all_assoc($result_sit) : [];
                                 <button type="submit" name="add_item" class="icon-btn-green" title="Adicionar"><i class="fas fa-plus" style="font-size:10px"></i></button>
                             </form>
                             
-                            <div class="max-h-[400px] overflow-y-auto custom-scrollbar border border-slate-100 rounded-xl">
+                            <div class="flex-1 min-h-[200px] overflow-y-auto custom-scrollbar border border-slate-100 rounded-xl">
                                 <table class="w-full text-left border-collapse">
                                     <tbody class="divide-y divide-slate-100">
                                         <?php if (empty($transportadoras)): ?>
@@ -157,8 +173,8 @@ $situacoes = $result_sit ? fetch_all_assoc($result_sit) : [];
                     </div>
 
                     <!-- Situações -->
-                    <div class="animate-slide-up" style="animation-delay: 0.1s;">
-                        <div class="admin-card">
+                    <div class="animate-slide-up h-full" style="animation-delay: 0.1s;">
+                        <div class="admin-card h-full flex flex-col">
                             <h2 class="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2">
                                 <i class="fas fa-info-circle text-primary-600"></i>
                                 Situações de Recebimento
@@ -170,7 +186,7 @@ $situacoes = $result_sit ? fetch_all_assoc($result_sit) : [];
                                 <button type="submit" name="add_item" class="icon-btn-green" title="Adicionar"><i class="fas fa-plus" style="font-size:10px"></i></button>
                             </form>
                             
-                            <div class="max-h-[400px] overflow-y-auto custom-scrollbar border border-slate-100 rounded-xl">
+                            <div class="flex-1 min-h-[200px] overflow-y-auto custom-scrollbar border border-slate-100 rounded-xl">
                                 <table class="w-full text-left border-collapse">
                                     <tbody class="divide-y divide-slate-100">
                                         <?php if (empty($situacoes)): ?>
