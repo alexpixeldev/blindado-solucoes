@@ -204,7 +204,7 @@ if (in_array($usuario_categoria, ['operador', 'supervisor'])) {
                                 </a>
                                 <button type="submit" class="btn-primary order-1 sm:order-2">
                                     <i class="fas fa-check"></i>
-                                    <span>Registrar Serviço</span>
+                                    <span>Registrar Prestador</span>
                                 </button>
                             </div>
                         </form>

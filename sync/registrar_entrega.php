@@ -221,8 +221,14 @@ $situacoes = $conn->query("SELECT nome FROM situacoes_entrega ORDER BY nome")->f
                             </div>
 
                             <div class="flex flex-col gap-4 pt-6 border-t border-slate-100 sm:flex-row sm:items-center sm:justify-end">
-                                <a href="consultar_entrega.php" class="icon-btn" title="Consultar Entregas"><i class="fas fa-search" style="font-size:10px"></i></a>
-                                <button type="submit" class="icon-btn-green" title="Registrar"><i class="fas fa-check" style="font-size:10px"></i></button>
+                                <a href="consultar_entrega.php" class="btn-secondary order-2 sm:order-1">
+                                    <i class="fas fa-search"></i>
+                                    <span>Consultar Entregas</span>
+                                </a>
+                                <button type="submit" class="btn-primary order-1 sm:order-2">
+                                    <i class="fas fa-check"></i>
+                                    <span>Registrar Entrega</span>
+                                </button>
                             </div>
                         </form>
                     </div>
