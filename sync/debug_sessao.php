@@ -1,6 +1,6 @@
 <?php
-require_once 'C:/xampp/htdocs/blindado/blindadosync/verifica_login.php';
-require_once 'C:/xampp/htdocs/blindado/blindadosync/conexao.php';
+require_once 'C:/xampp/htdocs/blindado/sync/verifica_login.php';
+require_once 'C:/xampp/htdocs/blindado/sync/conexao.php';
 
 echo "<!DOCTYPE html>";
 echo "<html lang='pt-br'>";

@@ -1,5 +1,5 @@
 <?php
-require_once '../blindadosync/conexao.php';
+require_once '../sync/conexao.php';
 
 header('Content-Type: application/json; charset=utf-8');
 

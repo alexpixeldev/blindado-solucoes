@@ -1,5 +1,5 @@
 <?php
-require_once '../blindadosync/conexao.php';
+require_once '../sync/conexao.php';
 
 $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 $cadastro = null;

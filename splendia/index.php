@@ -1,5 +1,5 @@
 <?php
-require_once '../blindadosync/conexao.php';
+require_once '../sync/conexao.php';
 
 // Edifício Splendia (id 61) e base Nova Guaraparí (id 1)
 $edificio = $conn->query("SELECT e.id, e.nome, b.nome AS nome_base, b.telefone

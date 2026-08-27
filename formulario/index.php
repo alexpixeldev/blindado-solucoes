@@ -1,5 +1,5 @@
 <?php
-require_once '../blindadosync/conexao.php';
+require_once '../sync/conexao.php';
 
 $has_selfie_col = false;
 $check = @$conn->query("SHOW COLUMNS FROM edificios LIKE 'requer_selfie'");
