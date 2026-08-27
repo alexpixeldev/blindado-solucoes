@@ -124,12 +124,6 @@ if ($usuario_categoria === 'operador') {
     $row_b = $conn->query("SELECT base_id FROM usuarios WHERE id = $usuario_id_op")->fetch_assoc();
     if ($row_b) $base_id_op = intval($row_b['base_id'] ?? 0);
 
-    // Cards do mês / da base
-    $stats['ultimas_locacoes'] = $conn->query("SELECT COUNT(*) c FROM locacoes l JOIN edificios e ON l.edificio_id = e.id WHERE e.base_id = $base_id_op AND YEAR(l.data_registro) = $ano_selecionado AND MONTH(l.data_registro) = $mes_selecionado")->fetch_assoc()['c'] ?? 0;
-    $stats['ultimas_entregas'] = $conn->query("SELECT COUNT(*) c FROM entregas en JOIN edificios e ON en.edificio_id = e.id WHERE e.base_id = $base_id_op AND YEAR(en.data_criacao) = $ano_selecionado AND MONTH(en.data_criacao) = $mes_selecionado")->fetch_assoc()['c'] ?? 0;
-    $stats['ocorrencias_mes'] = $conn->query("SELECT COUNT(*) c FROM ocorrencias WHERE base_id = $base_id_op AND YEAR(data_criacao) = $ano_selecionado AND MONTH(data_criacao) = $mes_selecionado")->fetch_assoc()['c'] ?? 0;
-    $stats['prestadores_hoje'] = $conn->query("SELECT COUNT(*) c FROM prestadores_servico ps JOIN edificios e ON ps.edificio_id = e.id WHERE e.base_id = $base_id_op AND ps.data_servico = CURDATE()")->fetch_assoc()['c'] ?? 0;
-
     // Listas
     $ultimas_locacoes_list = [];
     $r = $conn->query("SELECT l.id, e.nome as edificio_nome, l.numero_apartamento, l.nome_morador, l.data_registro FROM locacoes l JOIN edificios e ON l.edificio_id = e.id WHERE e.base_id = $base_id_op ORDER BY l.data_registro DESC LIMIT 6");
@@ -313,62 +307,6 @@ if ($usuario_categoria === 'operador') {
                             </div>
                             <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-50 text-orange-600 transition-colors group-hover:bg-orange-600 group-hover:text-white">
                                 <i class="fas fa-plus-circle text-xl"></i>
-                            </div>
-                        </div>
-                    </a>
-                    <?php endif; ?>
-
-                    <?php if (isset($stats['ultimas_locacoes'])): ?>
-                    <a href="listar_locacoes.php" class="admin-card group block cursor-pointer">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="text-sm font-medium text-slate-500">Últimas Locações</p>
-                                <h3 class="mt-1 text-3xl font-bold text-slate-900"><?php echo $stats['ultimas_locacoes']; ?></h3>
-                            </div>
-                            <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-50 text-purple-600 transition-colors group-hover:bg-purple-600 group-hover:text-white">
-                                <i class="fas fa-key text-xl"></i>
-                            </div>
-                        </div>
-                    </a>
-                    <?php endif; ?>
-
-                    <?php if (isset($stats['ultimas_entregas'])): ?>
-                    <a href="registrar_entrega.php" class="admin-card group block cursor-pointer">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="text-sm font-medium text-slate-500">Últimas Entregas</p>
-                                <h3 class="mt-1 text-3xl font-bold text-slate-900"><?php echo $stats['ultimas_entregas']; ?></h3>
-                            </div>
-                            <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-50 text-orange-600 transition-colors group-hover:bg-orange-600 group-hover:text-white">
-                                <i class="fas fa-box text-xl"></i>
-                            </div>
-                        </div>
-                    </a>
-                    <?php endif; ?>
-
-                    <?php if (isset($stats['ocorrencias_mes'])): ?>
-                    <a href="consultar_ocorrencia.php" class="admin-card group block cursor-pointer">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="text-sm font-medium text-slate-500">Ocorrências no mês</p>
-                                <h3 class="mt-1 text-3xl font-bold text-slate-900"><?php echo $stats['ocorrencias_mes']; ?></h3>
-                            </div>
-                            <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 transition-colors group-hover:bg-blue-600 group-hover:text-white">
-                                <i class="fas fa-edit text-xl"></i>
-                            </div>
-                        </div>
-                    </a>
-                    <?php endif; ?>
-
-                    <?php if (isset($stats['prestadores_hoje'])): ?>
-                    <a href="registrar_prestador.php" class="admin-card group block cursor-pointer">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="text-sm font-medium text-slate-500">Prestadores hoje</p>
-                                <h3 class="mt-1 text-3xl font-bold text-slate-900"><?php echo $stats['prestadores_hoje']; ?></h3>
-                            </div>
-                            <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-green-50 text-green-600 transition-colors group-hover:bg-green-600 group-hover:text-white">
-                                <i class="fas fa-user-shield text-xl"></i>
                             </div>
                         </div>
                     </a>
