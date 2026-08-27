@@ -191,6 +191,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         die("Erro: Edifício e Apartamento são obrigatórios.");
     }
 
+    // Verificação de duplicata exata:
+    // Bloqueia reenvio das mesmas informações (mesmo edifício + apartamento + mesmas datas),
+    // mas permite o mesmo apartamento em datas diferentes (nova locação legítima).
+    $dup_where = "edificio_id = ? AND numero_apartamento = ?";
+    $dup_types = "is";
+    $dup_params = [$edificio_id, $numero_apartamento];
+    if (!empty($data_entrada)) {
+        $dup_where .= " AND data_entrada = ?";
+        $dup_types .= "s";
+        $dup_params[] = $data_entrada;
+    }
+    if (!empty($data_saida)) {
+        $dup_where .= " AND data_saida = ?";
+        $dup_types .= "s";
+        $dup_params[] = $data_saida;
+    }
+    $stmt_dup = $conn->prepare("SELECT id FROM locacoes WHERE $dup_where LIMIT 1");
+    assert_prepare($stmt_dup, $conn, 'verificacao duplicata');
+    $bind_refs = [$dup_types];
+    foreach ($dup_params as $k => $v) {
+        $bind_refs[] = &$dup_params[$k];
+    }
+    call_user_func_array([$stmt_dup, 'bind_param'], $bind_refs);
+    $stmt_dup->execute();
+    $ja_enviado = $stmt_dup->get_result()->num_rows > 0;
+    $stmt_dup->close();
+
+    if ($ja_enviado) {
+        $msg = 'Estas informações já foram enviadas para este apartamento nesta data. Para registrar uma nova locação, utilize datas e/ou dados diferentes.';
+        if ($is_ajax) {
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['status' => 'error', 'message' => $msg]);
+            exit;
+        }
+        die('Erro: ' . $msg);
+    }
+
     // 1. Inserir na tabela principal (locacoes)
     $data_locacao = date('Y-m-d');
     $stmt = $conn->prepare("INSERT INTO locacoes (edificio_id, tipo_usuario, numero_apartamento, locador_nome, locador_telefone, data_entrada, data_saida, observacoes, data_locacao) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");

@@ -38,3 +38,45 @@ post_max_size=40M upload_max_filesize=40M
 POST keys: user_type, locador_nome, locador_ddi, locador_telefone, edificio_id, numero_apartamento, inquilinos, veiculos, data_entrada, data_saida
 FILES summary: inquilinos: nested file array
 post_max_size=40M upload_max_filesize=40M
+[2026-08-27 12:35:45] Início de request POST
+POST keys: edificio_id, user_type, numero_apartamento, locador_nome, data_entrada, data_saida, observacoes
+FILES summary: 
+post_max_size=40M upload_max_filesize=40M
+[2026-08-27 12:35:45] Início de request POST
+POST keys: edificio_id, user_type, numero_apartamento, locador_nome, data_entrada, data_saida, observacoes
+FILES summary: 
+post_max_size=40M upload_max_filesize=40M
+[2026-08-27 12:35:45] Início de request POST
+POST keys: edificio_id, user_type, numero_apartamento, locador_nome, data_entrada, data_saida, observacoes
+FILES summary: 
+post_max_size=40M upload_max_filesize=40M
+[2026-08-27 12:37:09] Início de request POST
+POST keys: edificio_id, user_type, numero_apartamento, locador_nome, data_entrada, data_saida, observacoes
+FILES summary: 
+post_max_size=40M upload_max_filesize=40M
+[2026-08-27 12:37:09] PHP error: Cannot modify header information - headers already sent by (output started at C:\Users\Usuario\AppData\Local\Temp\opencode\test_dup_runner.php:7) in C:\xampp\htdocs\blindado\formulario\salvar_locacao.php on line 321
+[2026-08-27 12:37:09] Uncaught exception: Cannot modify header information - headers already sent by (output started at C:\Users\Usuario\AppData\Local\Temp\opencode\test_dup_runner.php:7) in C:\xampp\htdocs\blindado\formulario\salvar_locacao.php on line 321
+[2026-08-27 12:37:09] Início de request POST
+POST keys: edificio_id, user_type, numero_apartamento, locador_nome, data_entrada, data_saida, observacoes
+FILES summary: 
+post_max_size=40M upload_max_filesize=40M
+[2026-08-27 12:37:09] PHP error: Cannot modify header information - headers already sent by (output started at C:\Users\Usuario\AppData\Local\Temp\opencode\test_dup_runner.php:7) in C:\xampp\htdocs\blindado\formulario\salvar_locacao.php on line 224
+[2026-08-27 12:37:09] Uncaught exception: Cannot modify header information - headers already sent by (output started at C:\Users\Usuario\AppData\Local\Temp\opencode\test_dup_runner.php:7) in C:\xampp\htdocs\blindado\formulario\salvar_locacao.php on line 224
+[2026-08-27 12:37:09] Início de request POST
+POST keys: edificio_id, user_type, numero_apartamento, locador_nome, data_entrada, data_saida, observacoes
+FILES summary: 
+post_max_size=40M upload_max_filesize=40M
+[2026-08-27 12:37:09] PHP error: Cannot modify header information - headers already sent by (output started at C:\Users\Usuario\AppData\Local\Temp\opencode\test_dup_runner.php:7) in C:\xampp\htdocs\blindado\formulario\salvar_locacao.php on line 321
+[2026-08-27 12:37:09] Uncaught exception: Cannot modify header information - headers already sent by (output started at C:\Users\Usuario\AppData\Local\Temp\opencode\test_dup_runner.php:7) in C:\xampp\htdocs\blindado\formulario\salvar_locacao.php on line 321
+[2026-08-27 12:37:46] Início de request POST
+POST keys: edificio_id, user_type, numero_apartamento, locador_nome, data_entrada, data_saida, observacoes
+FILES summary: 
+post_max_size=40M upload_max_filesize=40M
+[2026-08-27 12:37:46] Início de request POST
+POST keys: edificio_id, user_type, numero_apartamento, locador_nome, data_entrada, data_saida, observacoes
+FILES summary: 
+post_max_size=40M upload_max_filesize=40M
+[2026-08-27 12:37:46] Início de request POST
+POST keys: edificio_id, user_type, numero_apartamento, locador_nome, data_entrada, data_saida, observacoes
+FILES summary: 
+post_max_size=40M upload_max_filesize=40M
