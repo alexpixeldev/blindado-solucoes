@@ -9,6 +9,11 @@ function btnCopiar($texto) {
 }
 
 $usuario_categoria = $_SESSION['usuario_categoria'] ?? '';
+$usuario_base_id = null;
+if (in_array($usuario_categoria, ['operador', 'supervisor'])) {
+    $row_b = $conn->query("SELECT base_id FROM usuarios WHERE id = " . intval($_SESSION['usuario_id'] ?? 0))->fetch_assoc();
+    $usuario_base_id = $row_b['base_id'] ?? null;
+}
 $mensagem = '';
 $mensagem_tipo = '';
 
@@ -90,8 +95,13 @@ $data_inicio = filter_input(INPUT_GET, 'data_inicio');
 $data_fim = filter_input(INPUT_GET, 'data_fim');
 
 // Fetch bases and buildings for the dropdowns
-$bases = $conn->query("SELECT id, nome FROM bases ORDER BY nome ASC")->fetch_all(MYSQLI_ASSOC);
-$edificios = $conn->query("SELECT id, nome, base_id FROM edificios ORDER BY nome ASC")->fetch_all(MYSQLI_ASSOC);
+if (intval($usuario_base_id) > 0) {
+    $bases = $conn->query("SELECT id, nome FROM bases WHERE id = " . intval($usuario_base_id) . " ORDER BY nome ASC")->fetch_all(MYSQLI_ASSOC);
+    $edificios = $conn->query("SELECT id, nome, base_id FROM edificios WHERE base_id = " . intval($usuario_base_id) . " ORDER BY nome ASC")->fetch_all(MYSQLI_ASSOC);
+} else {
+    $bases = $conn->query("SELECT id, nome FROM bases ORDER BY nome ASC")->fetch_all(MYSQLI_ASSOC);
+    $edificios = $conn->query("SELECT id, nome, base_id FROM edificios ORDER BY nome ASC")->fetch_all(MYSQLI_ASSOC);
+}
 
 // Main Query Construction
     $sql = "SELECT 
@@ -111,6 +121,12 @@ if ($filtro_base) {
 } elseif ($filtro_edificio) {
     $sql .= " AND l.edificio_id = ?";
     $params[] = $filtro_edificio;
+    $types .= "i";
+}
+
+if (intval($usuario_base_id) > 0) {
+    $sql .= " AND e.base_id = ?";
+    $params[] = intval($usuario_base_id);
     $types .= "i";
 }
 

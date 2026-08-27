@@ -22,7 +22,7 @@ $ano_selecionado = filter_input(INPUT_GET, 'ano', FILTER_VALIDATE_INT) ?: date('
 $inicio_mes = sprintf('%04d-%02d-01', $ano_selecionado, $mes_selecionado);
 $fim_mes = date('Y-m-01', strtotime($inicio_mes . ' +1 month'));
 
-if (in_array($usuario_categoria, ['gerente', 'supervisor'])) {
+if ($usuario_categoria === 'gerente') {
     $stats['total_edificios'] = $conn->query("SELECT COUNT(*) as total FROM edificios")->fetch_assoc()['total'] ?? 0;
     $stats['total_locacoes'] = $conn->query("SELECT COUNT(*) as total FROM locacoes")->fetch_assoc()['total'] ?? 0;
     $stats['total_entregas'] = $conn->query("SELECT COUNT(*) as total FROM entregas")->fetch_assoc()['total'] ?? 0;
@@ -118,23 +118,25 @@ if ($usuario_categoria === 'administrativo') {
     $filtro_ano_admin = $ano_selecionado;
 }
 
-if ($usuario_categoria === 'operador') {
+if (in_array($usuario_categoria, ['operador', 'supervisor'])) {
     $usuario_id_op = intval($_SESSION['usuario_id'] ?? 0);
     $base_id_op = 0;
     $row_b = $conn->query("SELECT base_id FROM usuarios WHERE id = $usuario_id_op")->fetch_assoc();
     if ($row_b) $base_id_op = intval($row_b['base_id'] ?? 0);
 
     // Listas
+    $cond_base = intval($base_id_op) > 0 ? "e.base_id = $base_id_op AND " : "";
+
     $ultimas_locacoes_list = [];
-    $r = $conn->query("SELECT l.id, e.nome as edificio_nome, l.numero_apartamento, l.nome_morador, l.data_registro FROM locacoes l JOIN edificios e ON l.edificio_id = e.id WHERE e.base_id = $base_id_op ORDER BY l.data_registro DESC LIMIT 6");
+    $r = $conn->query("SELECT l.id, e.nome as edificio_nome, l.numero_apartamento, l.nome_morador, l.data_registro FROM locacoes l JOIN edificios e ON l.edificio_id = e.id WHERE {$cond_base}1 ORDER BY l.data_registro DESC LIMIT 6");
     if ($r) $ultimas_locacoes_list = $r->fetch_all(MYSQLI_ASSOC);
 
     $ultimas_entregas_list = [];
-    $r = $conn->query("SELECT en.id, e.nome as edificio_nome, en.numero_apartamento, en.transportadora, en.situacao_recebimento, en.data_criacao FROM entregas en JOIN edificios e ON en.edificio_id = e.id WHERE e.base_id = $base_id_op ORDER BY en.data_criacao DESC, en.id DESC LIMIT 6");
+    $r = $conn->query("SELECT en.id, e.nome as edificio_nome, en.numero_apartamento, en.transportadora, en.situacao_recebimento, en.data_criacao FROM entregas en JOIN edificios e ON en.edificio_id = e.id WHERE {$cond_base}1 ORDER BY en.data_criacao DESC, en.id DESC LIMIT 6");
     if ($r) $ultimas_entregas_list = $r->fetch_all(MYSQLI_ASSOC);
 
     $ultimos_prestadores_list = [];
-    $r = $conn->query("SELECT ps.id, e.nome as edificio_nome, ps.numero_apartamento, ps.nome_empresa, ps.nome_funcionario, ps.tipo_servico, ps.data_servico, ps.data_criacao FROM prestadores_servico ps JOIN edificios e ON ps.edificio_id = e.id WHERE e.base_id = $base_id_op ORDER BY ps.data_criacao DESC, ps.id DESC LIMIT 6");
+    $r = $conn->query("SELECT ps.id, e.nome as edificio_nome, ps.numero_apartamento, ps.nome_empresa, ps.nome_funcionario, ps.tipo_servico, ps.data_servico, ps.data_criacao FROM prestadores_servico ps JOIN edificios e ON ps.edificio_id = e.id WHERE {$cond_base}1 ORDER BY ps.data_criacao DESC, ps.id DESC LIMIT 6");
     if ($r) $ultimos_prestadores_list = $r->fetch_all(MYSQLI_ASSOC);
 }
 ?>
@@ -419,7 +421,7 @@ if ($usuario_categoria === 'operador') {
                     </div>
                 </div>
 
-                <?php elseif ($usuario_categoria === 'operador'): ?>
+                <?php elseif (in_array($usuario_categoria, ['operador', 'supervisor'])): ?>
 
                 <!-- Ações Rápidas -->
                 <div class="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-4 animate-slide-up">

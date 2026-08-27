@@ -7,6 +7,12 @@ $usuario_categoria = $_SESSION['usuario_categoria'] ?? '';
 if ($usuario_categoria === 'colaborador') { header('Location: index.php'); exit(); }
 $pode_editar = in_array($usuario_categoria, ['supervisor', 'gerente']);
 
+$usuario_base_id = null;
+if (in_array($usuario_categoria, ['operador', 'supervisor'])) {
+    $row_b = $conn->query("SELECT base_id FROM usuarios WHERE id = " . intval($_SESSION['usuario_id'] ?? 0))->fetch_assoc();
+    $usuario_base_id = $row_b['base_id'] ?? null;
+}
+
 if ($pode_editar && isset($_POST['delete_item'])) {
     $id = intval($_POST['id_delete']);
     $tipo = $_POST['tipo_delete'];
@@ -243,6 +249,7 @@ switch ($tab) {
                   LEFT JOIN administradoras a ON e.administradora_id = a.id";
 
         if ($filtro_base) $where_clauses[] = "e.base_id = " . intval($filtro_base);
+        if (intval($usuario_base_id) > 0) $where_clauses[] = "e.base_id = " . intval($usuario_base_id);
         if ($search) {
             $s = $conn->real_escape_string($search);
             $where_clauses[] = "(e.nome LIKE '%$s%' OR b.nome LIKE '%$s%' OR e.endereco LIKE '%$s%' OR e.sindico_nome LIKE '%$s%')";
@@ -256,9 +263,11 @@ switch ($tab) {
 
     case 'faciais_locacao':
         $selfie_col = $has_selfie_col ? 'e.requer_selfie' : '0 AS requer_selfie';
+        $facial_base_cond = intval($usuario_base_id) > 0 ? " WHERE b.id = " . intval($usuario_base_id) : '';
         $query = "SELECT e.id, e.nome, $selfie_col, b.nome AS nome_base
                   FROM edificios e
                   JOIN bases b ON e.base_id = b.id
+                  $facial_base_cond
                   ORDER BY b.nome, e.nome";
         $result = $conn->query($query);
         $data = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
@@ -266,9 +275,11 @@ switch ($tab) {
 
     case 'retirada_lixo':
         $retirada_col = $has_retirada_col ? 'e.retirada_lixo' : '0 AS retirada_lixo';
+        $retirada_base_cond = intval($usuario_base_id) > 0 ? " WHERE b.id = " . intval($usuario_base_id) : '';
         $query = "SELECT e.id, e.nome, $retirada_col, b.nome AS nome_base
                   FROM edificios e
                   JOIN bases b ON e.base_id = b.id
+                  $retirada_base_cond
                   ORDER BY b.nome, e.nome";
         $result = $conn->query($query);
         $data = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
@@ -282,6 +293,7 @@ switch ($tab) {
             $s = $conn->real_escape_string($search);
             $where_clauses[] = "(b.nome LIKE '%$s%' OR b.telefone LIKE '%$s%')";
         }
+        if (intval($usuario_base_id) > 0) $where_clauses[] = "b.id = " . intval($usuario_base_id);
         if (!empty($where_clauses)) $query .= " WHERE " . implode(" AND ", $where_clauses);
         $query .= " GROUP BY b.id, b.nome, b.telefone, b.localizacao, b.status ORDER BY b.nome";
         $data = $conn->query($query)->fetch_all(MYSQLI_ASSOC);
@@ -321,7 +333,8 @@ switch ($tab) {
 }
 
 try {
-    $bases_result = $conn->query("SELECT id, nome FROM bases ORDER BY nome");
+    $bases_filter_sql = intval($usuario_base_id) > 0 ? " WHERE id = " . intval($usuario_base_id) : "";
+    $bases_result = $conn->query("SELECT id, nome FROM bases$bases_filter_sql ORDER BY nome");
     $bases = $bases_result ? $bases_result->fetch_all(MYSQLI_ASSOC) : [];
 } catch (Exception $e) {
     $bases = [];
