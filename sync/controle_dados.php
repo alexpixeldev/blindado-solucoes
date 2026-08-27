@@ -6,6 +6,12 @@ $usuario_categoria = $_SESSION['usuario_categoria'] ?? '';
 if ($usuario_categoria === 'colaborador') { header('Location: index.php'); exit(); }
 $pode_editar = in_array($usuario_categoria, ['supervisor', 'gerente']);
 
+$usuario_base_id = null;
+if (in_array($usuario_categoria, ['operador', 'supervisor'])) {
+    $row_b = $conn->query("SELECT base_id FROM usuarios WHERE id = " . intval($_SESSION['usuario_id'] ?? 0))->fetch_assoc();
+    $usuario_base_id = $row_b['base_id'] ?? null;
+}
+
 if ($pode_editar && isset($_POST['delete_item'])) {
     $id_raw = $_POST['id_delete'];
     $id = is_numeric($id_raw) ? intval($id_raw) : $id_raw;
@@ -101,6 +107,11 @@ if ($search) {
     $where_clauses[] = "(" . implode(" OR ", $search_parts) . ")";
 }
 
+if (intval($usuario_base_id) > 0) {
+    $base_r = intval($usuario_base_id);
+    $where_clauses[] = "({$alias}.edificio_id IS NULL AND b.id = $base_r) OR e.base_id = $base_r";
+}
+
 if (!empty($where_clauses)) {
     $query .= " WHERE " . implode(" AND ", $where_clauses);
 }
@@ -132,7 +143,7 @@ if (!empty($where_clauses)) {
     $dados = $conn->query($query)->fetch_all(MYSQLI_ASSOC);
 }
 
-$edificios = $conn->query("SELECT id, nome FROM edificios ORDER BY nome")->fetch_all(MYSQLI_ASSOC);
+$edificios = $conn->query("SELECT id, nome FROM edificios" . (intval($usuario_base_id) > 0 ? " WHERE base_id = " . intval($usuario_base_id) : "") . " ORDER BY nome")->fetch_all(MYSQLI_ASSOC);
 
 /**
  * Função auxiliar para tratar codificação de dados legados
@@ -324,7 +335,8 @@ function render_data_field($content, $type) {
                 <!-- POPs Map for Radio/Fibra -->
                 <?php if ($tipo_dados === 'radio_fibra' && !$filtro_edificio && !$search): ?>
                     <?php 
-                    $pops = $conn->query("SELECT crf.*, e.nome as edificio_nome, b.nome as base_nome FROM controle_radio_fibra crf LEFT JOIN edificios e ON crf.edificio_id = e.id LEFT JOIN bases b ON crf.base_id = b.id WHERE is_pop = 1 ORDER BY e.nome, b.nome")->fetch_all(MYSQLI_ASSOC);
+                    $base_cond_pops = intval($usuario_base_id) > 0 ? " AND (crf.edificio_id IS NULL AND b.id = " . intval($usuario_base_id) . " OR e.base_id = " . intval($usuario_base_id) . ")" : "";
+                    $pops = $conn->query("SELECT crf.*, e.nome as edificio_nome, b.nome as base_nome FROM controle_radio_fibra crf LEFT JOIN edificios e ON crf.edificio_id = e.id LEFT JOIN bases b ON crf.base_id = b.id WHERE is_pop = 1$base_cond_pops ORDER BY e.nome, b.nome")->fetch_all(MYSQLI_ASSOC);
                     if (!empty($pops)): 
                     ?>
                     <div class="mb-8 animate-slide-up">
