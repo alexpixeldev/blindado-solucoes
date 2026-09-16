@@ -41,7 +41,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['salvar_plantao'])) {
     $supervisor = trim($_POST['supervisor_nome']);
     $operador1 = trim($_POST['operador1_nome'] ?? '');
     $operador2 = trim($_POST['operador2_nome'] ?? '');
-    $operadores = implode(' / ', array_filter([$operador1, $operador2]));
+    $operador3 = trim($_POST['operador3_nome'] ?? '');
+    $operadores = implode(' / ', array_filter([$operador1, $operador2, $operador3]));
     $periodo = $_POST['periodo_dia'];
     $data_plantao = $_POST['data_ocorrencia'];
 
@@ -116,8 +117,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['salvar_plantao'])) {
         .meta-value input:focus, .meta-value select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 169, 55, 0.18); }
         .meta-value input:hover, .meta-value select:hover { border-color: rgba(255, 255, 255, 0.25); }
         .meta-value-row { display: flex; align-items: center; gap: 8px; }
-        .meta-value-row .modern-calendar-container { flex: 1; }
-        .turno-select { width: auto !important; min-width: 110px; flex-shrink: 0; }
         .top-bar { position: sticky; top: 0; z-index: 1000; background: rgba(6, 19, 40, 0.97); border-bottom: 1px solid var(--border); padding: 14px 32px; display: flex; justify-content: space-between; align-items: center; }
 
         .top-bar-left { display: flex; align-items: center; gap: 8px; }
@@ -218,7 +217,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['salvar_plantao'])) {
             .notion-header-static { font-size: 1.25rem !important; }
             .notion-meta { grid-template-columns: 1fr !important; padding: 16px !important; }
             .meta-value-row { flex-direction: column; align-items: stretch; }
-            .turno-select { width: 100% !important; }
             .top-bar { padding: 12px 16px !important; }
         }
     </style>
@@ -254,19 +252,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['salvar_plantao'])) {
                         <div class="meta-row"><span class="meta-label"><i class="fas fa-user-tie"></i> Supervisor</span><div class="meta-value"><div class="autocomplete-wrap"><input type="text" id="supervisor-input" class="autocomplete-input" placeholder="Digite o nome do supervisor" required autocomplete="off"><input type="hidden" name="supervisor_nome" id="supervisor-nome"><div class="autocomplete-dropdown" id="supervisor-dropdown"></div></div></div></div>
                         <div class="meta-row"><span class="meta-label"><i class="fas fa-user"></i> Operador 1</span><div class="meta-value"><div class="autocomplete-wrap"><input type="text" id="operador1-input" class="autocomplete-input" placeholder="Digite o nome do operador" required autocomplete="off"><input type="hidden" name="operador1_nome" id="operador1-nome"><div class="autocomplete-dropdown" id="operador1-dropdown"></div></div></div></div>
                         <div class="meta-row">
-                            <span class="meta-label"><i class="fas fa-calendar-alt"></i> Data / Turno</span>
-                            <div class="meta-value meta-value-row">
+                            <span class="meta-label"><i class="fas fa-calendar-alt"></i> Data</span>
+                            <div class="meta-value">
                                 <?php renderModernCalendar('data_ocorrencia', date('Y-m-d'), ''); ?>
                                 <script>
                                     document.getElementById('value_calendar_data_ocorrencia').setAttribute('onchange', 'updateTitle()');
                                 </script>
-                                <select name="periodo_dia" id="periodo_dia" required onchange="updateTitle()" class="turno-select">
+                            </div>
+                        </div>
+                        <div class="meta-row"><span class="meta-label"><i class="fas fa-user"></i> Operador 2</span><div class="meta-value"><div class="autocomplete-wrap"><input type="text" id="operador2-input" class="autocomplete-input" placeholder="Digite o nome do operador" required autocomplete="off"><input type="hidden" name="operador2_nome" id="operador2-nome"><div class="autocomplete-dropdown" id="operador2-dropdown"></div></div></div></div>
+                        <div class="meta-row">
+                            <span class="meta-label"><i class="fas fa-calendar-alt"></i> Turno</span>
+                            <div class="meta-value">
+                                <select name="periodo_dia" id="periodo_dia" required onchange="updateTitle()" class="form-input">
                                     <option value="dia" selected>Diurno</option>
                                     <option value="noite">Noturno</option>
                                 </select>
                             </div>
                         </div>
-                        <div class="meta-row"><span class="meta-label"><i class="fas fa-user"></i> Operador 2</span><div class="meta-value"><div class="autocomplete-wrap"><input type="text" id="operador2-input" class="autocomplete-input" placeholder="Digite o nome do operador" required autocomplete="off"><input type="hidden" name="operador2_nome" id="operador2-nome"><div class="autocomplete-dropdown" id="operador2-dropdown"></div></div></div></div>
+                        <div class="meta-row"><span class="meta-label"><i class="fas fa-user"></i> Operador 3</span><div class="meta-value"><div class="autocomplete-wrap"><input type="text" id="operador3-input" class="autocomplete-input" placeholder="Digite o nome do operador" autocomplete="off"><input type="hidden" name="operador3_nome" id="operador3-nome"><div class="autocomplete-dropdown" id="operador3-dropdown"></div></div></div></div>
                     </div>
                     <div class="w-full space-y-6">
                         <div id="reports-container">
@@ -394,6 +398,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['salvar_plantao'])) {
         initAutocomplete('supervisor-input', 'supervisor-nome', 'supervisor-dropdown', 'supervisor,gerente,diretor');
         initAutocomplete('operador1-input', 'operador1-nome', 'operador1-dropdown', 'operador');
         initAutocomplete('operador2-input', 'operador2-nome', 'operador2-dropdown', 'operador');
+        initAutocomplete('operador3-input', 'operador3-nome', 'operador3-dropdown', 'operador');
 
         // Atualizar título
         function updateTitle() {
@@ -940,13 +945,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['salvar_plantao'])) {
             const campos = [
                 ['supervisor-input', 'supervisor-nome', 'supervisor'],
                 ['operador1-input', 'operador1-nome', 'operador 1'],
-                ['operador2-input', 'operador2-nome', 'operador 2']
+                ['operador2-input', 'operador2-nome', 'operador 2'],
+                ['operador3-input', 'operador3-nome', 'operador 3']
             ];
             for (const [inputId, hiddenId, label] of campos) {
                 const input = document.getElementById(inputId);
                 const hidden = document.getElementById(hiddenId);
                 if (input.value.trim()) hidden.value = formatName(input.value.trim());
-                if (!hidden.value.trim()) {
+                if (!hidden.value.trim() && label !== 'operador 3') {
                     showToast('Informe o ' + label + ' antes de salvar o relatório.', 'error');
                     input.focus();
                     return;
@@ -996,6 +1002,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['salvar_plantao'])) {
                     operador1Text: document.getElementById('operador1-input').value,
                     operador2: document.getElementById('operador2-nome').value,
                     operador2Text: document.getElementById('operador2-input').value,
+                    operador3: document.getElementById('operador3-nome').value,
+                    operador3Text: document.getElementById('operador3-input').value,
                     data_ocorrencia: document.getElementById('value_calendar_data_ocorrencia').value,
                     periodo_dia: document.getElementById('periodo_dia').value
                 },
@@ -1004,7 +1012,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['salvar_plantao'])) {
         }
 
         function hasDraftContent(draft) {
-            if (draft.meta.supervisorText || draft.meta.operador1Text || draft.meta.operador2Text) return true;
+            if (draft.meta.supervisorText || draft.meta.operador1Text || draft.meta.operador2Text || draft.meta.operador3Text) return true;
             if (draft.meta.data_ocorrencia !== document.getElementById('value_calendar_data_ocorrencia').value) return true;
             return draft.blocks.some(function(b) { return b.descricao || b.locais.length > 0; });
         }
@@ -1073,6 +1081,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['salvar_plantao'])) {
             document.getElementById('operador1-input').value = draft.meta.operador1Text || '';
             document.getElementById('operador2-nome').value = draft.meta.operador2 || '';
             document.getElementById('operador2-input').value = draft.meta.operador2Text || '';
+            document.getElementById('operador3-nome').value = draft.meta.operador3 || '';
+            document.getElementById('operador3-input').value = draft.meta.operador3Text || '';
 
             if (draft.meta.data_ocorrencia) {
                 const hid = document.getElementById('value_calendar_data_ocorrencia');

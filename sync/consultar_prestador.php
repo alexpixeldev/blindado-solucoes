@@ -11,6 +11,12 @@ if (in_array($usuario_categoria, ['administrativo', 'colaborador'])) {
     exit();
 }
 
+$usuario_base_id = null;
+if (in_array($usuario_categoria, ['operador', 'supervisor'])) {
+    $row_b = $conn->query("SELECT base_id FROM usuarios WHERE id = " . intval($_SESSION['usuario_id'] ?? 0))->fetch_assoc();
+    $usuario_base_id = $row_b['base_id'] ?? null;
+}
+
 $mensagem = '';
 $mensagem_tipo = '';
 
@@ -22,6 +28,15 @@ if (isset($_GET['msg']) && $_GET['msg'] === 'sucesso') {
 // Lógica de exclusão
 if (isset($_POST['delete_prestador'])) {
     $id_del = intval($_POST['id_delete']);
+    if (intval($usuario_base_id) > 0) {
+        $check = $conn->query("SELECT ps.id FROM prestadores_servico ps JOIN edificios ed ON ps.edificio_id = ed.id WHERE ps.id = $id_del AND ed.base_id = " . intval($usuario_base_id));
+        if (!$check || $check->num_rows == 0) {
+            $mensagem = "Sem permissão para excluir este registro.";
+            $mensagem_tipo = "error";
+            header("Location: consultar_prestador.php?msg=erro_permissao");
+            exit();
+        }
+    }
     $stmt = $conn->prepare("DELETE FROM prestadores_servico WHERE id = ?");
     $stmt->bind_param("i", $id_del);
     if ($stmt->execute()) {
@@ -56,11 +71,20 @@ if (!empty($filtro_data)) {
     $query .= " AND DATE(ps.data_servico) = '" . $conn->real_escape_string($filtro_data) . "'";
 }
 
+if (intval($usuario_base_id) > 0) {
+    $query .= " AND ed.base_id = " . intval($usuario_base_id);
+}
+
 $query .= " ORDER BY ps.data_servico DESC, ps.hora_servico DESC";
 $result = $conn->query($query);
 $prestadores = $result ? fetch_all_assoc($result) : [];
 
-$result_edificios = $conn->query("SELECT e.id, e.nome, b.nome as base_nome FROM edificios e JOIN bases b ON e.base_id = b.id ORDER BY e.nome");
+$sql_edificios = "SELECT e.id, e.nome, b.nome as base_nome FROM edificios e JOIN bases b ON e.base_id = b.id";
+if (intval($usuario_base_id) > 0) {
+    $sql_edificios .= " WHERE e.base_id = " . intval($usuario_base_id);
+}
+$sql_edificios .= " ORDER BY e.nome";
+$result_edificios = $conn->query($sql_edificios);
 $edificios = $result_edificios ? fetch_all_assoc($result_edificios) : [];
 ?>
 <!DOCTYPE html>

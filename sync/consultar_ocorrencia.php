@@ -4,6 +4,11 @@ require_once 'conexao.php';
 require_once 'components/modern_calendar.php';
 
 $usuario_categoria = $_SESSION['usuario_categoria'] ?? '';
+$usuario_base_id = null;
+if (in_array($usuario_categoria, ['operador', 'supervisor'])) {
+    $row_b = $conn->query("SELECT base_id FROM usuarios WHERE id = " . intval($_SESSION['usuario_id'] ?? 0))->fetch_assoc();
+    $usuario_base_id = $row_b['base_id'] ?? null;
+}
 
 if (in_array($usuario_categoria, ['administrador', 'colaborador'])) {
     header("Location: index.php");
@@ -71,7 +76,15 @@ if ($local_filtro) {
     }
 }
 
-$query .= " ORDER BY o.data_ocorrencia DESC, o.periodo_dia DESC, o.id DESC";
+if (intval($usuario_base_id) > 0) {
+    $bid = intval($usuario_base_id);
+    $query .= " AND (e.base_id = $bid OR o.base_id = $bid
+        OR EXISTS (SELECT 1 FROM edificios e2 WHERE e2.base_id = $bid AND FIND_IN_SET(CONCAT('e_', e2.id), o.locais_ids))
+        OR FIND_IN_SET(CONCAT('b_', $bid), o.locais_ids))
+    ";
+}
+
+$query .= " ORDER BY o.data_ocorrencia DESC, o.periodo_dia DESC, o.id ASC";
 $result = $conn->query($query);
 $ocorrencias_raw = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
 
@@ -84,8 +97,14 @@ foreach ($ocorrencias_raw as $row) {
     $livro_plantoes[$key]['registros'][] = $row;
 }
 
-$edificios = $conn->query("SELECT id, nome FROM edificios ORDER BY nome")->fetch_all(MYSQLI_ASSOC);
-$bases = $conn->query("SELECT id, nome FROM bases ORDER BY nome")->fetch_all(MYSQLI_ASSOC);
+if (intval($usuario_base_id) > 0) {
+    $bid = intval($usuario_base_id);
+    $edificios = $conn->query("SELECT id, nome FROM edificios WHERE base_id = $bid ORDER BY nome")->fetch_all(MYSQLI_ASSOC);
+    $bases = $conn->query("SELECT id, nome FROM bases WHERE id = $bid ORDER BY nome")->fetch_all(MYSQLI_ASSOC);
+} else {
+    $edificios = $conn->query("SELECT id, nome FROM edificios ORDER BY nome")->fetch_all(MYSQLI_ASSOC);
+    $bases = $conn->query("SELECT id, nome FROM bases ORDER BY nome")->fetch_all(MYSQLI_ASSOC);
+}
 
 $edificios_map = [];
 foreach ($edificios as $ed) { $edificios_map[$ed['id']] = $ed['nome']; }
@@ -130,9 +149,17 @@ function nomesLocais($locais_ids, $edificios_map, $bases_map) {
         .plantao-card { background: var(--bg-card); border-radius: 1.5rem; border: 1px solid var(--border); margin-bottom: 2rem; overflow: hidden; transition: all 0.3s ease; box-shadow: 0 8px 32px var(--shadow); }
         .plantao-card:hover { box-shadow: 0 12px 28px var(--shadow); }
         .plantao-header { background: var(--bg-secondary); padding: 1.5rem; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
-        .relatorio-body { padding: 2.5rem; }
+        .plantao-details { padding: 1.25rem; }
+        .relatorio-body { background: var(--bg-card); border: 1px solid var(--border); border-radius: 1rem; margin-bottom: 1rem; overflow: hidden; box-shadow: 0 2px 10px var(--shadow); }
+        .relatorio-body:last-child { margin-bottom: 0; }
+        .relatorio-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.9rem 1.25rem; background: var(--bg-secondary); border-bottom: 1px solid var(--border); }
+        .relatorio-body .relatorio-content { padding: 1.5rem 1.75rem; }
+        .relatorio-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 2.1rem; height: 2.1rem; border-radius: 0.6rem; background: #25A937; color: #fff; font-size: 0.85rem; font-weight: 800; flex-shrink: 0; }
+        .relatorio-title { font-size: 1.15rem; font-weight: 800; color: var(--text-primary); line-height: 1.3; }
+        .relatorio-actions { display: flex; gap: 0.5rem; flex-shrink: 0; }
         .mention { background: #D8F5DE; color: #1E8C2E; padding: 2px 6px; border-radius: 4px; font-weight: 600; text-decoration: none; }
         .prose p { margin-bottom: 1rem; line-height: 1.7; font-size: 1.05rem; color: var(--text-secondary); }
+        .prose p:last-child { margin-bottom: 0; }
         .prose img, .prose video { max-width: 240px !important; max-height: 180px !important; border-radius: 10px !important; margin: 0.5rem 0 !important; box-shadow: 0 2px 6px rgba(0,0,0,0.3); cursor: zoom-in; border: 1px solid var(--border); display: block; transition: border-color 0.15s, box-shadow 0.15s; }
         .prose img:hover, .prose video:hover { border-color: var(--secondary-hover); box-shadow: 0 4px 12px rgba(7, 146, 242, 0.2); }
         .prose audio { max-width: 340px; width: 100%; margin: 0.5rem 0; display: block; }
@@ -232,40 +259,44 @@ function nomesLocais($locais_ids, $edificios_map, $bases_map) {
                                     </div>
 
                                     <div id="details-<?= $key ?>" class="hidden overflow-hidden transition-all duration-500">
-                                        <?php foreach ($plantao['registros'] as $reg): ?>
-                                            <div class="relatorio-body border-b border-slate-50 last:border-0">
-                                                <div class="flex justify-between items-start mb-8">
-                                                    <div>
-                                                        <h4 class="text-2xl font-black text-slate-900">
-                                                            <?php
-                                                                $nomes = nomesLocais($reg['locais_ids'], $edificios_map, $bases_map);
-                                                                $titulo_local = $nomes !== '' ? $nomes : ($reg['edificio_nome'] ?: 'Base: ' . $reg['base_direta_nome']);
-                                                            ?>
-                                                            <?= htmlspecialchars($titulo_local) ?>
-                                                        </h4>
-                                                    </div>
-                                                    <?php if ($reg['usuario_id'] == $_SESSION['usuario_id'] || $usuario_categoria === 'gerente'): ?>
-                                                        <div class="flex gap-2">
-                                                            <a href="editar_ocorrencia.php?id=<?= $reg['id'] ?>" class="icon-btn" title="Editar"><i class="fas fa-edit" style="font-size:10px"></i></a>
-                                                            <?php if ($usuario_categoria === 'gerente'): ?>
-                                                                <form method="POST" onsubmit="return confirm('Excluir este registro?');" class="inline">
-                                                                    <input type="hidden" name="id_delete" value="<?= $reg['id'] ?>">
-                                                                    <button type="submit" name="delete_ocorrencia" class="icon-btn-red" title="Excluir"><i class="fas fa-trash-alt" style="font-size:10px"></i></button>
-                                                                </form>
-                                                            <?php endif; ?>
+                                        <div class="plantao-details">
+                                            <?php foreach ($plantao['registros'] as $regIdx => $reg): ?>
+                                                <div class="relatorio-body">
+                                                    <div class="relatorio-header">
+                                                        <div class="flex items-center gap-3 min-w-0">
+                                                            <span class="relatorio-badge"><?= $regIdx + 1 ?></span>
+                                                            <div class="min-w-0">
+                                                                <p class="relatorio-title truncate">
+                                                                    <?php
+                                                                        $nomes = nomesLocais($reg['locais_ids'], $edificios_map, $bases_map);
+                                                                        $titulo_local = $nomes !== '' ? $nomes : ($reg['edificio_nome'] ?: 'Base: ' . $reg['base_direta_nome']);
+                                                                    ?>
+                                                                    <?= htmlspecialchars($titulo_local) ?>
+                                                                </p>
+                                                            </div>
                                                         </div>
-                                                    <?php endif; ?>
+                                                        <?php if ($reg['usuario_id'] == $_SESSION['usuario_id'] || $usuario_categoria === 'gerente'): ?>
+                                                            <div class="relatorio-actions">
+                                                                <a href="editar_ocorrencia.php?id=<?= $reg['id'] ?>" class="icon-btn" title="Editar"><i class="fas fa-edit" style="font-size:10px"></i></a>
+                                                                <?php if ($usuario_categoria === 'gerente'): ?>
+                                                                    <form method="POST" onsubmit="return confirm('Excluir este registro?');" class="inline">
+                                                                        <input type="hidden" name="id_delete" value="<?= $reg['id'] ?>">
+                                                                        <button type="submit" name="delete_ocorrencia" class="icon-btn-red" title="Excluir"><i class="fas fa-trash-alt" style="font-size:10px"></i></button>
+                                                                    </form>
+                                                                <?php endif; ?>
+                                                            </div>
+                                                        <?php endif; ?>
+                                                    </div>
+                                                    <div class="relatorio-content prose max-w-none">
+                                                        <?php 
+                                                            $desc = $reg['descricao'];
+                                                            $desc = preg_replace('/@(\d{2}\/\d{2}\/\d{4})/', '<a href="consultar_ocorrencia.php?data=' . date('Y-m-d', strtotime(str_replace('/', '-', '$1'))) . '" class="mention">@$1</a>', $desc);
+                                                            echo nl2br($desc);
+                                                        ?>
+                                                    </div>
                                                 </div>
-
-                                                <div class="prose max-w-none">
-                                                    <?php 
-                                                        $desc = $reg['descricao'];
-                                                        $desc = preg_replace('/@(\d{2}\/\d{2}\/\d{4})/', '<a href="consultar_ocorrencia.php?data=' . date('Y-m-d', strtotime(str_replace('/', '-', '$1'))) . '" class="mention">@$1</a>', $desc);
-                                                        echo nl2br($desc); 
-                                                    ?>
-                                                </div>
-                                            </div>
-                                        <?php endforeach; ?>
+                                            <?php endforeach; ?>
+                                        </div>
                                     </div>
                                 </div>
                             <?php endforeach; ?>

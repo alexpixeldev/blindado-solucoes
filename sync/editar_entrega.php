@@ -9,6 +9,12 @@ if (in_array($usuario_categoria, ['administrativo', 'colaborador'])) {
     exit();
 }
 
+$usuario_base_id = null;
+if (in_array($usuario_categoria, ['operador', 'supervisor'])) {
+    $row_b = $conn->query("SELECT base_id FROM usuarios WHERE id = " . intval($_SESSION['usuario_id'] ?? 0))->fetch_assoc();
+    $usuario_base_id = $row_b['base_id'] ?? null;
+}
+
 $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
 if (!$id) { header("Location: consultar_entrega.php"); exit(); }
 
@@ -25,6 +31,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $observacao = trim($_POST['observacao']);
 
     if ($edificio_id > 0 && !empty($numero_apartamento) && !empty($data_entrega) && !empty($hora_entrega)) {
+        if (intval($usuario_base_id) > 0) {
+            $check_ed = $conn->query("SELECT id FROM edificios WHERE id = $edificio_id AND base_id = " . intval($usuario_base_id));
+            if (!$check_ed || $check_ed->num_rows == 0) {
+                $mensagem = "Sem permissão para vincular este edifício.";
+                $mensagem_tipo = "error";
+                goto skip_update;
+            }
+        }
         $usuario_id = $_SESSION['usuario_id'];
         $stmt = $conn->prepare("UPDATE entregas SET edificio_id = ?, numero_apartamento = ?, data_entrega = ?, hora_entrega = ?, situacao_recebimento = ?, transportadora = ?, observacao = ?, atualizado_por = ?, data_atualizacao = NOW() WHERE id = ?");
         $stmt->bind_param("issssssii", $edificio_id, $numero_apartamento, $data_entrega, $hora_entrega, $situacao_recebimento, $transportadora, $observacao, $usuario_id, $id);
@@ -41,9 +55,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $mensagem = "Preencha todos os campos obrigatórios!";
         $mensagem_tipo = "error";
     }
+    skip_update:
 }
 
-$stmt = $conn->prepare("SELECT * FROM entregas WHERE id = ?");
+$sql_ent = "SELECT em.* FROM entregas em JOIN edificios ed ON em.edificio_id = ed.id WHERE em.id = ?";
+if (intval($usuario_base_id) > 0) {
+    $sql_ent .= " AND ed.base_id = " . intval($usuario_base_id);
+}
+$stmt = $conn->prepare($sql_ent);
 $stmt->bind_param("i", $id);
 $stmt->execute();
 $entrega = $stmt->get_result()->fetch_assoc();
@@ -51,7 +70,12 @@ $stmt->close();
 
 if (!$entrega) { header("Location: consultar_entrega.php"); exit(); }
 
-$edificios = $conn->query("SELECT e.id, e.nome, b.nome as base_nome FROM edificios e JOIN bases b ON e.base_id = b.id WHERE b.status = 'ativo' ORDER BY e.nome")->fetch_all(MYSQLI_ASSOC);
+$sql_edificios = "SELECT e.id, e.nome, b.nome as base_nome FROM edificios e JOIN bases b ON e.base_id = b.id WHERE b.status = 'ativo'";
+if (intval($usuario_base_id) > 0) {
+    $sql_edificios .= " AND e.base_id = " . intval($usuario_base_id);
+}
+$sql_edificios .= " ORDER BY e.nome";
+$edificios = $conn->query($sql_edificios)->fetch_all(MYSQLI_ASSOC);
 $transportadoras = $conn->query("SELECT nome FROM transportadoras ORDER BY nome")->fetch_all(MYSQLI_ASSOC);
 $situacoes = $conn->query("SELECT nome FROM situacoes_entrega ORDER BY nome")->fetch_all(MYSQLI_ASSOC);
 ?>
