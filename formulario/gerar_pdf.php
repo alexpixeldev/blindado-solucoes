@@ -113,8 +113,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $data_saida = null;
     }
 
-    // Validação básica
-    if ($edificio_id && $numero_apartamento) {
+function documento_valido($raw) {
+    $str = strtoupper(preg_replace('/[^0-9A-Za-z]/', '', $raw));
+    if (strlen($str) < 4) return false;
+    if (preg_match('/^(\w)\1+$/', $str)) return false;
+    if (preg_match('/^\d+$/', $str)) {
+        if (strlen($str) === 11) return cpf_valido($str);
+        if (strlen($str) === 14) return false;
+        return strlen($str) <= 15;
+    }
+    return strlen($str) <= 20;
+}
+
+function cpf_valido($cpf) {
+    if (strlen($cpf) !== 11) return false;
+    $soma = 0;
+    for ($i = 0; $i < 9; $i++) $soma += (int)$cpf[$i] * (10 - $i);
+    $resto = ($soma * 10) % 11;
+    if ($resto == 10 || $resto == 11) $resto = 0;
+    if ($resto !== (int)$cpf[9]) return false;
+    $soma = 0;
+    for ($i = 0; $i < 10; $i++) $soma += (int)$cpf[$i] * (11 - $i);
+    $resto = ($soma * 10) % 11;
+    if ($resto == 10 || $resto == 11) $resto = 0;
+    return $resto === (int)$cpf[10];
+}
+
+// Validação de documentos antes de inserir
+if (!empty($data['inquilinos']) && is_array($data['inquilinos'])) {
+    foreach ($data['inquilinos'] as $inq) {
+        if (!empty($inq['nome']) && !empty($inq['documento']) && !documento_valido($inq['documento'])) {
+            die('Erro: Documento inválido para o hóspede "' . htmlspecialchars(trim($inq['nome'])) . '". Verifique o número digitado.');
+        }
+    }
+}
+
+// Validação básica
+if ($edificio_id && $numero_apartamento) {
         // 1. Inserir na tabela principal (locacoes)
         $data_locacao = date('Y-m-d');
         $stmt = $conn->prepare("INSERT INTO locacoes (edificio_id, tipo_usuario, numero_apartamento, locador_nome, locador_telefone, data_entrada, data_saida, observacoes, data_locacao) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");

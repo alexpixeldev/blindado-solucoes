@@ -74,6 +74,7 @@ class Auth {
             $_SESSION['usuario_nome'] = $user['nome'];
             $_SESSION['usuario_email'] = $user['email'];
             $_SESSION['usuario_categoria'] = $user['categoria'];
+            $_SESSION['login_time'] = time();
             
             self::$user = null;
             return true;

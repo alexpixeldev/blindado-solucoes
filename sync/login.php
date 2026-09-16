@@ -28,6 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['usuario_nome_real'] = $usuario['nome_real'];
         $_SESSION['usuario_categoria'] = strtolower(trim($usuario['categoria']));
         $_SESSION['usuario_base_id'] = $usuario['base_id'] ?? null;
+        $_SESSION['login_time'] = time();
 
         header('Location: index.php');
         exit();
@@ -93,6 +94,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="mb-4 p-3 bg-red-500/10 border-l-4 border-red-500 rounded-r-lg flex items-start gap-2 animate-fade-in">
                         <i class="fas fa-exclamation-circle text-red-400 mt-0.5 text-sm"></i>
                         <div class="text-xs text-red-300 font-medium"><?php echo $erro; ?></div>
+                    </div>
+                <?php endif; ?>
+                <?php if (isset($_GET['expirada'])): ?>
+                    <div class="mb-4 p-3 bg-amber-500/10 border-l-4 border-amber-500 rounded-r-lg flex items-start gap-2 animate-fade-in">
+                        <i class="fas fa-clock text-amber-400 mt-0.5 text-sm"></i>
+                        <div class="text-xs text-amber-200 font-medium">Sua sessão foi encerrada por segurança na troca de plantão. Faça login novamente.</div>
                     </div>
                 <?php endif; ?>
 

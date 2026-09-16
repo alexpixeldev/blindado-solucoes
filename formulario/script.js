@@ -800,6 +800,18 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
 
+        if (currentStep === 2) {
+            const docInputs = step.querySelectorAll('.inquilino-item input[name*="[documento]"]');
+            docInputs.forEach(function (input) {
+                if (!input.value.trim()) return;
+                if (!isValidDocumento(input.value.trim())) {
+                    isValid = false;
+                    showFieldError(input, 'Documento inválido. Digite um CPF, RG ou documento válido.');
+                    if (!firstErrorElement) firstErrorElement = input;
+                }
+            });
+        }
+
         if (!isValid && firstErrorElement) {
             const container = firstErrorElement.closest('.field-container') || firstErrorElement.parentElement;
             container.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -825,6 +837,50 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             element.insertAdjacentHTML('afterend', errorHtml);
         }
+    }
+
+    function isValidDocumento(raw) {
+        const str = (raw || '').replace(/[^0-9A-Za-z]/g, '').toUpperCase();
+        if (str.length < 4) return false;
+        if (/^(\w)\1+$/.test(str)) return false;
+        if (/^\d+$/.test(str)) {
+            if (str.length === 11) return isValidCPF(str);
+            if (str.length === 14) return false;
+            return str.length <= 15;
+        }
+        return str.length <= 20;
+    }
+
+    function isValidCPF(cpf) {
+        cpf = cpf.replace(/\D/g, '');
+        if (cpf.length !== 11) return false;
+        let soma = 0;
+        for (let i = 0; i < 9; i++) soma += parseInt(cpf.charAt(i)) * (10 - i);
+        let resto = (soma * 10) % 11;
+        if (resto === 10 || resto === 11) resto = 0;
+        if (resto !== parseInt(cpf.charAt(9))) return false;
+        soma = 0;
+        for (let i = 0; i < 10; i++) soma += parseInt(cpf.charAt(i)) * (11 - i);
+        resto = (soma * 10) % 11;
+        if (resto === 10 || resto === 11) resto = 0;
+        return resto === parseInt(cpf.charAt(10));
+    }
+
+    function isValidCNPJ(cnpj) {
+        cnpj = cnpj.replace(/\D/g, '');
+        if (cnpj.length !== 14) return false;
+        function calcDigito(base) {
+            let soma = 0;
+            let peso = 2;
+            for (let i = base - 1; i >= 0; i--) {
+                soma += parseInt(cnpj.charAt(i)) * peso;
+                peso = peso === 9 ? 2 : peso + 1;
+            }
+            const r = soma % 11;
+            return r < 2 ? 0 : 11 - r;
+        }
+        if (calcDigito(12) !== parseInt(cnpj.charAt(12))) return false;
+        return calcDigito(13) === parseInt(cnpj.charAt(13));
     }
 
     function clearAllErrors() {
@@ -953,23 +1009,13 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(result => {
             if (result.status === 'success') {
-                const msg = generateWhatsAppMessage(formData);
-                let telefone = '';
-                
-                if (data.user_type === 'locatario') {
-                    const ddi = data.locador_ddi ? data.locador_ddi.replace(/\D/g, '') : '55';
-                    const numero = data.locador_telefone ? data.locador_telefone.replace(/\D/g, '') : '';
-                    telefone = ddi + numero;
-                } else {
-                    const edificio = EDIFICIOS_DATA.find(e => e.id == data.edificio_id);
-                    telefone = edificio && edificio.telefone ? edificio.telefone.replace(/\D/g, '') : '';
-                    if (telefone && !telefone.startsWith('55') && telefone.length <= 11) {
-                        telefone = '55' + telefone;
-                    }
-                }
-                
-                const whatsappUrl = `https://api.whatsapp.com/send?phone=${telefone}&text=${msg}`;
-                window.location.href = whatsappUrl;
+                const whatsappUrl = buildWhatsAppUrl(formData, data);
+                sessionStorage.setItem('whatsapp_locacao', whatsappUrl);
+                window.location.href = 'sucesso.php';
+            } else if (result.status === 'duplicate') {
+                const whatsappUrl = buildWhatsAppUrl(formData, data);
+                sessionStorage.setItem('reativacao_locacao', whatsappUrl);
+                window.location.href = 'sucesso.php?duplicado=1';
             } else {
                 throw new Error(result.message || 'Erro ao salvar');
             }
@@ -981,6 +1027,25 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             alert(err.message || 'Erro ao salvar os dados. Tente novamente.');
         });
+    }
+
+    function buildWhatsAppUrl(formData, data) {
+        const msg = generateWhatsAppMessage(formData);
+        let telefone = '';
+
+        if (data.user_type === 'locatario') {
+            const ddi = data.locador_ddi ? data.locador_ddi.replace(/\D/g, '') : '55';
+            const numero = data.locador_telefone ? data.locador_telefone.replace(/\D/g, '') : '';
+            telefone = ddi + numero;
+        } else {
+            const edificio = EDIFICIOS_DATA.find(e => e.id == data.edificio_id);
+            telefone = edificio && edificio.telefone ? edificio.telefone.replace(/\D/g, '') : '';
+            if (telefone && !telefone.startsWith('55') && telefone.length <= 11) {
+                telefone = '55' + telefone;
+            }
+        }
+
+        return `https://api.whatsapp.com/send?phone=${telefone}&text=${msg}`;
     }
 
     function generateWhatsAppMessage(formData) {

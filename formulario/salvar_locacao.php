@@ -119,13 +119,39 @@ function ensure_locacoes_schema($conn) {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 }
 
-function assert_prepare($stmt, $conn, $message) {
-    if (!$stmt) {
-        $error = $conn->error ?: 'unknown error';
-        error_log("salvar_locacao.php prepare error ({$message}): $error");
-        sendJsonError('Erro interno no servidor ao preparar a consulta: ' . $error, $error);
+function documento_valido($raw) {
+    $str = strtoupper(preg_replace('/[^0-9A-Za-z]/', '', $raw));
+    if (strlen($str) < 4) return false;
+    if (preg_match('/^(\w)\1+$/', $str)) return false;
+    if (preg_match('/^\d+$/', $str)) {
+        if (strlen($str) === 11) return cpf_valido($str);
+        if (strlen($str) === 14) return false;
+        return strlen($str) <= 15;
     }
+    return strlen($str) <= 20;
 }
+
+function cpf_valido($cpf) {
+    if (strlen($cpf) !== 11) return false;
+    $soma = 0;
+    for ($i = 0; $i < 9; $i++) $soma += (int)$cpf[$i] * (10 - $i);
+    $resto = ($soma * 10) % 11;
+    if ($resto == 10 || $resto == 11) $resto = 0;
+    if ($resto !== (int)$cpf[9]) return false;
+    $soma = 0;
+    for ($i = 0; $i < 10; $i++) $soma += (int)$cpf[$i] * (11 - $i);
+    $resto = ($soma * 10) % 11;
+    if ($resto == 10 || $resto == 11) $resto = 0;
+    return $resto === (int)$cpf[10];
+}
+
+function assert_prepare($stmt, $conn, $message) {
+        if (!$stmt) {
+            $error = $conn->error ?: 'unknown error';
+            error_log("salvar_locacao.php prepare error ({$message}): $error");
+            sendJsonError('Erro interno no servidor ao preparar a consulta: ' . $error, $error);
+        }
+    }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     ensure_locacoes_schema($conn);
@@ -222,10 +248,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $msg = 'Estas informações já foram enviadas para este apartamento nesta data. Para registrar uma nova locação, utilize datas e/ou dados diferentes.';
         if ($is_ajax) {
             header('Content-Type: application/json; charset=utf-8');
-            echo json_encode(['status' => 'error', 'message' => $msg]);
+            echo json_encode(['status' => 'duplicate', 'message' => $msg]);
             exit;
         }
         die('Erro: ' . $msg);
+    }
+
+    if (!empty($_POST['inquilinos']) && is_array($_POST['inquilinos'])) {
+        foreach ($_POST['inquilinos'] as $inq) {
+            if (!empty($inq['nome']) && !empty($inq['documento']) && !documento_valido($inq['documento'])) {
+                $msg = 'Documento inválido para o hóspede "' . trim($inq['nome']) . '". Verifique o número digitado.';
+                if ($is_ajax) {
+                    header('Content-Type: application/json; charset=utf-8');
+                    echo json_encode(['status' => 'error', 'message' => $msg]);
+                    exit;
+                }
+                die('Erro: ' . $msg);
+            }
+        }
     }
 
     // 1. Inserir na tabela principal (locacoes)
