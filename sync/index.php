@@ -446,7 +446,7 @@ if (in_array($usuario_categoria, ['operador', 'supervisor'])) {
                             <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 transition-colors group-hover:bg-blue-600 group-hover:text-white">
                                 <i class="fas fa-edit text-xl"></i>
                             </div>
-                            <span class="text-sm font-semibold text-slate-700">Registrar Ocorrência</span>
+                            <span class="text-sm font-semibold text-slate-700">Registrar Relatório</span>
                         </div>
                     </a>
                     <a href="consultar_ocorrencia.php" class="admin-card group block cursor-pointer hover:border-purple-300">
@@ -454,7 +454,7 @@ if (in_array($usuario_categoria, ['operador', 'supervisor'])) {
                             <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-50 text-purple-600 transition-colors group-hover:bg-purple-600 group-hover:text-white">
                                 <i class="fas fa-search text-xl"></i>
                             </div>
-                            <span class="text-sm font-semibold text-slate-700">Consultar Ocorrências</span>
+                            <span class="text-sm font-semibold text-slate-700">Consultar Relatórios</span>
                         </div>
                     </a>
                 </div>

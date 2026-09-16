@@ -233,9 +233,13 @@ if (isset($_SESSION['mensagem'])) {
                                                 <?php 
                                                     $cat_colors = [
                                                         'gerente' => 'bg-purple-100 text-purple-700',
+                                                        'gerente_monitoramento' => 'bg-purple-100 text-purple-700',
+                                                        'gerente_zeladoria' => 'bg-purple-100 text-purple-700',
+                                                        'gerente_tecnica' => 'bg-purple-100 text-purple-700',
                                                         'diretor' => 'bg-indigo-100 text-indigo-700',
                                                         'tecnico' => 'bg-cyan-100 text-cyan-700',
                                                         'supervisor' => 'bg-blue-100 text-blue-700',
+                                                        'supervisor_zeladoria' => 'bg-blue-100 text-blue-700',
                                                         'administrativo' => 'bg-green-100 text-green-700',
                                                         'operador' => 'bg-orange-100 text-orange-700',
                                                         'rondante' => 'bg-amber-100 text-amber-700',
@@ -244,7 +248,7 @@ if (isset($_SESSION['mensagem'])) {
                                                     $color = $cat_colors[$usuario['categoria']] ?? 'bg-slate-100 text-slate-700';
                                                 ?>
                                                 <span class="inline-flex items-center rounded-lg px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider <?= $color ?>">
-                                                    <?= ucfirst($usuario['categoria']) ?>
+                                                    <?= categoria_label($usuario['categoria']) ?>
                                                 </span>
                                             </td>
                                             <td>

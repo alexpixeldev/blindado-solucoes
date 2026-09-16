@@ -14,6 +14,35 @@ if (!$id) {
     exit();
 }
 
+// Exclusão de ação disciplinar
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_disciplina'])) {
+    $acao_id = intval($_POST['acao_id']);
+    $stmt = $conn->prepare("SELECT arquivo FROM acoes_disciplinares WHERE id = ? AND usuario_id = ?");
+    $stmt->bind_param("ii", $acao_id, $id);
+    $stmt->execute();
+    $acao = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+
+    if ($acao) {
+        $stmt = $conn->prepare("DELETE FROM acoes_disciplinares WHERE id = ? AND usuario_id = ?");
+        $stmt->bind_param("ii", $acao_id, $id);
+        if ($stmt->execute()) {
+            if (!empty($acao['arquivo'])) {
+                $filePath = realpath(__DIR__ . '/..') . "/uploads/disciplina/" . $acao['arquivo'];
+                if (file_exists($filePath)) unlink($filePath);
+            }
+            $_SESSION['mensagem'] = "Ação disciplinar excluída com sucesso!";
+            $_SESSION['mensagem_tipo'] = "success";
+        } else {
+            $_SESSION['mensagem'] = "Erro ao excluir: " . $stmt->error;
+            $_SESSION['mensagem_tipo'] = "error";
+        }
+        $stmt->close();
+    }
+    header("Location: ver_disciplina.php?id=" . $id);
+    exit();
+}
+
 // Buscar dados do colaborador
 $stmt = $conn->prepare("SELECT nome, nome_real FROM usuarios WHERE id = ?");
 $stmt->bind_param("i", $id);
@@ -123,10 +152,14 @@ $stmt->close();
                                             </td>
                                             <td class="px-6 py-4">
                                                 <div class="flex items-center justify-center gap-2">
-                                                    <?php if (!empty($a['arquivo'])): ?>
+                                                                                                        <?php if (!empty($a['arquivo'])): ?>
                                                         <a href="../uploads/disciplina/<?= htmlspecialchars($a['arquivo']) ?>" target="_blank" class="icon-btn-blue" title="Ver Anexo"><i class="fas fa-paperclip" style="font-size:10px"></i></a>
                                                     <?php endif; ?>
                                                     <a href="editar_disciplina.php?id=<?= $a['id'] ?>" class="icon-btn" title="Editar"><i class="fas fa-edit" style="font-size:10px"></i></a>
+                                                    <form method="POST" class="flex" onsubmit="return confirm('Excluir esta ação disciplinar? Esta ação não pode ser desfeita.');">
+                                                        <input type="hidden" name="acao_id" value="<?= $a['id'] ?>">
+                                                        <button type="submit" name="delete_disciplina" class="icon-btn-red" title="Excluir"><i class="fas fa-trash" style="font-size:10px"></i></button>
+                                                    </form>
                                                 </div>
                                             </td>
                                         </tr>

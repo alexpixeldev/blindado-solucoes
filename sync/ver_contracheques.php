@@ -14,6 +14,38 @@ if (!$id) {
     exit();
 }
 
+// Exclusão de contracheque
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_contracheque'])) {
+    $cc_id = intval($_POST['contracheque_id']);
+    $stmt = $conn->prepare("SELECT arquivo FROM contracheques WHERE id = ? AND usuario_id = ?");
+    $stmt->bind_param("ii", $cc_id, $id);
+    $stmt->execute();
+    $cc = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+
+    if (!$cc) {
+        $_SESSION['mensagem'] = "Contracheque não encontrado.";
+        $_SESSION['mensagem_tipo'] = "error";
+    } else {
+        $stmt = $conn->prepare("DELETE FROM contracheques WHERE id = ? AND usuario_id = ?");
+        $stmt->bind_param("ii", $cc_id, $id);
+        if ($stmt->execute()) {
+            if (!empty($cc['arquivo'])) {
+                $filePath = realpath(__DIR__ . '/..') . "/uploads/contracheques/" . $cc['arquivo'];
+                if (file_exists($filePath)) unlink($filePath);
+            }
+            $_SESSION['mensagem'] = "Contracheque excluído com sucesso!";
+            $_SESSION['mensagem_tipo'] = "success";
+        } else {
+            $_SESSION['mensagem'] = "Erro ao excluir contracheque: " . $conn->error;
+            $_SESSION['mensagem_tipo'] = "error";
+        }
+        $stmt->close();
+    }
+    header("Location: ver_contracheques.php?id=" . $id);
+    exit();
+}
+
 // Fetch collaborator data
 $stmt = $conn->prepare("SELECT nome, nome_real FROM usuarios WHERE id = ?");
 $stmt->bind_param("i", $id);
@@ -33,6 +65,10 @@ $stmt->execute();
 $result = $stmt->get_result();
 $contracheques = $result->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
+
+$mensagem = $_SESSION['mensagem'] ?? '';
+$mensagem_tipo = $_SESSION['mensagem_tipo'] ?? 'info';
+unset($_SESSION['mensagem'], $_SESSION['mensagem_tipo']);
 
 $meses = [
     1 => 'Janeiro', 2 => 'Fevereiro', 3 => 'Março', 4 => 'Abril',
@@ -87,6 +123,13 @@ $meses = [
                     </div>
                 </div>
 
+                <?php if ($mensagem): ?>
+                    <div class="mb-6 p-4 <?php echo $mensagem_tipo === 'success' ? 'bg-green-50 border-green-500 text-green-700' : 'bg-red-50 border-red-500 text-red-700'; ?> border-l-4 rounded-r-xl flex items-start gap-3 animate-fade-in">
+                        <i class="fas <?php echo $mensagem_tipo === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'; ?> mt-0.5"></i>
+                        <div class="text-sm font-medium"><?php echo htmlspecialchars($mensagem); ?></div>
+                    </div>
+                <?php endif; ?>
+
                 <div class="admin-card overflow-hidden animate-slide-up">
                     <div class="overflow-x-auto">
                         <table class="w-full text-left border-collapse">
@@ -123,6 +166,10 @@ $meses = [
                                             <td class="px-6 py-4">
                                                 <div class="flex items-center justify-center gap-2">
                                                     <a href="editar_contracheque.php?id=<?= $cc['id'] ?>" class="icon-btn-blue" title="Trocar Arquivo"><i class="fas fa-exchange-alt" style="font-size:10px"></i></a>
+                                                    <form method="POST" class="flex" onsubmit="return confirm('Excluir este contracheque? Esta ação não pode ser desfeita.');">
+                                                        <input type="hidden" name="contracheque_id" value="<?= $cc['id'] ?>">
+                                                        <button type="submit" name="delete_contracheque" class="icon-btn-red" title="Excluir"><i class="fas fa-trash" style="font-size:10px"></i></button>
+                                                    </form>
                                                 </div>
                                             </td>
                                         </tr>

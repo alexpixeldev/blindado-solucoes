@@ -8,6 +8,27 @@ if (!in_array($_SESSION['usuario_categoria'], ['administrativo', 'gerente', 'sup
     exit();
 }
 
+// Exclusão de colaborador (apenas Administrativo)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_colaborador']) && $_SESSION['usuario_categoria'] === 'administrativo') {
+    $id = intval($_POST['id']);
+    $stmt = $conn->prepare("DELETE FROM usuarios WHERE id = ? AND categoria = 'colaborador'");
+    $stmt->bind_param("i", $id);
+    if ($stmt->execute()) {
+        $_SESSION['mensagem'] = "Colaborador excluído com sucesso!";
+        $_SESSION['mensagem_tipo'] = "success";
+    } else {
+        $_SESSION['mensagem'] = "Erro ao excluir colaborador: " . $conn->error;
+        $_SESSION['mensagem_tipo'] = "error";
+    }
+    $stmt->close();
+    header("Location: listar_colaboradores.php");
+    exit();
+}
+
+$mensagem = $_SESSION['mensagem'] ?? '';
+$mensagem_tipo = $_SESSION['mensagem_tipo'] ?? 'info';
+unset($_SESSION['mensagem'], $_SESSION['mensagem_tipo']);
+
 $search = isset($_GET['search']) ? $_GET['search'] : '';
 
 // Buscar apenas colaboradores
@@ -33,7 +54,7 @@ $stmt->close();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ações Disciplinares | Blindado Soluções</title>
+    <title>Colaboradores | Blindado Soluções</title>
     <link rel="icon" type="image/png" href="../img/escudo.png">
     
     <!-- Tailwind CSS -->
@@ -63,9 +84,26 @@ $stmt->close();
             <main class="flex-1 overflow-y-auto p-4 sm:p-8 custom-scrollbar">
                 <!-- Page Header -->
                 <div class="mb-8 animate-fade-in">
-                    <h1 class="text-2xl font-bold text-slate-900 sm:text-3xl">Ações Disciplinares</h1>
-                    <p class="mt-1 text-slate-500">Gerencie e registre as ocorrências disciplinares dos colaboradores.</p>
+                    <div class="flex items-center justify-between gap-4">
+                        <div>
+                            <h1 class="text-2xl font-bold text-slate-900 sm:text-3xl">Colaboradores</h1>
+                            <p class="mt-1 text-slate-500">Visualize e gerencie os colaboradores da empresa.</p>
+                        </div>
+                        <?php if ($_SESSION['usuario_categoria'] === 'administrativo'): ?>
+                        <a href="criar_colaborador.php" class="btn btn-primary btn-sm">
+                            <i class="fas fa-plus"></i>
+                            <span>Cadastrar Colaborador</span>
+                        </a>
+                        <?php endif; ?>
+                    </div>
                 </div>
+
+                <?php if ($mensagem): ?>
+                    <div class="mb-6 p-4 <?php echo $mensagem_tipo === 'success' ? 'bg-green-50 border-green-500 text-green-700' : 'bg-red-50 border-red-500 text-red-700'; ?> border-l-4 rounded-r-xl flex items-start gap-3 animate-fade-in">
+                        <i class="fas <?php echo $mensagem_tipo === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'; ?> mt-0.5"></i>
+                        <div class="text-sm font-medium"><?php echo htmlspecialchars($mensagem); ?></div>
+                    </div>
+                <?php endif; ?>
 
                 <!-- Search Card -->
                 <div class="mb-6 animate-slide-up">
@@ -116,6 +154,17 @@ $stmt->close();
                                                     <span>Ver Detalhes</span>
                                                 </a>
                                                 <?php if ($_SESSION['usuario_categoria'] === 'administrativo'): ?>
+                                                <a href="editar_colaborador.php?id=<?= $colab['id'] ?>" class="btn btn-secondary btn-sm">
+                                                    <i class="fas fa-edit"></i>
+                                                    <span>Editar</span>
+                                                </a>
+                                                <form method="POST" class="flex" onsubmit="return confirm('Excluir este colaborador? Esta ação não pode ser desfeita.');">
+                                                    <input type="hidden" name="id" value="<?= $colab['id'] ?>">
+                                                    <button type="submit" name="delete_colaborador" class="btn btn-danger btn-sm">
+                                                        <i class="fas fa-trash"></i>
+                                                        <span>Excluir</span>
+                                                    </button>
+                                                </form>
                                                 <a href="registrar_acao_disciplinar.php?id=<?= $colab['id'] ?>" class="btn btn-danger btn-sm">
                                                     <i class="fas fa-gavel"></i>
                                                     <span>Registrar Disciplina</span>

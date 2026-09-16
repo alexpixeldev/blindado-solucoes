@@ -16,17 +16,28 @@ if (!$id) {
 
 // Processar exclusão de falta
 if (isset($_POST['delete_falta'])) {
-    $falta_id = $_POST['falta_id'];
-    $stmt = $conn->prepare("DELETE FROM faltas WHERE id = ? AND usuario_id = ?");
+    $falta_id = intval($_POST['falta_id']);
+    $stmt = $conn->prepare("SELECT arquivo FROM faltas WHERE id = ? AND usuario_id = ?");
     $stmt->bind_param("ii", $falta_id, $id);
-    if ($stmt->execute()) {
-        $mensagem = "Falta excluída com sucesso.";
-        $mensagem_tipo = "success";
-    } else {
-        $mensagem = "Erro ao excluir: " . $stmt->error;
-        $mensagem_tipo = "error";
-    }
+    $stmt->execute();
+    $falta = $stmt->get_result()->fetch_assoc();
     $stmt->close();
+    if ($falta) {
+        $stmt = $conn->prepare("DELETE FROM faltas WHERE id = ? AND usuario_id = ?");
+        $stmt->bind_param("ii", $falta_id, $id);
+        if ($stmt->execute()) {
+            if (!empty($falta['arquivo'])) {
+                $filePath = realpath(__DIR__ . '/..') . "/uploads/faltas/" . $falta['arquivo'];
+                if (file_exists($filePath)) unlink($filePath);
+            }
+            $mensagem = "Falta excluída com sucesso.";
+            $mensagem_tipo = "success";
+        } else {
+            $mensagem = "Erro ao excluir: " . $stmt->error;
+            $mensagem_tipo = "error";
+        }
+        $stmt->close();
+    }
 }
 
 // Buscar dados do colaborador
@@ -149,6 +160,10 @@ $stmt->close();
                                                         <a href="../uploads/faltas/<?= htmlspecialchars($f['arquivo']) ?>" target="_blank" class="icon-btn-blue" title="Ver Anexo"><i class="fas fa-paperclip" style="font-size:10px"></i></a>
                                                     <?php endif; ?>
                                                     <a href="editar_falta.php?id=<?= $f['id'] ?>" class="icon-btn" title="Editar"><i class="fas fa-edit" style="font-size:10px"></i></a>
+                                                    <form method="POST" class="flex" onsubmit="return confirm('Excluir esta falta? Esta ação não pode ser desfeita.');">
+                                                        <input type="hidden" name="falta_id" value="<?= $f['id'] ?>">
+                                                        <button type="submit" name="delete_falta" class="icon-btn-red" title="Excluir"><i class="fas fa-trash" style="font-size:10px"></i></button>
+                                                    </form>
                                                 </div>
                                             </td>
                                         </tr>

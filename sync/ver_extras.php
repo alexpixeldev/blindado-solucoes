@@ -38,6 +38,42 @@ $stmt->bind_param("i", $id);
 $stmt->execute();
 $extras = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
+
+$mensagem = $_SESSION['mensagem'] ?? '';
+$mensagem_tipo = $_SESSION['mensagem_tipo'] ?? 'info';
+unset($_SESSION['mensagem'], $_SESSION['mensagem_tipo']);
+
+// Exclusão de extra
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_extra'])) {
+    $extra_id = intval($_POST['extra_id']);
+    $stmt = $conn->prepare("SELECT arquivo FROM extras WHERE id = ? AND usuario_id = ?");
+    $stmt->bind_param("ii", $extra_id, $id);
+    $stmt->execute();
+    $arquivo = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+
+    if (!$arquivo) {
+        $_SESSION['mensagem'] = "Extra não encontrado.";
+        $_SESSION['mensagem_tipo'] = "error";
+    } else {
+        $stmt = $conn->prepare("DELETE FROM extras WHERE id = ?");
+        $stmt->bind_param("i", $extra_id);
+        if ($stmt->execute()) {
+            if (!empty($arquivo['arquivo'])) {
+                $filePath = realpath(__DIR__ . '/..') . "/uploads/extras/" . $arquivo['arquivo'];
+                if (file_exists($filePath)) unlink($filePath);
+            }
+            $_SESSION['mensagem'] = "Extra excluído com sucesso!";
+            $_SESSION['mensagem_tipo'] = "success";
+        } else {
+            $_SESSION['mensagem'] = "Erro ao excluir extra: " . $conn->error;
+            $_SESSION['mensagem_tipo'] = "error";
+        }
+        $stmt->close();
+    }
+    header("Location: ver_extras.php?id=" . $id);
+    exit();
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-br" class="h-full bg-slate-50">
@@ -86,6 +122,13 @@ $stmt->close();
                     </div>
                 </div>
 
+                <?php if ($mensagem): ?>
+                    <div class="mb-6 p-4 <?php echo $mensagem_tipo === 'success' ? 'bg-green-50 border-green-500 text-green-700' : 'bg-red-50 border-red-500 text-red-700'; ?> border-l-4 rounded-r-xl flex items-start gap-3 animate-fade-in">
+                        <i class="fas <?php echo $mensagem_tipo === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'; ?> mt-0.5"></i>
+                        <div class="text-sm font-medium"><?php echo htmlspecialchars($mensagem); ?></div>
+                    </div>
+                <?php endif; ?>
+
                 <div class="admin-card overflow-hidden animate-slide-up">
                     <div class="overflow-x-auto">
                         <table class="w-full text-left border-collapse">
@@ -129,6 +172,10 @@ $stmt->close();
                                                         <a href="../uploads/extras/<?= htmlspecialchars($e['arquivo']) ?>" target="_blank" class="icon-btn-blue" title="Ver Anexo"><i class="fas fa-paperclip" style="font-size:10px"></i></a>
                                                     <?php endif; ?>
                                                     <a href="editar_extra.php?id=<?= $e['id'] ?>" class="icon-btn" title="Editar"><i class="fas fa-edit" style="font-size:10px"></i></a>
+                                                    <form method="POST" class="flex" onsubmit="return confirm('Excluir este extra? Esta ação não pode ser desfeita.');">
+                                                        <input type="hidden" name="extra_id" value="<?= $e['id'] ?>">
+                                                        <button type="submit" name="delete_extra" class="icon-btn-red" title="Excluir"><i class="fas fa-trash" style="font-size:10px"></i></button>
+                                                    </form>
                                                 </div>
                                             </td>
                                         </tr>

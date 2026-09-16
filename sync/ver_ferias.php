@@ -14,6 +14,38 @@ if (!$id) {
     exit();
 }
 
+// Exclusão de férias
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_ferias'])) {
+    $ferias_id = intval($_POST['ferias_id']);
+    $stmt = $conn->prepare("SELECT arquivo FROM ferias WHERE id = ? AND usuario_id = ?");
+    $stmt->bind_param("ii", $ferias_id, $id);
+    $stmt->execute();
+    $ferias_row = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+
+    if (!$ferias_row) {
+        $_SESSION['mensagem'] = "Registro de férias não encontrado.";
+        $_SESSION['mensagem_tipo'] = "error";
+    } else {
+        $stmt = $conn->prepare("DELETE FROM ferias WHERE id = ? AND usuario_id = ?");
+        $stmt->bind_param("ii", $ferias_id, $id);
+        if ($stmt->execute()) {
+            if (!empty($ferias_row['arquivo'])) {
+                $filePath = realpath(__DIR__ . '/..') . "/uploads/ferias/" . $ferias_row['arquivo'];
+                if (file_exists($filePath)) unlink($filePath);
+            }
+            $_SESSION['mensagem'] = "Registro de férias excluído com sucesso!";
+            $_SESSION['mensagem_tipo'] = "success";
+        } else {
+            $_SESSION['mensagem'] = "Erro ao excluir registro de férias: " . $conn->error;
+            $_SESSION['mensagem_tipo'] = "error";
+        }
+        $stmt->close();
+    }
+    header("Location: ver_ferias.php?id=" . $id);
+    exit();
+}
+
 // Buscar dados do colaborador
 $stmt = $conn->prepare("SELECT nome, nome_real FROM usuarios WHERE id = ?");
 $stmt->bind_param("i", $id);
@@ -32,6 +64,10 @@ $stmt->bind_param("i", $id);
 $stmt->execute();
 $ferias = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
+
+$mensagem = $_SESSION['mensagem'] ?? '';
+$mensagem_tipo = $_SESSION['mensagem_tipo'] ?? 'info';
+unset($_SESSION['mensagem'], $_SESSION['mensagem_tipo']);
 ?>
 <!DOCTYPE html>
 <html lang="pt-br" class="h-full bg-slate-50">
@@ -117,6 +153,10 @@ $stmt->close();
                                                 <div class="flex items-center justify-center gap-2">
                                                     <a href="../uploads/ferias/<?= htmlspecialchars($f['arquivo']) ?>" target="_blank" class="icon-btn-blue" title="Ver Documento"><i class="fas fa-file-pdf" style="font-size:10px"></i></a>
                                                     <a href="editar_ferias.php?id=<?= $f['id'] ?>" class="icon-btn" title="Editar"><i class="fas fa-edit" style="font-size:10px"></i></a>
+                                                    <form method="POST" class="flex" onsubmit="return confirm('Excluir este registro de férias? Esta ação não pode ser desfeita.');">
+                                                        <input type="hidden" name="ferias_id" value="<?= $f['id'] ?>">
+                                                        <button type="submit" name="delete_ferias" class="icon-btn-red" title="Excluir"><i class="fas fa-trash" style="font-size:10px"></i></button>
+                                                    </form>
                                                 </div>
                                             </td>
                                         </tr>
