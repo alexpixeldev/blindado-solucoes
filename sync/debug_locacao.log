@@ -80,3 +80,7 @@ post_max_size=40M upload_max_filesize=40M
 POST keys: edificio_id, user_type, numero_apartamento, locador_nome, data_entrada, data_saida, observacoes
 FILES summary: 
 post_max_size=40M upload_max_filesize=40M
+[2026-09-16 17:26:29] Início de request POST
+POST keys: user_type, locador_nome, locador_ddi, locador_telefone, edificio_id, numero_apartamento, inquilinos, veiculos, data_entrada, data_saida
+FILES summary: inquilinos: nested file array
+post_max_size=40M upload_max_filesize=40M

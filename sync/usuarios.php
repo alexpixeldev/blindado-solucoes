@@ -15,21 +15,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['nome'], $_POST['categ
     $nome = trim($_POST['nome']);
     $nome_real = trim($_POST['nome_real'] ?? '');
     $whatsapp = trim($_POST['whatsapp'] ?? '');
-    // Supervisor só pode criar usuários do tipo Colaborador
-    $categoria = $usuario_categoria === 'supervisor' ? 'colaborador' : $_POST['categoria'];
+    // Supervisor só pode criar usuários do tipo Operador
+    $categoria = $usuario_categoria === 'supervisor' ? 'operador' : $_POST['categoria'];
     $base_id = !empty($_POST['base_id']) ? intval($_POST['base_id']) : null;
-    $senha = password_hash($_POST['senha'], PASSWORD_DEFAULT);
 
-    $stmt = $conn->prepare("INSERT INTO usuarios (nome, nome_real, whatsapp, categoria, base_id, senha) VALUES (?, ?, ?, ?, ?, ?)");
-    $stmt->bind_param("ssssis", $nome, $nome_real, $whatsapp, $categoria, $base_id, $senha);
-    if ($stmt->execute()) {
-        $mensagem = "Usuário '$nome' criado com sucesso!";
-        $mensagem_tipo = "success";
-    } else {
-        $mensagem = "Erro ao criar usuário: " . $conn->error;
-        $mensagem_tipo = "error";
+    // Operador deve estar vinculado a uma base válida
+    $validacao_ok = true;
+    if ($categoria === 'operador' && $usuario_categoria === 'supervisor') {
+        if (empty($base_id)) {
+            $mensagem = "Operadores devem estar vinculados a uma base.";
+            $mensagem_tipo = "error";
+            $validacao_ok = false;
+        } else {
+            $checkBase = $conn->query("SELECT id FROM bases WHERE id = $base_id AND status = 'ativo'");
+            if ($checkBase && $checkBase->num_rows === 0) {
+                $mensagem = "Base selecionada não é válida.";
+                $mensagem_tipo = "error";
+                $base_id = null;
+                $validacao_ok = false;
+            }
+        }
     }
-    $stmt->close();
+
+    if ($validacao_ok) {
+        $senha = password_hash($_POST['senha'], PASSWORD_DEFAULT);
+
+        $stmt = $conn->prepare("INSERT INTO usuarios (nome, nome_real, whatsapp, categoria, base_id, senha) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("ssssis", $nome, $nome_real, $whatsapp, $categoria, $base_id, $senha);
+        if ($stmt->execute()) {
+            $mensagem = "Usuário '$nome' criado com sucesso!";
+            $mensagem_tipo = "success";
+        } else {
+            $mensagem = "Erro ao criar usuário: " . $conn->error;
+            $mensagem_tipo = "error";
+        }
+        $stmt->close();
+    }
 }
 
 if (isset($_POST['delete_usuario'])) {
@@ -141,8 +162,10 @@ if (isset($_SESSION['mensagem'])) {
                                     <label class="form-label">Categoria / Nível</label>
                                     <div class="relative">
                                         <select name="categoria" class="form-input appearance-none pr-10" required <?= $usuario_categoria === 'supervisor' ? 'disabled' : '' ?>>
-                                            <option value="colaborador" <?= $usuario_categoria === 'supervisor' ? 'selected' : '' ?>>Colaborador</option>
-                                            <?php if ($usuario_categoria !== 'supervisor'): ?>
+                                            <?php if ($usuario_categoria === 'supervisor'): ?>
+                                                <option value="operador" selected>Operador</option>
+                                            <?php else: ?>
+                                                <option value="colaborador">Colaborador</option>
                                                 <option value="gerente">Gerente</option>
                                                 <option value="diretor">Diretor</option>
                                                 <option value="tecnico">Técnico</option>
@@ -153,17 +176,17 @@ if (isset($_SESSION['mensagem'])) {
                                             <?php endif; ?>
                                         </select>
                                         <?php if ($usuario_categoria === 'supervisor'): ?>
-                                            <input type="hidden" name="categoria" value="colaborador">
-                                            <p class="mt-2 text-xs text-slate-500">Supervisores podem criar apenas usuários do tipo <strong>Colaborador</strong>.</p>
+                                            <input type="hidden" name="categoria" value="operador">
+                                            <p class="mt-2 text-xs text-slate-500">Supervisores podem criar apenas usuários do tipo <strong>Operador</strong>.</p>
                                         <?php endif; ?>
                                         <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
                                             <i class="fas fa-chevron-down text-slate-400 text-xs"></i>
                                         </div>
                                     </div>
                                 </div>
-                                <div id="base-field" class="space-y-2" style="display:none">
+                                <div id="base-field" class="space-y-2" <?= $usuario_categoria === 'supervisor' ? '' : 'style="display:none"' ?>>
                                     <label class="form-label">Base Vinculada</label>
-                                    <select name="base_id" class="form-input">
+                                    <select name="base_id" class="form-input" <?= $usuario_categoria === 'supervisor' ? 'required' : '' ?>>
                                         <option value="">Selecione a base</option>
                                         <?php foreach ($bases as $b): ?>
                                             <option value="<?= $b['id'] ?>"><?= htmlspecialchars($b['nome']) ?></option>

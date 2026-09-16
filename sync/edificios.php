@@ -184,6 +184,7 @@ $has_localizacao = column_exists($conn, 'edificios', 'localizacao');
 $has_elevador = column_exists($conn, 'edificios', 'elevador_empresa');
 $has_selfie_col = column_exists($conn, 'edificios', 'requer_selfie');
 $has_retirada_col = column_exists($conn, 'edificios', 'retirada_lixo');
+$has_email_adm_col = column_exists($conn, 'edificios', 'enviar_email_adm');
 
 $has_controle_faciais = table_exists($conn, 'controle_faciais');
 $has_controle_ata = table_exists($conn, 'controle_ata');
@@ -263,8 +264,9 @@ switch ($tab) {
 
     case 'faciais_locacao':
         $selfie_col = $has_selfie_col ? 'e.requer_selfie' : '0 AS requer_selfie';
+        $email_adm_col = $has_email_adm_col ? 'e.enviar_email_adm' : '0 AS enviar_email_adm';
         $facial_base_cond = intval($usuario_base_id) > 0 ? " WHERE b.id = " . intval($usuario_base_id) : '';
-        $query = "SELECT e.id, e.nome, $selfie_col, b.nome AS nome_base
+        $query = "SELECT e.id, e.nome, $selfie_col, $email_adm_col, b.nome AS nome_base
                   FROM edificios e
                   JOIN bases b ON e.base_id = b.id
                   $facial_base_cond
@@ -486,15 +488,47 @@ unset($_SESSION['mensagem'], $_SESSION['mensagem_tipo']);
                                                 <p class="font-semibold text-slate-900"><?= htmlspecialchars($item['nome']) ?></p>
                                                 <p class="text-sm text-slate-500"><?= htmlspecialchars($item['nome_base']) ?></p>
                                             </div>
-                                            <?php if ($pode_editar): ?>
-                                            <label class="relative inline-flex items-center cursor-pointer">
-                                                <input type="checkbox" class="sr-only peer" onchange="toggleSelfie(<?= $item['id'] ?>, this)" <?= $item['requer_selfie'] ? 'checked' : '' ?>>
-                                                <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
-                                                <span class="ml-3 text-sm font-medium text-slate-900"><?= $item['requer_selfie'] ? 'Habilitado' : 'Desabilitado' ?></span>
-                                            </label>
-                                            <?php else: ?>
-                                            <span class="text-sm font-medium <?= $item['requer_selfie'] ? 'text-green-600' : 'text-slate-400' ?>"><?= $item['requer_selfie'] ? 'Habilitado' : 'Desabilitado' ?></span>
-                                            <?php endif; ?>
+                                            <div class="flex items-center gap-3 sm:gap-4">
+                                                <?php if ($pode_editar): ?>
+                                                <!-- Toggle Selfie -->
+                                                <div class="flex flex-col items-start gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm" style="width:170px; flex-shrink:0;">
+                                                    <span class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-500">
+                                                        <i class="fas fa-camera text-slate-400"></i> Selfie
+                                                    </span>
+                                                    <label class="relative inline-flex items-center cursor-pointer" title="Selfie obrigatória no formulário">
+                                                        <input type="checkbox" class="sr-only peer" onchange="toggleSelfie(<?= $item['id'] ?>, this)" <?= $item['requer_selfie'] ? 'checked' : '' ?>>
+                                                        <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
+                                                        <span class="ml-2 text-xs font-medium <?= $item['requer_selfie'] ? 'text-primary-600' : 'text-slate-400' ?>"><?= $item['requer_selfie'] ? 'Habilitado' : 'Desabilitado' ?></span>
+                                                    </label>
+                                                </div>
+                                                <div class="w-px self-stretch bg-slate-200"></div>
+                                                <!-- Toggle E-mail Administradora -->
+                                                <div class="flex flex-col items-start gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm" style="width:170px; flex-shrink:0;">
+                                                    <span class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-500">
+                                                        <i class="fas fa-envelope text-slate-400"></i> E-mail Adm
+                                                    </span>
+                                                    <label class="relative inline-flex items-center cursor-pointer" title="Enviar e-mail à administradora ao registrar locação">
+                                                        <input type="checkbox" class="sr-only peer" onchange="toggleEmailAdm(<?= $item['id'] ?>, this)" <?= $item['enviar_email_adm'] ? 'checked' : '' ?>>
+                                                        <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
+                                                        <span class="ml-2 text-xs font-medium <?= $item['enviar_email_adm'] ? 'text-primary-600' : 'text-slate-400' ?>"><?= $item['enviar_email_adm'] ? 'Habilitado' : 'Desabilitado' ?></span>
+                                                    </label>
+                                                </div>
+                                                <?php else: ?>
+                                                <div class="flex flex-col items-start gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm" style="width:170px; flex-shrink:0;">
+                                                    <span class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-500">
+                                                        <i class="fas fa-camera text-slate-400"></i> Selfie
+                                                    </span>
+                                                    <span class="text-sm font-medium <?= $item['requer_selfie'] ? 'text-green-600' : 'text-slate-400' ?>"><?= $item['requer_selfie'] ? 'Habilitado' : 'Desabilitado' ?></span>
+                                                </div>
+                                                <div class="w-px self-stretch bg-slate-200"></div>
+                                                <div class="flex flex-col items-start gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm" style="width:170px; flex-shrink:0;">
+                                                    <span class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-500">
+                                                        <i class="fas fa-envelope text-slate-400"></i> E-mail Adm
+                                                    </span>
+                                                    <span class="text-sm font-medium <?= $item['enviar_email_adm'] ? 'text-green-600' : 'text-slate-400' ?>"><?= $item['enviar_email_adm'] ? 'Habilitado' : 'Desabilitado' ?></span>
+                                                </div>
+                                                <?php endif; ?>
+                                            </div>
                                         </div>
                                     <?php endforeach; ?>
                                 </div>
@@ -816,6 +850,30 @@ unset($_SESSION['mensagem'], $_SESSION['mensagem_tipo']);
             .catch(error => {
                 console.error('Erro:', error);
                 alert('Erro ao atualizar configuração');
+                checkbox.checked = !checkbox.checked;
+            });
+        }
+
+        function toggleEmailAdm(edificioId, checkbox) {
+            const newValue = checkbox.checked ? 1 : 0;
+
+            fetch('toggle_email_adm.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'edificio_id=' + edificioId + '&valor=' + newValue
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.success) {
+                    alert('Erro ao atualizar: ' + data.message);
+                    checkbox.checked = !checkbox.checked;
+                }
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                alert('Erro ao atualizar envio de e-mail');
                 checkbox.checked = !checkbox.checked;
             });
         }

@@ -312,6 +312,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
+        // 4. Enviar e-mail à administradora (se habilitado para este edifício)
+        require_once __DIR__ . '/../sync/helper_mail.php';
+        $stmt_edif = $conn->prepare("SELECT e.id AS edificio_id, e.nome AS edificio_nome, e.endereco AS edificio_endereco, a.id AS administradora_id, a.nome AS administradora_nome, a.email AS administradora_email
+            FROM edificios e
+            LEFT JOIN administradoras a ON e.administradora_id = a.id
+            WHERE e.id = ?");
+        if ($stmt_edif) {
+            $stmt_edif->bind_param("i", $edificio_id);
+            $stmt_edif->execute();
+            $edif_row = $stmt_edif->get_result()->fetch_assoc();
+            $stmt_edif->close();
+            if ($edif_row) {
+                $mail_items = [
+                    'edificio_id'          => $edif_row['edificio_id'],
+                    'edificio_nome'        => $edif_row['edificio_nome'],
+                    'edificio_endereco'    => $edif_row['edificio_endereco'] ?? '',
+                    'administradora_id'    => $edif_row['administradora_id'],
+                    'administradora_nome'  => $edif_row['administradora_nome'] ?? '',
+                    'administradora_email' => $edif_row['administradora_email'] ?? '',
+                    'tipo_usuario'         => $tipo_usuario,
+                    'numero_apartamento'   => $numero_apartamento,
+                    'locador_nome'         => $locador_nome,
+                    'locador_telefone'     => $locador_telefone,
+                    'data_entrada'         => $data_entrada,
+                    'data_saida'           => $data_saida,
+                    'observacoes'          => $observacoes,
+                    'data_locacao'         => $data_locacao,
+                    'inquilinos'           => $_POST['inquilinos'] ?? [],
+                    'veiculos'             => $_POST['veiculos'] ?? [],
+                ];
+                $mail_result = enviar_email_locacao_adm($conn, $mail_items);
+                if (!$mail_result['success']) {
+                    error_log("salvar_locacao.php: e-mail adm não enviado – " . $mail_result['message'] . " (locacao_id=$locacao_id)");
+                }
+            }
+        }
+
         if ($is_ajax) {
             $buffer = ob_get_clean();
             $resp = ['status' => 'success', 'locacao_id' => $locacao_id];

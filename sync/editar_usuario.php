@@ -9,15 +9,27 @@ if (!$id) {
     exit();
 }
 
+$usuario_categoria = $_SESSION['usuario_categoria'] ?? '';
+
 // Processar atualização
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nome = $_POST['nome'];
     $nome_real = trim($_POST['nome_real'] ?? '');
     $whatsapp = trim($_POST['whatsapp'] ?? '');
-    $categoria = $_POST['categoria'];
+    // Supervisor só pode gerenciar usuários do tipo Operador
+    $categoria = $usuario_categoria === 'supervisor' ? 'operador' : $_POST['categoria'];
     $base_id = !empty($_POST['base_id']) ? intval($_POST['base_id']) : null;
     $senha = $_POST['senha'];
 
+    // Operador deve estar vinculado a uma base válida quando editado por supervisor
+    if ($usuario_categoria === 'supervisor' && (empty($base_id) || !(($checkBase = $conn->query("SELECT id FROM bases WHERE id = $base_id AND status = 'ativo'")) && $checkBase->num_rows > 0))) {
+        $erro = "Operadores devem estar vinculados a uma base válida.";
+        $skipUpdate = true;
+    } else {
+        $skipUpdate = false;
+    }
+
+    if (!$skipUpdate) {
     if (!empty($senha)) {
         // Se a senha foi preenchida, atualiza com hash
         $senhaHash = password_hash($senha, PASSWORD_DEFAULT);
@@ -35,6 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         $erro = "Erro ao atualizar: " . $conn->error;
     }
+    } // fim if (!$skipUpdate)
 }
 
 // Buscar dados do usuário
@@ -124,16 +137,23 @@ $bases = $conn->query("SELECT id, nome FROM bases WHERE status = 'ativo' ORDER B
                                 <div class="space-y-2">
                                     <label class="form-label">Categoria / Nível</label>
                                     <div class="relative">
-                                        <select name="categoria" class="form-input appearance-none pr-10" required>
-                                            <option value="gerente" <?= $usuario['categoria'] == 'gerente' ? 'selected' : '' ?>>Gerente</option>
-                                            <option value="diretor" <?= $usuario['categoria'] == 'diretor' ? 'selected' : '' ?>>Diretor</option>
-                                            <option value="tecnico" <?= $usuario['categoria'] == 'tecnico' ? 'selected' : '' ?>>Técnico</option>
-                                            <option value="supervisor" <?= $usuario['categoria'] == 'supervisor' ? 'selected' : '' ?>>Supervisor</option>
-                                            <option value="administrativo" <?= $usuario['categoria'] == 'administrativo' ? 'selected' : '' ?>>Administrativo</option>
-                                            <option value="operador" <?= $usuario['categoria'] == 'operador' ? 'selected' : '' ?>>Operador</option>
-                                            <option value="rondante" <?= $usuario['categoria'] == 'rondante' ? 'selected' : '' ?>>Rondante</option>
-                                            <option value="colaborador" <?= $usuario['categoria'] == 'colaborador' ? 'selected' : '' ?>>Colaborador</option>
+                                        <select name="categoria" class="form-input appearance-none pr-10" required <?= $usuario_categoria === 'supervisor' ? 'disabled' : '' ?>>
+                                            <?php if ($usuario_categoria === 'supervisor'): ?>
+                                                <option value="operador" selected>Operador</option>
+                                            <?php else: ?>
+                                                <option value="gerente" <?= $usuario['categoria'] == 'gerente' ? 'selected' : '' ?>>Gerente</option>
+                                                <option value="diretor" <?= $usuario['categoria'] == 'diretor' ? 'selected' : '' ?>>Diretor</option>
+                                                <option value="tecnico" <?= $usuario['categoria'] == 'tecnico' ? 'selected' : '' ?>>Técnico</option>
+                                                <option value="supervisor" <?= $usuario['categoria'] == 'supervisor' ? 'selected' : '' ?>>Supervisor</option>
+                                                <option value="administrativo" <?= $usuario['categoria'] == 'administrativo' ? 'selected' : '' ?>>Administrativo</option>
+                                                <option value="operador" <?= $usuario['categoria'] == 'operador' ? 'selected' : '' ?>>Operador</option>
+                                                <option value="rondante" <?= $usuario['categoria'] == 'rondante' ? 'selected' : '' ?>>Rondante</option>
+                                                <option value="colaborador" <?= $usuario['categoria'] == 'colaborador' ? 'selected' : '' ?>>Colaborador</option>
+                                            <?php endif; ?>
                                         </select>
+                                        <?php if ($usuario_categoria === 'supervisor'): ?>
+                                            <input type="hidden" name="categoria" value="operador">
+                                        <?php endif; ?>
                                         <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
                                             <i class="fas fa-chevron-down text-slate-400 text-xs"></i>
                                         </div>
@@ -141,9 +161,9 @@ $bases = $conn->query("SELECT id, nome FROM bases WHERE status = 'ativo' ORDER B
                                 </div>
                             </div>
 
-                            <div id="base-field" class="space-y-2" style="<?= ($usuario['categoria'] ?? '') === 'operador' ? '' : 'display:none' ?>">
+                            <div id="base-field" class="space-y-2" style="<?= ($usuario_categoria === 'supervisor' || ($usuario['categoria'] ?? '') === 'operador') ? '' : 'display:none' ?>">
                                 <label class="form-label">Base Vinculada</label>
-                                <select name="base_id" class="form-input">
+                                <select name="base_id" class="form-input" <?= $usuario_categoria === 'supervisor' ? 'required' : '' ?>>
                                     <option value="">Selecione a base</option>
                                     <?php foreach ($bases as $b): ?>
                                         <option value="<?= $b['id'] ?>" <?= ($usuario['base_id'] ?? null) == $b['id'] ? 'selected' : '' ?>><?= htmlspecialchars($b['nome']) ?></option>
