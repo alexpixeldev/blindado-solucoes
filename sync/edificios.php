@@ -585,7 +585,7 @@ unset($_SESSION['mensagem'], $_SESSION['mensagem_tipo']);
                         <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
                             <!-- Nova Base Form -->
                             <div class="animate-slide-up">
-                                <div class="admin-card sticky top-24 usuario-card">
+                                <div class="admin-card">
                                     <h2 class="mb-6 text-lg font-bold text-slate-900">Adicionar Base</h2>
                                     <?php if (!$pode_editar): ?>
                                         <p class="text-sm text-slate-500">Você não tem permissão para criar bases.</p>
@@ -778,7 +778,7 @@ unset($_SESSION['mensagem'], $_SESSION['mensagem_tipo']);
                                                 <div class="flex flex-col items-end gap-1.5">
                                                     <span class="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-bold text-slate-700"><?= render_card_value($item['nome_base'] ?? 'Base não informada') ?></span>
                                                     <?php if ($has_retirada_col): ?>
-                                                        <span class="inline-flex items-center rounded-full px-3 py-1 text-[11px] font-bold <?= ($item['retirada_lixo'] ?? 0) ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500' ?>">
+                                                        <span class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-bold <?= ($item['retirada_lixo'] ?? 0) ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500' ?>">
                                                             <i class="fas <?= ($item['retirada_lixo'] ?? 0) ? 'fa-trash-alt' : 'fa-trash' ?>" style="font-size:10px"></i>
                                                             Lixo: <?= ($item['retirada_lixo'] ?? 0) ? 'Sim' : 'Não' ?>
                                                         </span>
