@@ -85,11 +85,11 @@ $categoria_label = $categoria_labels[$usuario_categoria] ?? 'Usuário';
                 <?php if (in_array($usuario_categoria, ['operador', 'supervisor', 'gerente', 'diretor'])): ?>
                     <a href="registrar_ocorrencia.php" class="group flex items-center gap-3 rounded-xl px-4 py-2 text-sm font-semibold transition-all <?php echo isActive('registrar_ocorrencia.php', $current_page); ?>">
                         <i class="fas fa-edit text-lg"></i>
-                        <span>Registrar Ocorrência</span>
+                        <span>Registrar Relatório</span>
                     </a>
                     <a href="consultar_ocorrencia.php" class="group flex items-center gap-3 rounded-xl px-4 py-2 text-sm font-semibold transition-all <?php echo isActive('consultar_ocorrencia.php', $current_page); ?>">
                         <i class="fas fa-search text-lg"></i>
-                        <span>Consultar Ocorrências</span>
+                        <span>Consultar Relatórios</span>
                     </a>
                     <a href="feedback.php" class="group flex items-center gap-3 rounded-xl px-4 py-2 text-sm font-semibold transition-all <?php echo isActive('feedback.php', $current_page); ?>">
                         <i class="fas fa-comment-dots text-lg"></i>

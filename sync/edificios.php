@@ -370,7 +370,7 @@ unset($_SESSION['mensagem'], $_SESSION['mensagem_tipo']);
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </noscript>
     <link rel="stylesheet" href="style_modern.css">
-    <link rel="stylesheet" href="assets/css/tailwind.css">
+    <link rel="stylesheet" href="assets/css/tailwind.css?v=2">
     <style>
         @media (min-width: 1024px) {
             .usuario-card { margin-top: 66px; }
@@ -428,6 +428,9 @@ unset($_SESSION['mensagem'], $_SESSION['mensagem_tipo']);
                     <a href="?tab=bases" class="px-6 py-3 text-sm font-bold transition-all border-b-2 <?= $tab === 'bases' ? 'border-primary-500 text-primary-600' : 'border-transparent text-slate-500 hover:text-slate-700' ?>">
                         Bases
                     </a>
+                    <a href="?tab=administradoras" class="px-6 py-3 text-sm font-bold transition-all border-b-2 <?= $tab === 'administradoras' ? 'border-primary-500 text-primary-600' : 'border-transparent text-slate-500 hover:text-slate-700' ?>">
+                        Administradoras
+                    </a>
                     <a href="?tab=faciais_locacao" class="px-6 py-3 text-sm font-bold transition-all border-b-2 <?= $tab === 'faciais_locacao' ? 'border-primary-500 text-primary-600' : 'border-transparent text-slate-500 hover:text-slate-700' ?>">
                         Faciais Locação
                     </a>
@@ -437,15 +440,16 @@ unset($_SESSION['mensagem'], $_SESSION['mensagem_tipo']);
                 </div>
 
                 <!-- Filters & Search -->
+                <?php if ($tab === 'edificios'): ?>
                 <div class="mb-6 animate-slide-up">
                     <div class="admin-card">
                         <form method="GET" class="grid grid-cols-1 gap-4 sm:grid-cols-3 sm:items-end">
-                            <input type="hidden" name="tab" value="edificios">
+                            <input type="hidden" name="tab" value="<?= htmlspecialchars($tab) ?>">
 
                             <div class="space-y-2">
                                 <label class="form-label">Filtrar por Base</label>
                                 <div class="relative">
-                                    <select name="base" class="form-input appearance-none pr-10" onchange="this.form.submit()">
+                                    <select name="base" class="form-input appearance-none pr-10" onchange="this.form.submit()" <?= $tab !== 'edificios' ? 'disabled' : '' ?>>
                                         <option value="">Todas as Bases</option>
                                         <?php foreach ($bases as $b): ?>
                                             <option value="<?= $b['id'] ?>" <?= $filtro_base == $b['id'] ? 'selected' : '' ?>><?= htmlspecialchars($b['nome']) ?></option>
@@ -471,6 +475,7 @@ unset($_SESSION['mensagem'], $_SESSION['mensagem_tipo']);
                         </form>
                     </div>
                 </div>
+                <?php endif; ?>
 
                 <!-- Data Table -->
                 <div class="animate-slide-up" style="animation-delay: 0.1s;">
@@ -550,26 +555,38 @@ unset($_SESSION['mensagem'], $_SESSION['mensagem_tipo']);
                                                 <p class="font-semibold text-slate-900"><?= htmlspecialchars($item['nome']) ?></p>
                                                 <p class="text-sm text-slate-500"><?= htmlspecialchars($item['nome_base']) ?></p>
                                             </div>
-                                            <?php if ($pode_editar): ?>
-                                            <label class="relative inline-flex items-center cursor-pointer">
-                                                <input type="checkbox" class="sr-only peer" onchange="toggleRetirada(<?= $item['id'] ?>, this)" <?= $item['retirada_lixo'] ? 'checked' : '' ?>>
-                                                <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
-                                                <span class="ml-3 text-sm font-medium text-slate-900"><?= $item['retirada_lixo'] ? 'Sim' : 'Não' ?></span>
-                                            </label>
-                                            <?php else: ?>
-                                            <span class="text-sm font-medium <?= $item['retirada_lixo'] ? 'text-green-600' : 'text-slate-400' ?>"><?= $item['retirada_lixo'] ? 'Sim' : 'Não' ?></span>
-                                            <?php endif; ?>
+                                            <div class="flex items-center gap-3 sm:gap-4">
+                                                <?php if ($pode_editar): ?>
+                                                <div class="flex flex-col items-start gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm" style="width:170px; flex-shrink:0;">
+                                                    <span class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-500">
+                                                        <i class="fas fa-trash-alt text-slate-400"></i> Retirada Lixo
+                                                    </span>
+                                                    <label class="relative inline-flex items-center cursor-pointer" title="Retirada de lixo obrigatória">
+                                                        <input type="checkbox" class="sr-only peer" onchange="toggleRetirada(<?= $item['id'] ?>, this)" <?= $item['retirada_lixo'] ? 'checked' : '' ?>>
+                                                        <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
+                                                        <span class="ml-2 text-xs font-medium <?= $item['retirada_lixo'] ? 'text-primary-600' : 'text-slate-400' ?>"><?= $item['retirada_lixo'] ? 'Habilitado' : 'Desabilitado' ?></span>
+                                                    </label>
+                                                </div>
+                                                <?php else: ?>
+                                                <div class="flex flex-col items-start gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm" style="width:170px; flex-shrink:0;">
+                                                    <span class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-500">
+                                                        <i class="fas fa-trash-alt text-slate-400"></i> Retirada Lixo
+                                                    </span>
+                                                    <span class="text-sm font-medium <?= $item['retirada_lixo'] ? 'text-green-600' : 'text-slate-400' ?>"><?= $item['retirada_lixo'] ? 'Habilitado' : 'Desabilitado' ?></span>
+                                                </div>
+                                                <?php endif; ?>
+                                            </div>
                                         </div>
                                     <?php endforeach; ?>
                                 </div>
                             <?php endif; ?>
                         </div>
                     <?php elseif ($tab === 'bases'): ?>
-                        <div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
+                        <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
                             <!-- Nova Base Form -->
-                            <div class="lg:col-span-1 animate-slide-up">
+                            <div class="animate-slide-up">
                                 <div class="admin-card sticky top-24 usuario-card">
-                                    <h2 class="mb-6 text-lg font-bold text-slate-900">Nova Base</h2>
+                                    <h2 class="mb-6 text-lg font-bold text-slate-900">Adicionar Base</h2>
                                     <?php if (!$pode_editar): ?>
                                         <p class="text-sm text-slate-500">Você não tem permissão para criar bases.</p>
                                     <?php else: ?>
@@ -601,52 +618,49 @@ unset($_SESSION['mensagem'], $_SESSION['mensagem_tipo']);
 
                             <!-- Bases List -->
                             <div class="lg:col-span-2 animate-slide-up" style="animation-delay: 0.1s;">
-                                <div class="overflow-x-auto">
-                                    <table class="admin-table" data-no-cell-copy>
-                                        <thead>
-                                            <tr>
-                                                <th>Base</th>
-                                                <th>Telefone</th>
-                                                <th>Localização</th>
-                                                <th>Edifícios</th>
-                                                <th>Status</th>
-                                                <th class="text-right">Ações</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <?php if (empty($data)): ?>
-                                                <tr>
-                                                    <td colspan="6" class="text-center py-10 text-slate-500 italic">Nenhuma base cadastrada.</td>
-                                                </tr>
-                                            <?php endif; ?>
-                                            <?php foreach ($data as $base): ?>
-                                                <tr class="group">
-                                                    <td class="font-bold text-slate-900"><?= htmlspecialchars($base['nome']) ?></td>
-                                                    <td class="text-sm text-slate-500"><?= htmlspecialchars($base['telefone'] ?: '—') ?></td>
-                                                    <td>
+                                <?php if (empty($data)): ?>
+                                    <div class="admin-card text-center py-12 text-slate-500 italic">
+                                        Nenhuma base cadastrada.
+                                    </div>
+                                <?php else: ?>
+                                    <div class="grid gap-4 lg:grid-cols-2">
+                                        <?php foreach ($data as $base): ?>
+                                            <article class="admin-card border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md">
+                                                <div class="flex flex-col gap-3">
+                                                    <div class="flex items-start justify-between gap-3">
+                                                        <div class="flex items-center gap-3 min-w-0">
+                                                            <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-primary-50 text-primary-600 shrink-0">
+                                                                <i class="fas fa-flag"></i>
+                                                            </div>
+                                                            <div class="min-w-0">
+                                                                <h2 class="truncate text-lg font-bold text-slate-900"><?= htmlspecialchars($base['nome']) ?></h2>
+                                                            </div>
+                                                        </div>
+                                                        <?php if (($base['status'] ?? 'ativo') === 'ativo'): ?>
+                                                            <span class="inline-flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-green-700 shrink-0">
+                                                                <i class="fas fa-check-circle"></i> Ativo
+                                                            </span>
+                                                        <?php else: ?>
+                                                            <span class="inline-flex items-center gap-1 rounded-full bg-slate-100 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-500 shrink-0">
+                                                                <i class="fas fa-pause-circle"></i> Inativo
+                                                            </span>
+                                                        <?php endif; ?>
+                                                    </div>
+
+                                                    <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 space-y-2">
+                                                        <p class="truncate text-xs text-slate-500"><i class="fas fa-phone mr-1.5 text-slate-400"></i><?= htmlspecialchars($base['telefone'] ?: '—') ?></p>
                                                         <?php if (!empty($base['localizacao'])): ?>
-                                                            <a href="<?= htmlspecialchars($base['localizacao']) ?>" target="_blank" class="inline-flex items-center gap-1 text-xs text-primary-600 hover:text-primary-700">
-                                                                <i class="fas fa-map-marker-alt"></i> Ver no Google Maps
+                                                            <a href="<?= htmlspecialchars($base['localizacao']) ?>" target="_blank" class="block truncate text-xs text-primary-600 hover:text-primary-700">
+                                                                <i class="fas fa-map-marker-alt mr-1.5 text-slate-400"></i> Ver no Google Maps
                                                             </a>
                                                         <?php else: ?>
-                                                            <span class="text-xs text-slate-400">—</span>
+                                                            <p class="truncate text-xs text-slate-500"><i class="fas fa-map-marker-alt mr-1.5 text-slate-400"></i>—</p>
                                                         <?php endif; ?>
-                                                    </td>
-                                                    <td class="text-sm text-slate-500"><?= intval($base['total_edificios']) ?></td>
-                                                    <td>
-                                                        <?php if (($base['status'] ?? 'ativo') === 'ativo'): ?>
-                                                            <span class="inline-flex items-center rounded-lg px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-green-100 text-green-700">
-                                                                <i class="fas fa-check-circle mr-1"></i> Ativo
-                                                            </span>
-                                                        <?php else: ?>
-                                                            <span class="inline-flex items-center rounded-lg px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-500">
-                                                                <i class="fas fa-pause-circle mr-1"></i> Inativo
-                                                            </span>
-                                                        <?php endif; ?>
-                                                    </td>
-                                                    <td class="text-right">
-                                                        <?php if ($pode_editar): ?>
-                                                        <div class="flex justify-end gap-2 opacity-0 transition-opacity group-hover:opacity-100">
+                                                        <p class="truncate text-xs text-slate-500"><i class="fas fa-building mr-1.5 text-slate-400"></i><?= intval($base['total_edificios']) ?> edifício(s)</p>
+                                                    </div>
+
+                                                    <?php if ($pode_editar): ?>
+                                                        <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-200">
                                                             <a href="editar_base.php?id=<?= $base['id'] ?>" class="icon-btn" title="Editar"><i class="fas fa-edit" style="font-size:10px"></i></a>
                                                             <form method="POST" class="inline">
                                                                 <input type="hidden" name="id_deactivate" value="<?= $base['id'] ?>">
@@ -662,18 +676,85 @@ unset($_SESSION['mensagem'], $_SESSION['mensagem_tipo']);
                                                                 <button type="submit" name="delete_item" class="icon-btn-red" title="Excluir"><i class="fas fa-trash-alt" style="font-size:10px"></i></button>
                                                             </form>
                                                         </div>
-                                                        <div class="flex justify-end gap-2 sm:hidden">
-                                                            <a href="editar_base.php?id=<?= $base['id'] ?>" class="icon-btn" title="Editar"><i class="fas fa-edit" style="font-size:10px"></i></a>
-                                                        </div>
-                                                        <?php endif; ?>
-                                                    </td>
-                                                </tr>
-                                            <?php endforeach; ?>
-                                        </tbody>
-                                    </table>
-                                </div>
+                                                    <?php endif; ?>
+                                                </div>
+                                            </article>
+                                        <?php endforeach; ?>
+                                    </div>
+                                <?php endif; ?>
                             </div>
                         </div>
+                    <?php elseif ($tab === 'administradoras'): ?>
+                        <?php if (empty($data)): ?>
+                            <div class="admin-card text-center py-12 text-slate-500 italic">
+                                Nenhuma administradora cadastrada.
+                            </div>
+                        <?php else: ?>
+                            <div class="grid gap-4 lg:grid-cols-2">
+                                <?php foreach ($data as $adm): ?>
+                                    <article class="admin-card border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md">
+                                        <div class="flex flex-col gap-3">
+                                            <div class="flex items-start justify-between gap-3">
+                                                <div class="flex items-center gap-3 min-w-0">
+                                                    <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-primary-50 text-primary-600 shrink-0">
+                                                        <i class="fas fa-handshake"></i>
+                                                    </div>
+                                                    <div class="min-w-0">
+                                                        <h2 class="truncate text-lg font-bold text-slate-900"><?= htmlspecialchars($adm['nome']) ?></h2>
+                                                    </div>
+                                                </div>
+                                                <span class="shrink-0 rounded-full bg-green-100 px-3 py-1 text-[11px] font-bold text-green-700">
+                                                    <?= intval($adm['total_edificios']) ?> edifício(s)
+                                                </span>
+                                            </div>
+
+                                            <?php if (!empty($adm['telefone']) || !empty($adm['email'])): ?>
+                                                <div class="grid gap-2 sm:grid-cols-2">
+                                                    <?php if (!empty($adm['telefone'])): ?>
+                                                        <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                                                            <p class="truncate text-xs text-slate-500"><i class="fas fa-phone mr-1.5 text-slate-400"></i><?= htmlspecialchars($adm['telefone']) ?></p>
+                                                        </div>
+                                                    <?php endif; ?>
+                                                    <?php if (!empty($adm['email'])): ?>
+                                                        <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                                                            <p class="truncate text-xs text-slate-500"><i class="fas fa-envelope mr-1.5 text-slate-400"></i><?= htmlspecialchars($adm['email']) ?></p>
+                                                        </div>
+                                                    <?php endif; ?>
+                                                </div>
+                                            <?php endif; ?>
+
+                                            <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                                                <p class="text-[10px] uppercase tracking-[0.2em] text-slate-400">Edifícios administrados</p>
+                                                <?php if (!empty(trim((string)$adm['edificios_administrados']))): ?>
+                                                    <div class="mt-2 flex flex-wrap gap-1.5">
+                                                        <?php $ed_nomes = array_map('trim', explode(',', $adm['edificios_administrados'])); ?>
+                                                        <?php foreach ($ed_nomes as $ed_nome): ?>
+                                                            <span class="inline-flex items-center rounded-lg bg-white px-2.5 py-1 text-xs font-medium text-slate-700 border border-slate-200">
+                                                                <i class="fas fa-building mr-1.5 text-slate-300" style="font-size:9px"></i><?= htmlspecialchars($ed_nome) ?>
+                                                            </span>
+                                                        <?php endforeach; ?>
+                                                    </div>
+                                                <?php else: ?>
+                                                    <p class="mt-1 text-xs text-slate-400 italic">Nenhum edifício vinculado a esta administradora.</p>
+                                                <?php endif; ?>
+                                            </div>
+
+                                            <?php if ($pode_editar): ?>
+                                                <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-200">
+                                                    <a href="editar_administradora.php?id=<?= $adm['id'] ?>" class="icon-btn" title="Editar"><i class="fas fa-edit" style="font-size:10px"></i></a>
+                                                    <form method="POST" class="inline" onsubmit="return confirm('Deseja realmente excluir a administradora <?= addslashes(htmlspecialchars($adm['nome'])) ?>?');">
+                                                        <input type="hidden" name="id_delete" value="<?= $adm['id'] ?>">
+                                                        <input type="hidden" name="tipo_delete" value="administradora">
+                                                        <input type="hidden" name="current_tab" value="administradoras">
+                                                        <button type="submit" name="delete_item" class="icon-btn-red" title="Excluir"><i class="fas fa-trash-alt" style="font-size:10px"></i></button>
+                                                    </form>
+                                                </div>
+                                            <?php endif; ?>
+                                        </div>
+                                    </article>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php endif; ?>
                     <?php elseif (empty($data)): ?>
                             <div class="admin-card text-center py-12 text-slate-500 italic">
                                 Nenhum edifício encontrado.
