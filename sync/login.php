@@ -96,12 +96,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <div class="text-xs text-red-300 font-medium"><?php echo $erro; ?></div>
                     </div>
                 <?php endif; ?>
-                <?php if (isset($_GET['expirada'])): ?>
-                    <div class="mb-4 p-3 bg-amber-500/10 border-l-4 border-amber-500 rounded-r-lg flex items-start gap-2 animate-fade-in">
-                        <i class="fas fa-clock text-amber-400 mt-0.5 text-sm"></i>
-                        <div class="text-xs text-amber-200 font-medium">Sua sessão foi encerrada por segurança na troca de plantão. Faça login novamente.</div>
-                    </div>
-                <?php endif; ?>
 
                 <form class="space-y-4" action="login.php" method="POST">
                     <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
