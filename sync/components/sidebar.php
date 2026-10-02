@@ -284,6 +284,18 @@ $categoria_label = $categoria_labels[$usuario_categoria] ?? 'Usuário';
     #sidebar-toggle { display: inline-flex; }
     body.menu-aberto { overflow: hidden; }
 
+    /* No celular o menu e uma gaveta de altura fixa: a lista de itens precisa
+       rolar sozinha, senao os ultimos ficam fora da tela e inacessiveis. */
+    @media (max-width: 1023px) {
+        #admin-sidebar nav {
+            min-height: 0;
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            -webkit-overflow-scrolling: touch;
+        }
+        #admin-sidebar nav::-webkit-scrollbar { width: 0; height: 0; }
+    }
+
     @media (min-width: 1024px) {
         #admin-sidebar {
             position: static;
