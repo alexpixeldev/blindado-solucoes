@@ -1,10 +1,12 @@
 <?php
 require_once 'verifica_login.php';
 require_once 'conexao.php';
+require_once 'base_scope.php';
 require_once 'components/modern_calendar.php';
 
 $usuario_id = $_SESSION['usuario_id'];
 $usuario_categoria = $_SESSION['usuario_categoria'] ?? '';
+$usuario_base_id = escopo_base_sessao($conn, $usuario_categoria);
 $mensagem = '';
 $mensagem_tipo = 'info';
 
@@ -25,7 +27,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $observacao = trim($_POST['observacao']);
     $data_servico = !empty($_POST['data_servico']) ? $_POST['data_servico'] : date('Y-m-d');
 
-    if ($edificio_id > 0 && !empty($numero_apartamento) && !empty($hora_servico) && !empty($nome_empresa) && !empty($nome_funcionario) && !empty($tipo_servico)) {
+      // Operador/supervisor vinculado só registra prestador em edifício da própria base
+      if (!pode_operar_no_edificio($conn, $edificio_id, $usuario_categoria, $usuario_base_id)) {
+          $mensagem = "Você só pode registrar prestadores em edifícios da base à qual está vinculado.";
+          $mensagem_tipo = 'error';
+      } elseif ($edificio_id > 0 && !empty($numero_apartamento) && !empty($hora_servico) && !empty($nome_empresa) && !empty($nome_funcionario) && !empty($tipo_servico)) {
         $stmt = $conn->prepare("INSERT INTO prestadores_servico (edificio_id, numero_apartamento, data_servico, hora_servico, nome_empresa, nome_funcionario, numero_matricula, tipo_servico, usuario_id, observacao) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
         $stmt->bind_param("isssssssss", $edificio_id, $numero_apartamento, $data_servico, $hora_servico, $nome_empresa, $nome_funcionario, $numero_matricula, $tipo_servico, $usuario_id, $observacao);
         
@@ -43,24 +49,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$usuario_base_id = null;
-if (in_array($usuario_categoria, ['operador', 'supervisor'])) {
-    $stmt_b = $conn->prepare("SELECT base_id FROM usuarios WHERE id = ?");
-    $stmt_b->bind_param("i", $usuario_id);
-    $stmt_b->execute();
-    $row_b = $stmt_b->get_result()->fetch_assoc();
-    $stmt_b->close();
-    $usuario_base_id = $row_b['base_id'] ?? null;
-
-    if (intval($usuario_base_id) > 0) {
-        $edificios = $conn->query("SELECT e.id, e.nome, b.nome as base_nome FROM edificios e JOIN bases b ON e.base_id = b.id WHERE e.base_id = " . intval($usuario_base_id) . " ORDER BY e.nome")->fetch_all(MYSQLI_ASSOC);
-    } else {
-        $edificios = $conn->query("SELECT e.id, e.nome, b.nome as base_nome FROM edificios e JOIN bases b ON e.base_id = b.id ORDER BY e.nome")->fetch_all(MYSQLI_ASSOC);
-    }
-} else {
-    $edificios = $conn->query("SELECT e.id, e.nome, b.nome as base_nome FROM edificios e JOIN bases b ON e.base_id = b.id ORDER BY e.nome")->fetch_all(MYSQLI_ASSOC);
-}
-?>
+  $edificios = $conn->query("SELECT e.id, e.nome, b.nome as base_nome FROM edificios e JOIN bases b ON e.base_id = b.id" . filtro_base_sql($usuario_categoria, $usuario_base_id, 'e.base_id') . " ORDER BY e.nome")->fetch_all(MYSQLI_ASSOC);
+  ?>
 <!DOCTYPE html>
 <html lang="pt-br" class="h-full bg-slate-50">
 <head>

@@ -3,7 +3,7 @@ require_once 'verifica_login.php';
 require_once 'conexao.php';
 
 // Apenas Supervisor e Gerente
-if (!in_array($_SESSION['usuario_categoria'], ['supervisor', 'gerente'])) {
+if (!in_array($_SESSION['usuario_categoria'], ['supervisor_monitoramento', 'gerente'])) {
     header("Location: index.php");
     exit();
 }

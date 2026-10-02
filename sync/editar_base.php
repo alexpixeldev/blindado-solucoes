@@ -2,12 +2,15 @@
 require_once 'verifica_login.php';
 require_once 'conexao.php';
 require_once 'localizacao_helper.php';
+require_once 'base_scope.php';
 
 $usuario_categoria = $_SESSION['usuario_categoria'] ?? '';
-if (!in_array($usuario_categoria, ['supervisor', 'gerente'])) {
+if (!in_array($usuario_categoria, ['supervisor_monitoramento', 'gerente'])) {
     header("Location: edificios.php");
     exit();
 }
+
+$usuario_base_id = escopo_base_sessao($conn, $usuario_categoria);
 
 $mensagem = '';
 $base = null;
@@ -16,6 +19,14 @@ $base_id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
 // If no ID, or invalid, redirect
 if (!$base_id) {
     $_SESSION['mensagem'] = "Erro: ID da base inválido.";
+    $_SESSION['mensagem_tipo'] = "error";
+    header('Location: edificios.php?tab=bases');
+    exit();
+}
+
+// Supervisor vinculado só pode editar a própria base
+if (!pode_operar_na_base($usuario_categoria, $usuario_base_id, $base_id)) {
+    $_SESSION['mensagem'] = "Você só pode editar a base à qual está vinculado.";
     $_SESSION['mensagem_tipo'] = "error";
     header('Location: edificios.php?tab=bases');
     exit();
@@ -30,9 +41,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $latitude = $coords['latitude'] ?? null;
     $longitude = $coords['longitude'] ?? null;
     $raio_perimetro = !empty($_POST['raio_perimetro']) ? intval($_POST['raio_perimetro']) : 200;
-    $id = $_POST['id'];
+    $id = intval($_POST['id']);
 
-    if (empty($nome)) {
+    if ($id !== intval($base_id) || !pode_operar_na_base($usuario_categoria, $usuario_base_id, $id)) {
+        $mensagem = "Você só pode editar a base à qual está vinculado.";
+    } elseif (empty($nome)) {
         $mensagem = "O nome da base não pode ficar em branco.";
     } else {
         $stmt = $conn->prepare("UPDATE bases SET nome = ?, telefone = ?, latitude = ?, longitude = ?, localizacao = ?, raio_perimetro = ? WHERE id = ?");

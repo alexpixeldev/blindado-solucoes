@@ -114,7 +114,7 @@ function getCategoriaLabel($categoria) {
         'tecnico' => 'Técnico',
         'administrativo' => 'Administrativo',
         'colaborador' => 'Colaborador',
-        'supervisor' => 'Supervisor',
+        'supervisor_monitoramento' => 'Supervisor',
         'operador' => 'Operador',
         'rondante' => 'Rondante'
     ];

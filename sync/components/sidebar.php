@@ -13,7 +13,7 @@ $is_diretor = ($usuario_categoria === 'diretor');
 $is_tecnico = ($usuario_categoria === 'tecnico');
 $is_administrativo = ($usuario_categoria === 'administrativo');
 $is_colaborador = ($usuario_categoria === 'colaborador');
-$is_supervisor = ($usuario_categoria === 'supervisor');
+$is_supervisor = ($usuario_categoria === 'supervisor_monitoramento');
 $is_operador = ($usuario_categoria === 'operador');
 $is_rondante = ($usuario_categoria === 'rondante');
 
@@ -32,7 +32,8 @@ $categoria_labels = [
     'tecnico' => 'Técnico',
     'administrativo' => 'Administrativo',
     'colaborador' => 'Colaborador',
-    'supervisor' => 'Supervisor',
+    'supervisor_monitoramento' => 'Supervisor Monitoramento',
+    'supervisor_zeladoria' => 'Supervisor Zeladoria',
     'operador' => 'Operador',
     'rondante' => 'Rondante'
 ];
@@ -82,7 +83,7 @@ $categoria_label = $categoria_labels[$usuario_categoria] ?? 'Usuário';
                     <i class="fas fa-key text-lg"></i>
                     <span>Locações</span>
                 </a>
-                <?php if (in_array($usuario_categoria, ['operador', 'supervisor', 'gerente', 'diretor'])): ?>
+                <?php if (in_array($usuario_categoria, ['operador', 'supervisor_monitoramento', 'gerente', 'diretor'])): ?>
                     <a href="registrar_ocorrencia.php" class="group flex items-center gap-3 rounded-xl px-4 py-2 text-sm font-semibold transition-all <?php echo isActive('registrar_ocorrencia.php', $current_page); ?>">
                         <i class="fas fa-edit text-lg"></i>
                         <span>Registrar Relatório</span>
@@ -131,7 +132,7 @@ $categoria_label = $categoria_labels[$usuario_categoria] ?? 'Usuário';
                     <span>Registro de prestador</span>
                 </a>
                 <!-- 'Consultar Prestadores' lateral menu intentionally hidden per request; page remains available at consultar_prestador.php -->
-                <?php if (in_array($usuario_categoria, ['supervisor', 'gerente', 'diretor'])): ?>
+                <?php if (in_array($usuario_categoria, ['supervisor_monitoramento', 'gerente', 'diretor'])): ?>
                     <a href="configurar_entregas.php" class="group flex items-center gap-3 rounded-xl px-4 py-2 text-sm font-semibold transition-all <?php echo isActive('configurar_entregas.php', $current_page); ?>">
                         <i class="fas fa-cog text-lg"></i>
                         <span>Configurações Portaria</span>
@@ -154,7 +155,7 @@ $categoria_label = $categoria_labels[$usuario_categoria] ?? 'Usuário';
                     <i class="fas fa-building text-lg"></i>
                     <span>Edifícios</span>
                 </a>
-                <?php if (in_array($usuario_categoria, ['gerente', 'supervisor'])): ?>
+                <?php if (in_array($usuario_categoria, ['gerente', 'supervisor_monitoramento'])): ?>
                 <a href="splendia_cadastros.php" class="group flex items-center gap-3 rounded-xl px-4 py-2 text-sm font-semibold transition-all <?php echo isActive('splendia_cadastros.php', $current_page); ?>">
                     <i class="fas fa-clipboard-list text-lg"></i>
                     <span>Cadastros Splendia</span>
@@ -165,7 +166,7 @@ $categoria_label = $categoria_labels[$usuario_categoria] ?? 'Usuário';
         <?php endif; ?>
 
         <!-- RH Section -->
-        <?php if (in_array($usuario_categoria, ['administrativo', 'colaborador', 'gerente', 'diretor', 'supervisor'])): ?>
+        <?php if (in_array($usuario_categoria, ['administrativo', 'colaborador', 'gerente', 'diretor', 'supervisor_monitoramento'])): ?>
         <div class="pt-3">
             <p class="mb-2 px-4 text-[10px] font-bold uppercase tracking-widest text-slate-500">Recursos Humanos</p>
             <div class="space-y-0.5">

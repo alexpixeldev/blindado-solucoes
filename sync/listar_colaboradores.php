@@ -3,7 +3,7 @@ require_once 'verifica_login.php';
 require_once 'conexao.php';
 
 // Apenas usuários Administrativo, Gerente e Supervisor podem acessar
-if (!in_array($_SESSION['usuario_categoria'], ['administrativo', 'gerente', 'supervisor'])) {
+if (!in_array($_SESSION['usuario_categoria'], ['administrativo', 'gerente', 'supervisor_monitoramento'])) {
     header("Location: index.php");
     exit();
 }

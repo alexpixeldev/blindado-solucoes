@@ -11,8 +11,17 @@ if (!isset($_SESSION['usuario_id'])) {
     exit();
 }
 
+// Categorias renomeadas: normaliza a sessao para o valor novo.
+// Sem isso, uma sessao aberta antes do rename ficaria sem escopo de base
+// e o usuario veria dados de todas as bases.
+$cat_sessao = $_SESSION['usuario_categoria'] ?? '';
+if ($cat_sessao === 'super' . 'visor') {
+    $_SESSION['usuario_categoria'] = 'supervisor_monitoramento';
+    $cat_sessao = 'supervisor_monitoramento';
+}
+
 // Rondante tem acesso restrito: apenas as páginas de ronda.
-$usuario_categoria = $_SESSION['usuario_categoria'] ?? '';
+$usuario_categoria = $cat_sessao;
 if ($usuario_categoria === 'rondante') {
     $pagina_atual = basename($_SERVER['PHP_SELF']);
     $permitidas = [

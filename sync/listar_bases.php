@@ -1,10 +1,28 @@
 <?php
 require_once 'verifica_login.php';
 require_once 'conexao.php';
+require_once 'base_scope.php';
+
+$usuario_categoria = $_SESSION['usuario_categoria'] ?? '';
+if (!in_array($usuario_categoria, ['supervisor_monitoramento', 'gerente'])) {
+    header("Location: index.php");
+    exit();
+}
+
+$usuario_base_id = escopo_base_sessao($conn, $usuario_categoria);
 
 // Delete base
 if (isset($_POST['delete_base'])) {
-    $base_id = $_POST['base_id'];
+    $base_id = intval($_POST['base_id']);
+
+    // Supervisor vinculado só exclui a própria base
+    if (!pode_operar_na_base($usuario_categoria, $usuario_base_id, $base_id)) {
+        $_SESSION['mensagem'] = "Você só pode excluir a base à qual está vinculado.";
+        $_SESSION['mensagem_tipo'] = "error";
+        header("Location: edificios.php?tab=bases");
+        exit();
+    }
+
     $stmt = $conn->prepare("DELETE FROM bases WHERE id = ?");
     $stmt->bind_param("i", $base_id);
     if ($stmt->execute()) {
@@ -19,14 +37,15 @@ if (isset($_POST['delete_base'])) {
     exit();
 }
 
-// Fetch bases for display
-$bases = $conn->query("
-    SELECT b.id, b.nome, b.telefone, COUNT(e.id) as total_edificios
-    FROM bases b
-    LEFT JOIN edificios e ON b.id = e.base_id
-    GROUP BY b.id, b.nome, b.telefone
-    ORDER BY b.nome ASC
-")->fetch_all(MYSQLI_ASSOC);
+  // Fetch bases for display
+  $bases = $conn->query("
+      SELECT b.id, b.nome, b.telefone, COUNT(e.id) as total_edificios
+      FROM bases b
+      LEFT JOIN edificios e ON b.id = e.base_id
+      WHERE 1=1" . filtro_base_sql($usuario_categoria, $usuario_base_id, 'b.id') . "
+      GROUP BY b.id, b.nome, b.telefone
+      ORDER BY b.nome ASC
+  ")->fetch_all(MYSQLI_ASSOC);
 
 // Feedback message
 $mensagem = '';

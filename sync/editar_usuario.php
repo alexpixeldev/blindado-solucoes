@@ -17,16 +17,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nome_real = trim($_POST['nome_real'] ?? '');
     $whatsapp = trim($_POST['whatsapp'] ?? '');
     // Supervisor só pode gerenciar usuários do tipo Operador
-    $categoria = $usuario_categoria === 'supervisor' ? 'operador' : $_POST['categoria'];
-    $base_id = !empty($_POST['base_id']) ? intval($_POST['base_id']) : null;
+    $categoria = $usuario_categoria === 'supervisor_monitoramento' ? 'operador' : $_POST['categoria'];
+    // Supervisor vinculado só mantém usuários na própria base
+    $base_id = $usuario_categoria === 'supervisor_monitoramento' && $usuario_base_id
+        ? $usuario_base_id
+        : (!empty($_POST['base_id']) ? intval($_POST['base_id']) : null);
     $senha = $_POST['senha'];
 
-    // Operador deve estar vinculado a uma base válida quando editado por supervisor
-    if ($usuario_categoria === 'supervisor' && (empty($base_id) || !(($checkBase = $conn->query("SELECT id FROM bases WHERE id = $base_id AND status = 'ativo'")) && $checkBase->num_rows > 0))) {
-        $erro = "Operadores devem estar vinculados a uma base válida.";
-        $skipUpdate = true;
-    } else {
-        $skipUpdate = false;
+    // Operador e Supervisor devem estar vinculados a uma base válida
+    $skipUpdate = false;
+    if (in_array($categoria, ['operador', 'supervisor_monitoramento'])) {
+        if (empty($base_id)) {
+            $erro = ($categoria === 'operador' ? "Operadores" : "Supervisores") . " devem estar vinculados a uma base válida.";
+            $skipUpdate = true;
+        } else {
+            $checkBase = $conn->query("SELECT id FROM bases WHERE id = $base_id AND status = 'ativo'");
+            if (!$checkBase || $checkBase->num_rows === 0) {
+                $erro = "Base selecionada não é válida.";
+                $skipUpdate = true;
+            }
+        }
     }
 
     if (!$skipUpdate) {
@@ -50,6 +60,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } // fim if (!$skipUpdate)
 }
 
+require_once 'verifica_login.php';
+require_once 'conexao.php';
+require_once 'base_scope.php';
+
+$id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+
+if (!$id) {
+    header("Location: usuarios.php");
+    exit();
+}
+
+$usuario_categoria = $_SESSION['usuario_categoria'] ?? '';
+if (!in_array($usuario_categoria, ['supervisor_monitoramento', 'gerente', 'diretor'])) {
+    header("Location: index.php");
+    exit();
+}
+
+$usuario_base_id = escopo_base_sessao($conn, $usuario_categoria);
+
 // Buscar dados do usuário
 $stmt = $conn->prepare("SELECT * FROM usuarios WHERE id = ?");
 $stmt->bind_param("i", $id);
@@ -61,7 +90,16 @@ if (!$usuario) {
     exit();
 }
 
-$bases = $conn->query("SELECT id, nome FROM bases WHERE status = 'ativo' ORDER BY nome")->fetch_all(MYSQLI_ASSOC);
+// Supervisor só gerencia operadores da própria base
+if ($usuario_categoria === 'supervisor_monitoramento'
+    && ($usuario['categoria'] !== 'operador' || intval($usuario['base_id'] ?? 0) !== intval($usuario_base_id))) {
+    $_SESSION['mensagem'] = "Você só pode editar usuários do tipo Operador vinculados à sua base.";
+    $_SESSION['mensagem_tipo'] = "error";
+    header("Location: usuarios.php");
+    exit();
+}
+
+$bases = $conn->query("SELECT id, nome FROM bases WHERE status = 'ativo'" . filtro_base_sql($usuario_categoria, $usuario_base_id, 'id') . " ORDER BY nome")->fetch_all(MYSQLI_ASSOC);
 ?>
 <!DOCTYPE html>
 <html lang="pt-br" class="h-full bg-slate-50">
@@ -137,8 +175,8 @@ $bases = $conn->query("SELECT id, nome FROM bases WHERE status = 'ativo' ORDER B
                                 <div class="space-y-2">
                                     <label class="form-label">Categoria / Nível</label>
                                     <div class="relative">
-                                        <select name="categoria" class="form-input appearance-none pr-10" required <?= $usuario_categoria === 'supervisor' ? 'disabled' : '' ?>>
-                                            <?php if ($usuario_categoria === 'supervisor'): ?>
+                                        <select name="categoria" class="form-input appearance-none pr-10" required <?= $usuario_categoria === 'supervisor_monitoramento' ? 'disabled' : '' ?>>
+                                            <?php if ($usuario_categoria === 'supervisor_monitoramento'): ?>
                                                 <option value="operador" selected>Operador</option>
                                             <?php else: ?>
                                                 <option value="gerente" <?= $usuario['categoria'] == 'gerente' ? 'selected' : '' ?>>Gerente</option>
@@ -147,7 +185,7 @@ $bases = $conn->query("SELECT id, nome FROM bases WHERE status = 'ativo' ORDER B
                                                 <option value="gerente_tecnica" <?= $usuario['categoria'] == 'gerente_tecnica' ? 'selected' : '' ?>>Gerente Técnica</option>
                                                 <option value="diretor" <?= $usuario['categoria'] == 'diretor' ? 'selected' : '' ?>>Diretor</option>
                                                 <option value="tecnico" <?= $usuario['categoria'] == 'tecnico' ? 'selected' : '' ?>>Técnico</option>
-                                                <option value="supervisor" <?= $usuario['categoria'] == 'supervisor' ? 'selected' : '' ?>>Supervisor</option>
+                                                <option value="supervisor_monitoramento" <?= $usuario['categoria'] == 'supervisor_monitoramento' ? 'selected' : '' ?>>Supervisor Monitoramento</option>
                                                 <option value="supervisor_zeladoria" <?= $usuario['categoria'] == 'supervisor_zeladoria' ? 'selected' : '' ?>>Supervisor Zeladoria</option>
                                                 <option value="administrativo" <?= $usuario['categoria'] == 'administrativo' ? 'selected' : '' ?>>Administrativo</option>
                                                 <option value="operador" <?= $usuario['categoria'] == 'operador' ? 'selected' : '' ?>>Operador</option>
@@ -155,7 +193,7 @@ $bases = $conn->query("SELECT id, nome FROM bases WHERE status = 'ativo' ORDER B
                                                 <option value="colaborador" <?= $usuario['categoria'] == 'colaborador' ? 'selected' : '' ?>>Colaborador</option>
                                             <?php endif; ?>
                                         </select>
-                                        <?php if ($usuario_categoria === 'supervisor'): ?>
+                                        <?php if ($usuario_categoria === 'supervisor_monitoramento'): ?>
                                             <input type="hidden" name="categoria" value="operador">
                                         <?php endif; ?>
                                         <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
@@ -165,14 +203,15 @@ $bases = $conn->query("SELECT id, nome FROM bases WHERE status = 'ativo' ORDER B
                                 </div>
                             </div>
 
-                            <div id="base-field" class="space-y-2" style="<?= ($usuario_categoria === 'supervisor' || ($usuario['categoria'] ?? '') === 'operador') ? '' : 'display:none' ?>">
+                            <div id="base-field" class="space-y-2" style="display:none">
                                 <label class="form-label">Base Vinculada</label>
-                                <select name="base_id" class="form-input" <?= $usuario_categoria === 'supervisor' ? 'required' : '' ?>>
+                                <select name="base_id" class="form-input">
                                     <option value="">Selecione a base</option>
                                     <?php foreach ($bases as $b): ?>
                                         <option value="<?= $b['id'] ?>" <?= ($usuario['base_id'] ?? null) == $b['id'] ? 'selected' : '' ?>><?= htmlspecialchars($b['nome']) ?></option>
                                     <?php endforeach; ?>
                                 </select>
+                                <p class="mt-1 text-[10px] text-slate-400 italic">Obrigatória para <strong>Operador</strong> e <strong>Supervisor Monitoramento</strong>.</p>
                             </div>
 
                             <div class="space-y-2">
@@ -197,10 +236,18 @@ $bases = $conn->query("SELECT id, nome FROM bases WHERE status = 'ativo' ORDER B
     </div>
 
     <?php include 'components/footer.php'; ?>
-    <script>
-        document.querySelector('select[name="categoria"]').addEventListener('change', function() {
-            document.getElementById('base-field').style.display = this.value === 'operador' ? 'block' : 'none';
-        });
-    </script>
+        <script>
+            (function() {
+                const selCategoria = document.querySelector('select[name="categoria"]');
+                const selBase = document.querySelector('select[name="base_id"]');
+                function syncBaseField() {
+                    const precisaBase = ['operador', 'supervisor_monitoramento'].includes(selCategoria.value);
+                    document.getElementById('base-field').style.display = precisaBase ? 'block' : 'none';
+                    selBase.required = precisaBase;
+                }
+                selCategoria.addEventListener('change', syncBaseField);
+                syncBaseField();
+            })();
+        </script>
 </body>
 </html>

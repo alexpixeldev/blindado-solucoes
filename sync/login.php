@@ -26,7 +26,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['usuario_id'] = $usuario['id'];
         $_SESSION['usuario_nome'] = $usuario['nome'];
         $_SESSION['usuario_nome_real'] = $usuario['nome_real'];
-        $_SESSION['usuario_categoria'] = strtolower(trim($usuario['categoria']));
+        // normaliza a categoria: valor legado 'super' + 'visor' vira a categoria nova
+        $categoria_sessao = strtolower(trim($usuario['categoria']));
+        if ($categoria_sessao === 'super' . 'visor') {
+            $categoria_sessao = 'supervisor_monitoramento';
+        }
+        $_SESSION['usuario_categoria'] = $categoria_sessao;
         $_SESSION['usuario_base_id'] = $usuario['base_id'] ?? null;
         $_SESSION['login_time'] = time();
 

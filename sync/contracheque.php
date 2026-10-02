@@ -10,7 +10,7 @@ if ($_SESSION['usuario_categoria'] !== 'administrativo' && $_SESSION['usuario_ca
 
 // Search for collaborators
 $search = isset($_GET['search']) ? $_GET['search'] : '';
-$sql = "SELECT * FROM usuarios WHERE categoria NOT IN ('gerente', 'administrativo', 'supervisor')";
+$sql = "SELECT * FROM usuarios WHERE categoria NOT IN ('gerente', 'administrativo', 'supervisor_monitoramento')";
 
 if ($search) {
     $sql .= " AND (nome LIKE ? OR nome_real LIKE ?)";

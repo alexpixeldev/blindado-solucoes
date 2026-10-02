@@ -4,7 +4,8 @@ require_once 'conexao.php';
 require_once 'localizacao_helper.php';
 
 $usuario_categoria = $_SESSION['usuario_categoria'] ?? '';
-if (!in_array($usuario_categoria, ['supervisor', 'gerente'])) {
+// Apenas gerente cria bases: um supervisor vinculado só existe dentro da própria base
+if ($usuario_categoria !== 'gerente') {
     header("Location: edificios.php");
     exit();
 }

@@ -3,7 +3,7 @@ require_once 'verifica_login.php';
 require_once 'conexao.php';
 
 $usuario_categoria = $_SESSION['usuario_categoria'] ?? '';
-if (!in_array($usuario_categoria, ['supervisor', 'gerente'])) {
+if (!in_array($usuario_categoria, ['supervisor_monitoramento', 'gerente'])) {
     header("Location: index.php");
     exit();
 }
@@ -32,17 +32,20 @@ if (!$sindico) {
 }
 
 // Buscar edifícios para o select
+// Síndicos podem atender edifícios de mais de uma base, então a lista não é filtrada por base
 $edificios = $conn->query("SELECT e.id, e.nome, b.nome AS nome_base 
                            FROM edificios e 
-                           JOIN bases b ON e.base_id = b.id                            WHERE b.status = 'ativo'                            ORDER BY b.nome, e.nome")->fetch_all(MYSQLI_ASSOC);
+                           JOIN bases b ON e.base_id = b.id
+                           WHERE b.status = 'ativo'
+                           ORDER BY b.nome, e.nome")->fetch_all(MYSQLI_ASSOC);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nome = $_POST['nome'] ?? '';
     $telefone = $_POST['telefone'] ?? '';
     $email = $_POST['email'] ?? '';
-    $edificio_id = !empty($_POST['edificio_id']) ? $_POST['edificio_id'] : null;
-    
-    if ($nome) {
+      $edificio_id = !empty($_POST['edificio_id']) ? $_POST['edificio_id'] : null;
+
+      if ($nome) {
         // Pegar o nome antigo antes de atualizar
         $stmt_old = $conn->prepare("SELECT nome FROM sindicos WHERE id = ?");
         $stmt_old->bind_param("i", $id);

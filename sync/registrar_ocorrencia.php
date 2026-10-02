@@ -1,26 +1,22 @@
 <?php
 require_once 'verifica_login.php';
 require_once 'conexao.php';
+require_once 'base_scope.php';
 require_once 'components/modern_calendar.php';
 
 $usuario_id = $_SESSION['usuario_id'];
 $usuario_categoria = $_SESSION['usuario_categoria'] ?? '';
 
-if (!in_array($usuario_categoria, ['operador', 'supervisor', 'gerente'])) {
+if (!in_array($usuario_categoria, ['operador', 'supervisor_monitoramento', 'gerente'])) {
     header("Location: index.php");
     exit();
 }
 
 // Carrega a base do usuário direto do banco
-$stmt = $conn->prepare("SELECT base_id FROM usuarios WHERE id = ?");
-$stmt->bind_param("i", $usuario_id);
-$stmt->execute();
-$result = $stmt->get_result();
-$row = $result->fetch_assoc();
-$usuario_base_id = $row['base_id'] ?? null;
+$usuario_base_id = escopo_base_sessao($conn, $usuario_categoria);
 $_SESSION['usuario_base_id'] = $usuario_base_id;
 
-if (in_array($usuario_categoria, ['operador', 'supervisor'])) {
+if (usuario_tem_escopo_de_base($usuario_categoria)) {
     $bid = intval($usuario_base_id);
     if ($bid > 0) {
         $bases = $conn->query("SELECT id, nome FROM bases WHERE id = $bid")->fetch_all(MYSQLI_ASSOC);
@@ -71,6 +67,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['salvar_plantao'])) {
             if (empty($locais)) {
                 throw new Exception("Cada relatório precisa de um edifício/base selecionado.");
             }
+
+            // Operador/supervisor vinculado só salva locais da própria base
+            $check_base = separar_locais_por_base($conn, $locais, $usuario_categoria, $usuario_base_id);
+            if (!empty($check_base['bloqueados'])) {
+                throw new Exception("Você só pode salvar relatórios de locais vinculados à sua base.");
+            }
+            $locais = $check_base['permitidos'];
 
             $primeiro = $locais[0];
             $edificio_id = (strpos($primeiro, 'e_') === 0) ? intval(substr($primeiro, 2)) : null;
@@ -943,7 +946,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['salvar_plantao'])) {
             syncContentEditable();
 
             const campos = [
-                ['supervisor-input', 'supervisor-nome', 'supervisor', true],
+                ['supervisor-input', 'supervisor-nome', 'supervisor_monitoramento', true],
                 ['operador1-input', 'operador1-nome', 'operador 1', true],
                 ['operador2-input', 'operador2-nome', 'operador 2', false],
                 ['operador3-input', 'operador3-nome', 'operador 3', false]

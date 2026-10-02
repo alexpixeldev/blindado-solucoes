@@ -1,12 +1,15 @@
 <?php
 require_once 'verifica_login.php';
 require_once 'conexao.php';
+require_once 'base_scope.php';
 
 $usuario_categoria = $_SESSION['usuario_categoria'] ?? '';
-if (!in_array($usuario_categoria, ['supervisor', 'gerente'])) {
+if (!in_array($usuario_categoria, ['supervisor_monitoramento', 'gerente'])) {
     header("Location: edificios.php");
     exit();
 }
+
+$usuario_base_id = escopo_base_sessao($conn, $usuario_categoria);
 
 $mensagem = '';
 $edificio = null;
@@ -21,10 +24,20 @@ if (!$edificio_id) {
     exit();
 }
 
+// Supervisor vinculado só pode editar edifícios da própria base
+if (!pode_operar_no_edificio($conn, $edificio_id, $usuario_categoria, $usuario_base_id)) {
+    $_SESSION['mensagem'] = "Você só pode editar edifícios da base à qual está vinculado.";
+    $_SESSION['mensagem_tipo'] = "error";
+    header('Location: edificios.php?tab=edificios');
+    exit();
+}
+
 // Logic to UPDATE data in database
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nome = $_POST['nome'];
-    $base_id = $_POST['base_id'];
+    // Supervisor vinculado não pode mover o edifício para outra base
+    $base_id = $usuario_base_id ? $usuario_base_id : $_POST['base_id'];
+    $id = intval($_POST['id']);
     $endereco = $_POST['endereco'] ?? '';
     $localizacao = $_POST['localizacao'] ?? '';
     $sindico_nome = $_POST['sindico_nome'] ?? '';
@@ -35,9 +48,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $elevador_contato = $_POST['elevador_contato'] ?? '';
     $latitude = !empty($_POST['latitude']) ? $_POST['latitude'] : null;
     $longitude = !empty($_POST['longitude']) ? $_POST['longitude'] : null;
-    $id = $_POST['id'];
+    $id = intval($_POST['id']);
 
-    if (empty($nome) || empty($base_id)) {
+    if ($id !== intval($edificio_id)) {
+        $mensagem = "Requisição inválida: o edifício informado não corresponde ao aberto.";
+    } elseif (!pode_operar_no_edificio($conn, $id, $usuario_categoria, $usuario_base_id)) {
+        $mensagem = "Você só pode editar edifícios da base à qual está vinculado.";
+    } elseif (empty($nome) || empty($base_id)) {
         $mensagem = "O nome do edifício e a base são obrigatórios.";
     } else {
         // Pegar o nome antigo do síndico antes de atualizar
@@ -88,7 +105,7 @@ if ($result->num_rows === 1) {
 $stmt->close();
 
 // Fetch all bases for the dropdown
-$bases_result = @$conn->query("SELECT * FROM bases WHERE status = 'ativo' ORDER BY nome ASC");
+$bases_result = @$conn->query("SELECT * FROM bases WHERE status = 'ativo'" . filtro_base_sql($usuario_categoria, $usuario_base_id, 'id') . " ORDER BY nome ASC");
 $bases = $bases_result ? $bases_result->fetch_all(MYSQLI_ASSOC) : [];
 
 $administradoras = [];

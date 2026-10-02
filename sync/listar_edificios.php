@@ -1,10 +1,27 @@
 <?php
 require_once 'verifica_login.php';
 require_once 'conexao.php';
+require_once 'base_scope.php';
+
+$usuario_categoria = $_SESSION['usuario_categoria'] ?? '';
+if (!in_array($usuario_categoria, ['supervisor_monitoramento', 'gerente'])) {
+    header("Location: index.php");
+    exit();
+}
+
+$usuario_base_id = escopo_base_sessao($conn, $usuario_categoria);
 
 if (isset($_POST['delete_edificio'])) {
-    $edificio_id = $_POST['edificio_id'];
-    
+      $edificio_id = intval($_POST['edificio_id']);
+
+      // Supervisor vinculado só exclua edifícios da própria base
+      if (!pode_operar_no_edificio($conn, $edificio_id, $usuario_categoria, $usuario_base_id)) {
+          $_SESSION['mensagem'] = "Você só pode excluir edifícios da base à qual está vinculado.";
+          $_SESSION['mensagem_tipo'] = "error";
+          header("Location: edificios.php?tab=edificios");
+          exit();
+      }
+
     // Primeiro, pegar o sindico_id do edifício que será excluído
     $stmt_get = $conn->prepare("SELECT sindico_id FROM edificios WHERE id = ?");
     $stmt_get->bind_param("i", $edificio_id);
@@ -44,14 +61,15 @@ if (isset($_POST['delete_edificio'])) {
     exit();
 }
 
-$edificios = $conn->query("
-    SELECT e.id, e.nome AS nome_edificio, e.endereco, e.sindico_nome, e.sindico_contato, e.administradora_id, 
-           b.nome AS nome_base, a.nome AS nome_administradora
-    FROM edificios e 
-    JOIN bases b ON e.base_id = b.id 
-    LEFT JOIN administradoras a ON e.administradora_id = a.id
-    ORDER BY b.nome, e.nome
-")->fetch_all(MYSQLI_ASSOC);
+  $edificios = $conn->query("
+      SELECT e.id, e.nome AS nome_edificio, e.endereco, e.sindico_nome, e.sindico_contato, e.administradora_id, 
+             b.nome AS nome_base, a.nome AS nome_administradora
+      FROM edificios e 
+      JOIN bases b ON e.base_id = b.id 
+      LEFT JOIN administradoras a ON e.administradora_id = a.id
+      WHERE 1=1" . filtro_base_sql($usuario_categoria, $usuario_base_id, 'e.base_id') . "
+      ORDER BY b.nome, e.nome
+  ")->fetch_all(MYSQLI_ASSOC);
 
 $mensagem = '';
 $mensagem_tipo = 'info';

@@ -1,16 +1,20 @@
 <?php
 require_once 'verifica_login.php';
 require_once 'conexao.php';
+require_once 'base_scope.php';
 
 $usuario_categoria = $_SESSION['usuario_categoria'] ?? '';
-if (!in_array($usuario_categoria, ['supervisor', 'gerente'])) {
+if (!in_array($usuario_categoria, ['supervisor_monitoramento', 'gerente'])) {
     header("Location: edificios.php");
     exit();
 }
 
+$usuario_base_id = escopo_base_sessao($conn, $usuario_categoria);
+
 if (isset($_POST['add_edificio'])) {
     $nome_edificio = trim($_POST['nome_edificio']);
-    $base_id = $_POST['base_id'];
+    // Supervisor vinculado a uma base só cadastra edifício na própria base
+    $base_id = $usuario_base_id ? $usuario_base_id : $_POST['base_id'];
     $endereco = trim($_POST['endereco'] ?? '');
     $localizacao = trim($_POST['localizacao'] ?? '');
     $sindico_nome = trim($_POST['sindico_nome'] ?? '');
@@ -72,7 +76,7 @@ if (isset($_POST['add_edificio'])) {
     }
 }
 
-$bases = $conn->query("SELECT id, nome FROM bases WHERE status = 'ativo' ORDER BY nome ASC")->fetch_all(MYSQLI_ASSOC);
+$bases = $conn->query("SELECT id, nome FROM bases WHERE status = 'ativo'" . filtro_base_sql($usuario_categoria, $usuario_base_id, 'id') . " ORDER BY nome ASC")->fetch_all(MYSQLI_ASSOC);
 $administradoras = $conn->query("SELECT id, nome FROM administradoras ORDER BY nome ASC")->fetch_all(MYSQLI_ASSOC);
 
 $mensagem = '';
@@ -181,6 +185,13 @@ if (isset($_SESSION['sindico_duplicado'])) {
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div class="space-y-2">
                                     <label class="form-label">Selecione a Base *</label>
+                                    <?php if ($usuario_base_id): ?>
+                                        <input type="hidden" name="base_id" value="<?= $usuario_base_id ?>">
+                                        <div class="form-input bg-slate-50 flex items-center justify-between">
+                                            <span><?= htmlspecialchars($bases[0]['nome'] ?? ('Base #' . $usuario_base_id)) ?></span>
+                                            <span class="text-[10px] uppercase tracking-wider text-slate-400">vinculada</span>
+                                        </div>
+                                    <?php else: ?>
                                     <div class="relative">
                                         <select name="base_id" class="form-input appearance-none pr-10" required>
                                             <option value="">-- Selecione a Base --</option>
@@ -192,6 +203,7 @@ if (isset($_SESSION['sindico_duplicado'])) {
                                             <i class="fas fa-chevron-down text-slate-400 text-xs"></i>
                                         </div>
                                     </div>
+                                    <?php endif; ?>
                                 </div>
                                 <div class="space-y-2">
                                     <label class="form-label">Nome do Edifício *</label>

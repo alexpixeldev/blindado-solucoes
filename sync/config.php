@@ -14,7 +14,7 @@ define('MAX_FILE_SIZE', 5 * 1024 * 1024);
 define('USER_ROLES', [
     'administrador' => 'Administrador',
     'gerente' => 'Gerente', 
-    'supervisor' => 'Supervisor',
+    'supervisor_monitoramento' => 'Supervisor',
     'administrativo' => 'Administrativo',
     'colaborador' => 'Colaborador'
 ]);
@@ -22,7 +22,7 @@ define('USER_ROLES', [
 define('PERMISSIONS', [
     'administrador' => ['all'],
     'gerente' => ['manage_users', 'manage_data', 'view_reports', 'delete_records'],
-    'supervisor' => ['manage_data', 'view_reports'],
+    'supervisor_monitoramento' => ['manage_data', 'view_reports'],
     'administrativo' => ['view_reports', 'manage_contracheques'],
     'colaborador' => ['view_own_data']
 ]);

@@ -2,7 +2,7 @@
 require_once 'verifica_login.php';
 require_once 'conexao.php';
 
-if (!in_array($_SESSION['usuario_categoria'], ['supervisor', 'gerente'])) {
+if (!in_array($_SESSION['usuario_categoria'], ['supervisor_monitoramento', 'gerente'])) {
     header("Location: controle_dados.php");
     exit();
 }

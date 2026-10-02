@@ -118,7 +118,7 @@ if ($usuario_categoria === 'administrativo') {
     $filtro_ano_admin = $ano_selecionado;
 }
 
-if (in_array($usuario_categoria, ['operador', 'supervisor'])) {
+if (in_array($usuario_categoria, ['operador', 'supervisor_monitoramento'])) {
     $usuario_id_op = intval($_SESSION['usuario_id'] ?? 0);
     $base_id_op = 0;
     $row_b = $conn->query("SELECT base_id FROM usuarios WHERE id = $usuario_id_op")->fetch_assoc();
@@ -421,7 +421,7 @@ if (in_array($usuario_categoria, ['operador', 'supervisor'])) {
                     </div>
                 </div>
 
-                <?php elseif (in_array($usuario_categoria, ['operador', 'supervisor'])): ?>
+                <?php elseif (in_array($usuario_categoria, ['operador', 'supervisor_monitoramento'])): ?>
 
                 <!-- Ações Rápidas -->
                 <div class="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-4 animate-slide-up">

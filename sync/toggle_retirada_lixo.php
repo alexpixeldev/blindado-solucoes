@@ -5,7 +5,7 @@ require_once 'conexao.php';
 header('Content-Type: application/json');
 
 $usuario_categoria = $_SESSION['usuario_categoria'] ?? '';
-if (!in_array($usuario_categoria, ['supervisor', 'gerente'])) {
+if (!in_array($usuario_categoria, ['supervisor_monitoramento', 'gerente'])) {
     echo json_encode(['success' => false, 'message' => 'Sem permissão para alterar esta configuração']);
     exit;
 }

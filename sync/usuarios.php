@@ -1,12 +1,15 @@
 <?php
 require_once 'verifica_login.php';
 require_once 'conexao.php';
+require_once 'base_scope.php';
 
 $usuario_categoria = $_SESSION['usuario_categoria'] ?? '';
-if (!in_array($usuario_categoria, ['supervisor', 'gerente', 'diretor'])) {
+if (!in_array($usuario_categoria, ['supervisor_monitoramento', 'gerente', 'diretor'])) {
     header("Location: index.php");
     exit();
 }
+
+$usuario_base_id = escopo_base_sessao($conn, $usuario_categoria);
 
 $mensagem = '';
 $mensagem_tipo = 'info';
@@ -16,14 +19,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['nome'], $_POST['categ
     $nome_real = trim($_POST['nome_real'] ?? '');
     $whatsapp = trim($_POST['whatsapp'] ?? '');
     // Supervisor só pode criar usuários do tipo Operador
-    $categoria = $usuario_categoria === 'supervisor' ? 'operador' : $_POST['categoria'];
-    $base_id = !empty($_POST['base_id']) ? intval($_POST['base_id']) : null;
+    $categoria = $usuario_categoria === 'supervisor_monitoramento' ? 'operador' : $_POST['categoria'];
+    // Supervisor vinculado só cria usuários na própria base
+    $base_id = $usuario_categoria === 'supervisor_monitoramento' && $usuario_base_id
+        ? $usuario_base_id
+        : (!empty($_POST['base_id']) ? intval($_POST['base_id']) : null);
 
-    // Operador deve estar vinculado a uma base válida
+    // Operador e Supervisor devem estar vinculados a uma base válida
     $validacao_ok = true;
-    if ($categoria === 'operador' && $usuario_categoria === 'supervisor') {
+    if (in_array($categoria, ['operador', 'supervisor_monitoramento'])) {
         if (empty($base_id)) {
-            $mensagem = "Operadores devem estar vinculados a uma base.";
+            $mensagem = ($categoria === 'operador' ? "Operadores" : "Supervisores") . " devem estar vinculados a uma base.";
             $mensagem_tipo = "error";
             $validacao_ok = false;
         } else {
@@ -54,7 +60,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['nome'], $_POST['categ
 }
 
 if (isset($_POST['delete_usuario'])) {
-    $id = $_POST['id'];
+    $id = intval($_POST['id']);
+    $alvo = $conn->query("SELECT id, categoria, base_id FROM usuarios WHERE id = $id")->fetch_assoc();
+
+    $negado = false;
+    if (!$alvo) {
+        $negado = true;
+    } elseif ($id === intval($_SESSION['usuario_id'])) {
+        $_SESSION['mensagem'] = "Você não pode excluir o próprio usuário.";
+        $_SESSION['mensagem_tipo'] = "error";
+        $negado = true;
+    } elseif ($usuario_categoria === 'supervisor_monitoramento' && intval($alvo['base_id'] ?? 0) !== intval($usuario_base_id)) {
+        // Supervisor só gerencia usuários da própria base
+        $_SESSION['mensagem'] = "Você só pode excluir usuários vinculados à sua base.";
+        $_SESSION['mensagem_tipo'] = "error";
+        $negado = true;
+    } elseif ($usuario_categoria === 'supervisor_monitoramento' && $alvo['categoria'] !== 'operador') {
+        $_SESSION['mensagem'] = "Supervisores só podem excluir usuários do tipo Operador.";
+        $_SESSION['mensagem_tipo'] = "error";
+        $negado = true;
+    }
+
+    if ($negado) {
+        header("Location: usuarios.php");
+        exit();
+    }
+
     $stmt = $conn->prepare("DELETE FROM usuarios WHERE id = ?");
     $stmt->bind_param("i", $id);
     if ($stmt->execute()) {
@@ -69,7 +100,7 @@ if (isset($_POST['delete_usuario'])) {
     exit();
 }
 
-$bases = $conn->query("SELECT id, nome FROM bases WHERE status = 'ativo' ORDER BY nome")->fetch_all(MYSQLI_ASSOC);
+$bases = $conn->query("SELECT id, nome FROM bases WHERE status = 'ativo'" . filtro_base_sql($usuario_categoria, $usuario_base_id, 'id') . " ORDER BY nome")->fetch_all(MYSQLI_ASSOC);
 $check = $conn->query("SHOW COLUMNS FROM usuarios LIKE 'base_id'");
 $hasBaseId = $check && $check->num_rows > 0;
 if ($hasBaseId) {
@@ -161,8 +192,8 @@ if (isset($_SESSION['mensagem'])) {
                                 <div class="space-y-2">
                                     <label class="form-label">Categoria / Nível</label>
                                     <div class="relative">
-                                        <select name="categoria" class="form-input appearance-none pr-10" required <?= $usuario_categoria === 'supervisor' ? 'disabled' : '' ?>>
-                                            <?php if ($usuario_categoria === 'supervisor'): ?>
+                                        <select name="categoria" class="form-input appearance-none pr-10" required <?= $usuario_categoria === 'supervisor_monitoramento' ? 'disabled' : '' ?>>
+                                            <?php if ($usuario_categoria === 'supervisor_monitoramento'): ?>
                                                 <option value="operador" selected>Operador</option>
                                             <?php else: ?>
                                                 <option value="colaborador">Colaborador</option>
@@ -172,14 +203,14 @@ if (isset($_SESSION['mensagem'])) {
                                                 <option value="gerente_tecnica">Gerente Técnica</option>
                                                 <option value="diretor">Diretor</option>
                                                 <option value="tecnico">Técnico</option>
-                                                <option value="supervisor">Supervisor</option>
+                                                <option value="supervisor_monitoramento">Supervisor Monitoramento</option>
                                                 <option value="supervisor_zeladoria">Supervisor Zeladoria</option>
                                                 <option value="administrativo">Administrativo</option>
                                                 <option value="operador">Operador</option>
                                                 <option value="rondante">Rondante</option>
                                             <?php endif; ?>
                                         </select>
-                                        <?php if ($usuario_categoria === 'supervisor'): ?>
+                                        <?php if ($usuario_categoria === 'supervisor_monitoramento'): ?>
                                             <input type="hidden" name="categoria" value="operador">
                                             <p class="mt-2 text-xs text-slate-500">Supervisores podem criar apenas usuários do tipo <strong>Operador</strong>.</p>
                                         <?php endif; ?>
@@ -188,14 +219,15 @@ if (isset($_SESSION['mensagem'])) {
                                         </div>
                                     </div>
                                 </div>
-                                <div id="base-field" class="space-y-2" <?= $usuario_categoria === 'supervisor' ? '' : 'style="display:none"' ?>>
+                                <div id="base-field" class="space-y-2" style="display:none">
                                     <label class="form-label">Base Vinculada</label>
-                                    <select name="base_id" class="form-input" <?= $usuario_categoria === 'supervisor' ? 'required' : '' ?>>
+                                    <select name="base_id" class="form-input">
                                         <option value="">Selecione a base</option>
                                         <?php foreach ($bases as $b): ?>
                                             <option value="<?= $b['id'] ?>"><?= htmlspecialchars($b['nome']) ?></option>
                                         <?php endforeach; ?>
                                     </select>
+                                    <p class="mt-1 text-[10px] text-slate-400 italic">Obrigatória para <strong>Operador</strong> e <strong>Supervisor Monitoramento</strong>.</p>
                                 </div>
                                 <button type="submit" class="icon-btn-green" title="Criar Usuário"><i class="fas fa-user-plus" style="font-size:10px"></i></button>
                             </form>
@@ -203,9 +235,17 @@ if (isset($_SESSION['mensagem'])) {
                     </div>
 
                     <script>
-                        document.querySelector('select[name="categoria"]').addEventListener('change', function() {
-                            document.getElementById('base-field').style.display = this.value === 'operador' ? 'block' : 'none';
-                        });
+                        (function() {
+                            const selCategoria = document.querySelector('select[name="categoria"]');
+                            const selBase = document.querySelector('select[name="base_id"]');
+                            function syncBaseField() {
+                                const precisaBase = ['operador', 'supervisor_monitoramento'].includes(selCategoria.value);
+                                document.getElementById('base-field').style.display = precisaBase ? 'block' : 'none';
+                                selBase.required = precisaBase;
+                            }
+                            selCategoria.addEventListener('change', syncBaseField);
+                            syncBaseField();
+                        })();
                     </script>
 
                     <!-- Users List -->
@@ -235,20 +275,33 @@ if (isset($_SESSION['mensagem'])) {
                                                         'gerente' => 'bg-purple-100 text-purple-700',
                                                         'diretor' => 'bg-indigo-100 text-indigo-700',
                                                         'tecnico' => 'bg-cyan-100 text-cyan-700',
-                                                        'supervisor' => 'bg-blue-100 text-blue-700',
+                                                        'supervisor_monitoramento' => 'bg-blue-100 text-blue-700',
+                                                        'supervisor_zeladoria' => 'bg-sky-100 text-sky-700',
                                                         'administrativo' => 'bg-green-100 text-green-700',
                                                         'operador' => 'bg-orange-100 text-orange-700',
                                                         'rondante' => 'bg-amber-100 text-amber-700',
                                                         'colaborador' => 'bg-slate-100 text-slate-700'
                                                     ];
+                                                    $cat_labels = [
+                                                        'gerente' => 'Gerente',
+                                                        'diretor' => 'Diretor',
+                                                        'tecnico' => 'Técnico',
+                                                        'supervisor_monitoramento' => 'Supervisor Monitoramento',
+                                                        'supervisor_zeladoria' => 'Supervisor Zeladoria',
+                                                        'administrativo' => 'Administrativo',
+                                                        'operador' => 'Operador',
+                                                        'rondante' => 'Rondante',
+                                                        'colaborador' => 'Colaborador'
+                                                    ];
                                                     $color = $cat_colors[$usuario['categoria']] ?? 'bg-slate-100 text-slate-700';
+                                                    $rotulo = $cat_labels[$usuario['categoria']] ?? ucfirst($usuario['categoria']);
                                                 ?>
                                                 <span class="inline-flex items-center rounded-lg px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider <?= $color ?>">
-                                                    <?= ucfirst($usuario['categoria']) ?>
+                                                    <?= $rotulo ?>
                                                 </span>
                                             </td>
                                             <td>
-                                                <?php if ($usuario['categoria'] === 'operador' && !empty($usuario['base_nome'])): ?>
+                                                <?php if (in_array($usuario['categoria'], ['operador', 'supervisor_monitoramento']) && !empty($usuario['base_nome'])): ?>
                                                     <span class="text-xs text-slate-500"><?= htmlspecialchars($usuario['base_nome']) ?></span>
                                                 <?php else: ?>
                                                     <span class="text-xs text-slate-300">—</span>

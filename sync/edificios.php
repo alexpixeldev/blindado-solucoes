@@ -5,10 +5,10 @@ require_once 'localizacao_helper.php';
 
 $usuario_categoria = $_SESSION['usuario_categoria'] ?? '';
 if ($usuario_categoria === 'colaborador') { header('Location: index.php'); exit(); }
-$pode_editar = in_array($usuario_categoria, ['supervisor', 'gerente']);
+$pode_editar = in_array($usuario_categoria, ['supervisor_monitoramento', 'gerente']);
 
 $usuario_base_id = null;
-if (in_array($usuario_categoria, ['operador', 'supervisor'])) {
+if (in_array($usuario_categoria, ['operador', 'supervisor_monitoramento'])) {
     $row_b = $conn->query("SELECT base_id FROM usuarios WHERE id = " . intval($_SESSION['usuario_id'] ?? 0))->fetch_assoc();
     $usuario_base_id = $row_b['base_id'] ?? null;
 }
@@ -408,8 +408,14 @@ unset($_SESSION['mensagem'], $_SESSION['mensagem_tipo']);
                                 'sindicos' => ['url' => 'cadastrar_sindico.php', 'label' => 'Novo Síndico']
                             ];
                             $current_add = $add_links[$tab] ?? $add_links['edificios'];
+                            // Supervisor vinculado não pode cadastrar uma nova base
+                            if ($tab === 'bases' && $usuario_categoria !== 'gerente') {
+                                $current_add = null;
+                            }
                         ?>
+                        <?php if ($current_add): ?>
                         <a href="<?= $current_add['url'] ?>" class="icon-btn-green" title="<?= $current_add['label'] ?>"><i class="fas fa-plus" style="font-size:10px"></i></a>
+                        <?php endif; ?>
                     <?php endif; ?>
                 </div>
 

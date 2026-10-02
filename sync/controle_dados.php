@@ -4,10 +4,10 @@ require_once 'conexao.php';
 
 $usuario_categoria = $_SESSION['usuario_categoria'] ?? '';
 if ($usuario_categoria === 'colaborador') { header('Location: index.php'); exit(); }
-$pode_editar = in_array($usuario_categoria, ['supervisor', 'gerente']);
+$pode_editar = in_array($usuario_categoria, ['supervisor_monitoramento', 'gerente']);
 
 $usuario_base_id = null;
-if (in_array($usuario_categoria, ['operador', 'supervisor'])) {
+if (in_array($usuario_categoria, ['operador', 'supervisor_monitoramento'])) {
     $row_b = $conn->query("SELECT base_id FROM usuarios WHERE id = " . intval($_SESSION['usuario_id'] ?? 0))->fetch_assoc();
     $usuario_base_id = $row_b['base_id'] ?? null;
 }

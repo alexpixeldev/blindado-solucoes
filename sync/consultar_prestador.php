@@ -12,7 +12,7 @@ if (in_array($usuario_categoria, ['administrativo', 'colaborador'])) {
 }
 
 $usuario_base_id = null;
-if (in_array($usuario_categoria, ['operador', 'supervisor'])) {
+if (in_array($usuario_categoria, ['operador', 'supervisor_monitoramento'])) {
     $row_b = $conn->query("SELECT base_id FROM usuarios WHERE id = " . intval($_SESSION['usuario_id'] ?? 0))->fetch_assoc();
     $usuario_base_id = $row_b['base_id'] ?? null;
 }

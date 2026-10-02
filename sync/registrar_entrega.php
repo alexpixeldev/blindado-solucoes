@@ -1,10 +1,12 @@
 <?php
 require_once 'verifica_login.php';
 require_once 'conexao.php';
+require_once 'base_scope.php';
 require_once 'components/modern_calendar.php';
 
 $usuario_id = $_SESSION['usuario_id'];
 $usuario_categoria = $_SESSION['usuario_categoria'] ?? '';
+$usuario_base_id = escopo_base_sessao($conn, $usuario_categoria);
 $mensagem = '';
 $mensagem_tipo = 'info';
 
@@ -28,7 +30,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!is_array($apartamentos)) $apartamentos = [$apartamentos];
     if (!is_array($situacoes_arr)) $situacoes_arr = [$situacoes_arr];
 
-    if ($edificio_id > 0 && !empty($hora_entrega) && !empty($transportadora) && count($apartamentos) > 0) {
+      // Operador/supervisor vinculado só registra entrega em edifício da própria base
+      if (!pode_operar_no_edificio($conn, $edificio_id, $usuario_categoria, $usuario_base_id)) {
+          $mensagem = "Você só pode registrar entregas em edifícios da base à qual está vinculado.";
+          $mensagem_tipo = 'error';
+      } elseif ($edificio_id > 0 && !empty($hora_entrega) && !empty($transportadora) && count($apartamentos) > 0) {
         $stmt = $conn->prepare("INSERT INTO entregas (edificio_id, numero_apartamento, data_entrega, hora_entrega, situacao_recebimento, transportadora, usuario_id, observacao) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
         if (!$stmt) {
             $mensagem = "Erro ao preparar insert: " . $conn->error;
@@ -63,23 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$usuario_base_id = null;
-if (in_array($usuario_categoria, ['operador', 'supervisor'])) {
-    $stmt_b = $conn->prepare("SELECT base_id FROM usuarios WHERE id = ?");
-    $stmt_b->bind_param("i", $usuario_id);
-    $stmt_b->execute();
-    $row_b = $stmt_b->get_result()->fetch_assoc();
-    $stmt_b->close();
-    $usuario_base_id = $row_b['base_id'] ?? null;
-
-    if (intval($usuario_base_id) > 0) {
-        $edificios = $conn->query("SELECT e.id, e.nome, b.nome as base_nome FROM edificios e JOIN bases b ON e.base_id = b.id WHERE b.status = 'ativo' AND e.base_id = " . intval($usuario_base_id) . " ORDER BY e.nome")->fetch_all(MYSQLI_ASSOC);
-    } else {
-        $edificios = $conn->query("SELECT e.id, e.nome, b.nome as base_nome FROM edificios e JOIN bases b ON e.base_id = b.id WHERE b.status = 'ativo' ORDER BY e.nome")->fetch_all(MYSQLI_ASSOC);
-    }
-} else {
-    $edificios = $conn->query("SELECT e.id, e.nome, b.nome as base_nome FROM edificios e JOIN bases b ON e.base_id = b.id WHERE b.status = 'ativo' ORDER BY e.nome")->fetch_all(MYSQLI_ASSOC);
-}
+$edificios = $conn->query("SELECT e.id, e.nome, b.nome as base_nome FROM edificios e JOIN bases b ON e.base_id = b.id WHERE b.status = 'ativo'" . filtro_base_sql($usuario_categoria, $usuario_base_id, 'e.base_id') . " ORDER BY e.nome")->fetch_all(MYSQLI_ASSOC);
 $transportadoras = $conn->query("SELECT nome FROM transportadoras ORDER BY nome")->fetch_all(MYSQLI_ASSOC);
 $situacoes = $conn->query("SELECT nome FROM situacoes_entrega ORDER BY nome")->fetch_all(MYSQLI_ASSOC);
 ?>
@@ -135,7 +125,7 @@ $situacoes = $conn->query("SELECT nome FROM situacoes_entrega ORDER BY nome")->f
                         <form method="POST" class="space-y-8">
                             <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                                 <div class="space-y-2 sm:col-span-1">
-                                    <label class="form-label">Edifício <span class="text-sm text-slate-500 font-normal">(somente bases ativas)</span></label>
+                                    <label class="form-label">Edifício</label>
                                     <div class="relative">
                                         <select name="edificio_id" class="form-input appearance-none pr-10" required>
                                             <option value="">-- Selecione o Edifício --</option>

@@ -1,11 +1,13 @@
 <?php
 require_once 'verifica_login.php';
 require_once 'conexao.php';
+require_once 'base_scope.php';
 require_once 'components/modern_calendar.php';
 
 $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
 $usuario_id = $_SESSION['usuario_id'];
 $usuario_categoria = $_SESSION['usuario_categoria'] ?? '';
+$usuario_base_id = escopo_base_sessao($conn, $usuario_categoria, $usuario_id);
 
 if (!$id) {
     header("Location: consultar_ocorrencia.php");
@@ -19,7 +21,10 @@ $stmt->execute();
 $ocorrencia = $stmt->get_result()->fetch_assoc();
 $stmt->close();
 
-if (!$ocorrencia || ($ocorrencia['usuario_id'] != $usuario_id && !in_array($usuario_categoria, ['supervisor', 'gerente']))) {
+$eh_dono = $ocorrencia && $ocorrencia['usuario_id'] == $usuario_id;
+$eh_gestor = in_array($usuario_categoria, ['supervisor_monitoramento', 'gerente']);
+
+if (!$ocorrencia || (!($eh_dono || $eh_gestor) || !ocorrencia_da_base_do_usuario($conn, $ocorrencia, $usuario_categoria, $usuario_base_id))) {
     header("Location: consultar_ocorrencia.php");
     exit();
 }
@@ -28,8 +33,10 @@ $mensagem = '';
 $mensagem_tipo = 'info';
 
 // Buscar edifícios para o select
-$edificios = $conn->query("SELECT e.id, e.nome, b.nome as base_nome FROM edificios e JOIN bases b ON e.base_id = b.id WHERE b.status = 'ativo' ORDER BY e.nome")->fetch_all(MYSQLI_ASSOC);
-$bases = $conn->query("SELECT id, nome FROM bases WHERE status = 'ativo' ORDER BY nome")->fetch_all(MYSQLI_ASSOC);
+$filtro_ed = filtro_base_sql($usuario_categoria, $usuario_base_id, 'e.base_id');
+$edificios = $conn->query("SELECT e.id, e.nome, b.nome as base_nome FROM edificios e JOIN bases b ON e.base_id = b.id WHERE b.status = 'ativo'" . $filtro_ed . " ORDER BY e.nome")->fetch_all(MYSQLI_ASSOC);
+$filtro_bases = filtro_base_sql($usuario_categoria, $usuario_base_id, 'id');
+$bases = $conn->query("SELECT id, nome FROM bases WHERE status = 'ativo'" . $filtro_bases . " ORDER BY nome")->fetch_all(MYSQLI_ASSOC);
 
 $edificios_map = [];
 foreach ($edificios as $ed) { $edificios_map[$ed['id']] = $ed['nome']; }
@@ -63,7 +70,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!is_array($locais)) $locais = [$locais];
     $locais = array_values(array_filter(array_map('trim', $locais)));
 
-    if (empty($supervisor) || empty($operadores) || empty($locais) || empty($descricao)) {
+    // Supervisor/operador só pode atribuir locais da base a que está vinculado
+    $check_locais = separar_locais_por_base($conn, $locais, $usuario_categoria, $usuario_base_id);
+    $locais = $check_locais['permitidos'];
+
+    if (!empty($check_locais['bloqueados'])) {
+        $mensagem = "Você só pode salvar locais vinculados à sua base.";
+        $mensagem_tipo = "error";
+    } elseif (empty($supervisor) || empty($operadores) || empty($locais) || empty($descricao)) {
         $mensagem = "Preencha supervisor, equipe, ao menos um local e o relatório.";
         $mensagem_tipo = "error";
     } else {
@@ -192,7 +206,7 @@ $midias = $conn->query("SELECT * FROM ocorrencias_midia WHERE ocorrencia_id = $i
                     <form id="form-editar" method="POST" enctype="multipart/form-data" class="space-y-6 animate-slide-up">
                         <div class="admin-card grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div class="space-y-2">
-                                <label class="form-label">Supervisor</label>
+                                <label class="form-label">Supervisor Monitoramento</label>
                                 <div class="relative">
                                     <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                         <i class="fas fa-user-tie text-slate-400 text-sm"></i>

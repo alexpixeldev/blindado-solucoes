@@ -5,7 +5,7 @@ require_once 'components/modern_calendar.php';
 
 $usuario_categoria = $_SESSION['usuario_categoria'] ?? '';
 $usuario_base_id = null;
-if (in_array($usuario_categoria, ['operador', 'supervisor'])) {
+if (in_array($usuario_categoria, ['operador', 'supervisor_monitoramento'])) {
     $row_b = $conn->query("SELECT base_id FROM usuarios WHERE id = " . intval($_SESSION['usuario_id'] ?? 0))->fetch_assoc();
     $usuario_base_id = $row_b['base_id'] ?? null;
 }
@@ -275,7 +275,7 @@ function nomesLocais($locais_ids, $edificios_map, $bases_map) {
                                                                 </p>
                                                             </div>
                                                         </div>
-                                                        <?php if ($reg['usuario_id'] == $_SESSION['usuario_id'] || in_array($usuario_categoria, ['supervisor', 'gerente'])): ?>
+                                                        <?php if ($reg['usuario_id'] == $_SESSION['usuario_id'] || in_array($usuario_categoria, ['supervisor_monitoramento', 'gerente'])): ?>
                                                             <div class="relatorio-actions">
                                                                 <a href="editar_ocorrencia.php?id=<?= $reg['id'] ?>" class="icon-btn" title="Editar"><i class="fas fa-edit" style="font-size:10px"></i></a>
                                                                 <?php if ($usuario_categoria === 'gerente'): ?>

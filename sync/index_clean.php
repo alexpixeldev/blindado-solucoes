@@ -20,7 +20,7 @@ $chart_data = [];
 $previsao_entradas = [];
 $previsao_saidas = [];
 
-if (Auth::isOneOf(['gerente', 'supervisor'])) {
+if (Auth::isOneOf(['gerente', 'supervisor_monitoramento'])) {
     $db = Database::getInstance();
     
     $stats['total_edificios'] = $db->fetchOne("SELECT COUNT(*) as total FROM edificios")['total'] ?? 0;
@@ -104,7 +104,7 @@ if (Auth::isOneOf(['gerente', 'supervisor'])) {
                     <p class="mt-1 text-slate-500">Bem-vindo(a), <?= $usuario['nome'] ?>!</p>
                 </div>
 
-                <?php if (Auth::isOneOf(['gerente', 'supervisor'])): ?>
+                <?php if (Auth::isOneOf(['gerente', 'supervisor_monitoramento'])): ?>
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                         <div class="admin-card animate-slide-up">
                             <div class="flex items-center">
@@ -178,7 +178,7 @@ if (Auth::isOneOf(['gerente', 'supervisor'])) {
         </div>
     </div>
 
-    <?php if (Auth::isOneOf(['gerente', 'supervisor'])): ?>
+    <?php if (Auth::isOneOf(['gerente', 'supervisor_monitoramento'])): ?>
         <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
         <script>

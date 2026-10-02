@@ -4,7 +4,7 @@ require_once 'conexao.php';
 require_once 'components/modern_calendar.php';
 
 // Apenas usuários Administrativo, Gerente e Supervisor podem acessar
-if (!in_array($_SESSION['usuario_categoria'], ['administrativo', 'gerente', 'supervisor'])) {
+if (!in_array($_SESSION['usuario_categoria'], ['administrativo', 'gerente', 'supervisor_monitoramento'])) {
     header("Location: index.php");
     exit();
 }
