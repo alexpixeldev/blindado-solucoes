@@ -260,7 +260,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['salvar_plantao'])) {
                                 </script>
                             </div>
                         </div>
-                        <div class="meta-row"><span class="meta-label"><i class="fas fa-user"></i> Operador 2</span><div class="meta-value"><div class="autocomplete-wrap"><input type="text" id="operador2-input" class="autocomplete-input" placeholder="Digite o nome do operador" required autocomplete="off"><input type="hidden" name="operador2_nome" id="operador2-nome"><div class="autocomplete-dropdown" id="operador2-dropdown"></div></div></div></div>
+                        <div class="meta-row"><span class="meta-label"><i class="fas fa-user"></i> Operador 2</span><div class="meta-value"><div class="autocomplete-wrap"><input type="text" id="operador2-input" class="autocomplete-input" placeholder="Digite o nome do operador (opcional)" autocomplete="off"><input type="hidden" name="operador2_nome" id="operador2-nome"><div class="autocomplete-dropdown" id="operador2-dropdown"></div></div></div></div>
                         <div class="meta-row">
                             <span class="meta-label"><i class="fas fa-calendar-alt"></i> Turno</span>
                             <div class="meta-value">
@@ -943,16 +943,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['salvar_plantao'])) {
             syncContentEditable();
 
             const campos = [
-                ['supervisor-input', 'supervisor-nome', 'supervisor'],
-                ['operador1-input', 'operador1-nome', 'operador 1'],
-                ['operador2-input', 'operador2-nome', 'operador 2'],
-                ['operador3-input', 'operador3-nome', 'operador 3']
+                ['supervisor-input', 'supervisor-nome', 'supervisor', true],
+                ['operador1-input', 'operador1-nome', 'operador 1', true],
+                ['operador2-input', 'operador2-nome', 'operador 2', false],
+                ['operador3-input', 'operador3-nome', 'operador 3', false]
             ];
-            for (const [inputId, hiddenId, label] of campos) {
+            for (const [inputId, hiddenId, label, obrigatorio] of campos) {
                 const input = document.getElementById(inputId);
                 const hidden = document.getElementById(hiddenId);
                 if (input.value.trim()) hidden.value = formatName(input.value.trim());
-                if (!hidden.value.trim() && label !== 'operador 3') {
+                if (!hidden.value.trim() && obrigatorio) {
                     showToast('Informe o ' + label + ' antes de salvar o relatório.', 'error');
                     input.focus();
                     return;

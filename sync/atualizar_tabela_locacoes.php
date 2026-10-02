@@ -17,6 +17,7 @@ if ($executar) {
         'data_registro' => "TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
         'locador_nome' => "VARCHAR(255)",
         'locador_telefone' => "VARCHAR(50)",
+        'registrador_nome' => "VARCHAR(255)",
         'data_entrada' => "DATE",
         'data_saida' => "DATE",
         'observacoes' => "TEXT",

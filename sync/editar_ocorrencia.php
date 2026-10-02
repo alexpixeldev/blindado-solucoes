@@ -19,7 +19,7 @@ $stmt->execute();
 $ocorrencia = $stmt->get_result()->fetch_assoc();
 $stmt->close();
 
-if (!$ocorrencia || ($ocorrencia['usuario_id'] != $usuario_id && $usuario_categoria !== 'gerente')) {
+if (!$ocorrencia || ($ocorrencia['usuario_id'] != $usuario_id && !in_array($usuario_categoria, ['supervisor', 'gerente']))) {
     header("Location: consultar_ocorrencia.php");
     exit();
 }

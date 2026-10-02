@@ -86,7 +86,13 @@ class BlindadoPDF extends FPDF {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $data = $_POST;
-    
+
+    // Garante a coluna registrador_nome (evita falha no primeiro envio)
+    $checkCol = $conn->query("SHOW COLUMNS FROM locacoes LIKE 'registrador_nome'");
+    if ($checkCol && $checkCol->num_rows == 0) {
+        $conn->query("ALTER TABLE locacoes ADD COLUMN registrador_nome VARCHAR(255)");
+    }
+
     // --- SALVAR DADOS NO BANCO DE DADOS ---
     // Coletar dados básicos
     $edificio_id = $data['edificio_id'] ?? null;
@@ -94,6 +100,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $numero_apartamento = $data['numero_apartamento'] ?? '';
     $locador_nome = $data['locador_nome'] ?? null;
     $locador_telefone = $data['locador_telefone'] ?? null;
+    $registrador_nome = trim($data['registrador_nome'] ?? '');
+    if ($tipo_usuario !== 'locador' || $registrador_nome === '') {
+        $registrador_nome = null;
+    }
     $data_entrada = $data['data_entrada'] ?? null;
     $data_saida = $data['data_saida'] ?? null;
     $observacoes = $data['observacoes'] ?? '';
@@ -152,8 +162,8 @@ if (!empty($data['inquilinos']) && is_array($data['inquilinos'])) {
 if ($edificio_id && $numero_apartamento) {
         // 1. Inserir na tabela principal (locacoes)
         $data_locacao = date('Y-m-d');
-        $stmt = $conn->prepare("INSERT INTO locacoes (edificio_id, tipo_usuario, numero_apartamento, locador_nome, locador_telefone, data_entrada, data_saida, observacoes, data_locacao) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("issssssss", $edificio_id, $tipo_usuario, $numero_apartamento, $locador_nome, $locador_telefone, $data_entrada, $data_saida, $observacoes, $data_locacao);
+        $stmt = $conn->prepare("INSERT INTO locacoes (edificio_id, tipo_usuario, numero_apartamento, locador_nome, locador_telefone, registrador_nome, data_entrada, data_saida, observacoes, data_locacao) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("isssssssss", $edificio_id, $tipo_usuario, $numero_apartamento, $locador_nome, $locador_telefone, $registrador_nome, $data_entrada, $data_saida, $observacoes, $data_locacao);
         
         if ($stmt->execute()) {
             $locacao_id = $stmt->insert_id;
@@ -240,12 +250,16 @@ if ($edificio_id && $numero_apartamento) {
     $saida = $data['data_saida'] ?? '---';
     $loc_tel = $data['locador_telefone'] ?? '';
     $loc_nome = formatarTexto($data['locador_nome'] ?? '');
+    $registrador_pdf = formatarTexto($data['registrador_nome'] ?? '');
 
     $y_start = $pdf->GetY();
     
     $pdf->Cell(60, 6, $pdf->T('Apartamento: ') . $pdf->T($apt), 0, 1);
     $pdf->Cell(60, 6, $pdf->T('Data entrada: ') . $pdf->T($entrada), 0, 1);
     $pdf->Cell(60, 6, $pdf->T('Data saída: ') . $pdf->T($saida), 0, 1);
+    if (!empty($registrador_pdf)) {
+        $pdf->Cell(60, 6, $pdf->T('Locação registrada por: ') . $pdf->T($registrador_pdf), 0, 1);
+    }
     
     $y_left_end = $pdf->GetY();
 

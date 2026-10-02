@@ -115,6 +115,7 @@ function montar_email_html(array $items) {
     $tipoLabel    = ($tipo === 'locador') ? 'Locador' : 'Locatário';
     $locador      = $esc($items['locador_nome'] ?? '');
     $locadorTel   = $esc($items['locador_telefone'] ?? '');
+    $registrador   = $esc($items['registrador_nome'] ?? '');
     $entrada      = $esc($items['data_entrada'] ?? '');
     $saida        = $esc($items['data_saida'] ?? '');
     $obs          = nl2br($esc($items['observacoes'] ?? ''));
@@ -165,6 +166,9 @@ function montar_email_html(array $items) {
     $html .= '<table style="width:100%;border-collapse:collapse;font-size:13px;">';
     $html .= '<tr><td style="padding:6px 0;color:#475569;width:40%;"><strong>Apartamento</strong></td><td style="padding:6px 0;">' . $apt . '</td></tr>';
     $html .= '<tr><td style="padding:6px 0;color:#475569;"><strong>Perfil</strong></td><td style="padding:6px 0;">' . $tipoLabel . '</td></tr>';
+    if ($registrador) {
+        $html .= '<tr><td style="padding:6px 0;color:#475569;"><strong>Locação registrada por</strong></td><td style="padding:6px 0;">' . $registrador . '</td></tr>';
+    }
     if ($locador) {
         $html .= '<tr><td style="padding:6px 0;color:#475569;"><strong>Locador</strong></td><td style="padding:6px 0;">' . $locador . '</td></tr>';
     }

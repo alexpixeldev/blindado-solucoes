@@ -137,11 +137,16 @@ document.addEventListener('DOMContentLoaded', function() {
     // --- Lógica de Tipo de Usuário ---
     const userTypeRadios = document.querySelectorAll('input[name="user_type"]');
     const locadorFields = document.getElementById('locadorFields');
+    const registradorFields = document.getElementById('registradorFields');
 
     userTypeRadios.forEach(radio => {
         radio.addEventListener('change', () => {
             const isLocatario = document.getElementById('radio_locatario').checked;
+            const isLocador = document.getElementById('radio_locador').checked;
             locadorFields.classList.toggle('hidden', !isLocatario);
+            if (registradorFields) {
+                registradorFields.classList.toggle('hidden', !isLocador);
+            }
 
             // Atualizar cor da bolinha
             updateRadioBolinha();
@@ -758,6 +763,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     showFieldError(telLocador, 'Você precisa inserir o WhatsApp do locador');
                     if (!firstErrorElement) firstErrorElement = telLocador;
                 }
+            } else {
+                const nomeRegistrador = document.getElementById('registrador_nome');
+                if (nomeRegistrador && !nomeRegistrador.value.trim()) {
+                    isValid = false;
+                    showFieldError(nomeRegistrador, 'Você precisa informar o seu nome');
+                    if (!firstErrorElement) firstErrorElement = nomeRegistrador;
+                }
             }
         }
 
@@ -939,6 +951,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
             ` : ''}
 
+            ${data.registrador_nome ? `
+                <div class="p-4 sm:p-6 bg-white border border-slate-100 rounded-2xl shadow-sm">
+                    <h4 class="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 sm:mb-4">Locação registrada por</h4>
+                    <p class="text-base sm:text-lg font-bold text-slate-900 break-words">${data.registrador_nome}</p>
+                </div>
+            ` : ''}
+
             <div class="p-4 sm:p-6 bg-white border border-slate-100 rounded-2xl shadow-sm">
                 <h4 class="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 sm:mb-4">Hóspedes</h4>
                 <div class="space-y-2 sm:space-y-3">
@@ -1065,6 +1084,10 @@ document.addEventListener('DOMContentLoaded', function() {
         if (data.user_type === 'locatario') {
             msg += `*Locador:* ${formatText(data.locador_nome)}\n`;
             msg += `*WhatsApp Locador:* ${data.locador_ddi} ${data.locador_telefone}\n\n`;
+        }
+
+        if (data.registrador_nome) {
+            msg += `*Locação registrada por:* ${formatText(data.registrador_nome)}\n\n`;
         }
 
         msg += `*Inquilinos:*\n`;

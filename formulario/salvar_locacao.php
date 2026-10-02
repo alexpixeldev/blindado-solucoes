@@ -68,6 +68,7 @@ function ensure_locacoes_schema($conn) {
         numero_apartamento VARCHAR(20),
         locador_nome VARCHAR(255),
         locador_telefone VARCHAR(50),
+        registrador_nome VARCHAR(255),
         data_entrada DATE,
         data_saida DATE,
         observacoes TEXT,
@@ -79,6 +80,7 @@ function ensure_locacoes_schema($conn) {
         'tipo_usuario' => "VARCHAR(50) DEFAULT 'locatario'",
         'locador_nome' => 'VARCHAR(255)',
         'locador_telefone' => 'VARCHAR(50)',
+        'registrador_nome' => 'VARCHAR(255)',
         'data_entrada' => 'DATE',
         'data_saida' => 'DATE',
         'observacoes' => 'TEXT',
@@ -181,6 +183,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $locador_nome = $_POST['locador_nome'] ?? null;
     $locador_ddi = $_POST['locador_ddi'] ?? '';
     $locador_telefone = $_POST['locador_telefone'] ?? null;
+    $registrador_nome = trim($_POST['registrador_nome'] ?? '');
+    if ($tipo_usuario !== 'locador' || $registrador_nome === '') {
+        $registrador_nome = null;
+    }
     
     // Concatenar DDI e Telefone para salvar no banco se necessário, 
     // ou você pode salvar apenas o telefone se preferir manter a estrutura atual.
@@ -215,6 +221,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         }
         die("Erro: Edifício e Apartamento são obrigatórios.");
+    }
+
+    // Nome de quem registra e obrigatorio quando o perfil e Locador
+    if ($tipo_usuario === 'locador' && empty($registrador_nome)) {
+        $msg = 'Informe o nome de quem registra a locação.';
+        if ($is_ajax) {
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['status' => 'error', 'message' => $msg]);
+            exit;
+        }
+        die('Erro: ' . $msg);
     }
 
     // Verificação de duplicata exata:
@@ -270,9 +287,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // 1. Inserir na tabela principal (locacoes)
     $data_locacao = date('Y-m-d');
-    $stmt = $conn->prepare("INSERT INTO locacoes (edificio_id, tipo_usuario, numero_apartamento, locador_nome, locador_telefone, data_entrada, data_saida, observacoes, data_locacao) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt = $conn->prepare("INSERT INTO locacoes (edificio_id, tipo_usuario, numero_apartamento, locador_nome, locador_telefone, registrador_nome, data_entrada, data_saida, observacoes, data_locacao) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
     assert_prepare($stmt, $conn, 'locacoes insert');
-    $stmt->bind_param("issssssss", $edificio_id, $tipo_usuario, $numero_apartamento, $locador_nome, $locador_telefone, $data_entrada, $data_saida, $observacoes, $data_locacao);
+    $stmt->bind_param("isssssssss", $edificio_id, $tipo_usuario, $numero_apartamento, $locador_nome, $locador_telefone, $registrador_nome, $data_entrada, $data_saida, $observacoes, $data_locacao);
     
     if ($stmt->execute()) {
         $locacao_id = $stmt->insert_id;
@@ -375,6 +392,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'numero_apartamento'   => $numero_apartamento,
                     'locador_nome'         => $locador_nome,
                     'locador_telefone'     => $locador_telefone,
+                    'registrador_nome'     => $registrador_nome,
                     'data_entrada'         => $data_entrada,
                     'data_saida'           => $data_saida,
                     'observacoes'          => $observacoes,

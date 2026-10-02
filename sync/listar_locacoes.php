@@ -294,6 +294,15 @@ if (!empty($locacaoIds)) {
             color: var(--text-secondary);
             white-space: nowrap;
         }
+        .loc-card-registro {
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            background: rgba(15, 23, 42, 0.08);
+            border-radius: 0.375rem;
+            padding: 0.2rem 0.5rem;
+            line-height: 1.1;
+        }
         .loc-card-delete {
             flex-shrink: 0;
         }
@@ -478,9 +487,13 @@ if (!empty($locacaoIds)) {
                                 <?php if ($usuario_categoria === 'gerente'): ?>
                                     <input type="checkbox" name="locacao_select[]" value="<?= $loc['id'] ?>" class="locacao-checkbox rounded border-slate-300 text-primary-600 focus:ring-primary-500 shrink-0">
                                 <?php endif; ?>
-                                <div class="flex items-center gap-2 min-w-0">
+                                <div class="flex items-center gap-2 min-w-0 flex-wrap">
                                     <span class="loc-card-title"><?= htmlspecialchars($loc['nome_edificio']) ?></span>
                                     <span class="loc-card-apt">Apartamento <?= htmlspecialchars($loc['numero_apartamento']) ?></span>
+                                    <?php $responsavel = $loc['registrador_nome'] ?? ''; if ($responsavel === '') { $responsavel = $loc['locador_nome'] ?? ''; } ?>
+                                    <?php if ($responsavel !== ''): ?>
+                                    <span class="loc-card-registro">Locação registrada por: <?= htmlspecialchars($responsavel) ?></span>
+                                    <?php endif; ?>
                                 </div>
                                 <span class="loc-card-date"><?= date('d/m/Y', strtotime($loc['data_registro'] ?? $loc['data_locacao'] ?? 'now')) ?> <?= date('H:i', strtotime($loc['data_registro'] ?? $loc['data_locacao'] ?? 'now')) ?></span>
                                 <?php if ($usuario_categoria === 'gerente'): ?>

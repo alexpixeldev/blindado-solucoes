@@ -34,8 +34,8 @@
                         <div class="w-2 h-2 rounded-full bg-white opacity-0 peer-checked:opacity-100 transition-opacity duration-300"></div>
                     </div>
                 </div>
-                <span class="text-lg font-bold text-slate-900">Sou Locatário</span>
-                <span class="mt-1 text-sm text-slate-500">Hóspede ou inquilino temporário.</span>
+                <span class="text-lg font-bold text-slate-900">Sou Hóspede</span>
+                <span class="mt-1 text-sm text-slate-500">Inquilino temporário</span>
                 
                 <div class="absolute inset-0 border-2 border-transparent peer-checked:border-primary-600 rounded-2xl pointer-events-none transition-all duration-300"></div>
             </label>
@@ -81,6 +81,17 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- Nome de quem registra a locacao (ambos os perfis) -->
+        <div id="registradorFields" class="hidden p-6 bg-slate-50 rounded-2xl border border-slate-200 animate-fade-in">
+            <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
+                    <i class="fas fa-user"></i>
+                </div>
+                <input type="text" name="registrador_nome" id="registrador_nome" placeholder="Informe seu nome" data-label="nome"
+                       class="block w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-200">
             </div>
         </div>
     </div>

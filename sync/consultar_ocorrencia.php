@@ -275,7 +275,7 @@ function nomesLocais($locais_ids, $edificios_map, $bases_map) {
                                                                 </p>
                                                             </div>
                                                         </div>
-                                                        <?php if ($reg['usuario_id'] == $_SESSION['usuario_id'] || $usuario_categoria === 'gerente'): ?>
+                                                        <?php if ($reg['usuario_id'] == $_SESSION['usuario_id'] || in_array($usuario_categoria, ['supervisor', 'gerente'])): ?>
                                                             <div class="relatorio-actions">
                                                                 <a href="editar_ocorrencia.php?id=<?= $reg['id'] ?>" class="icon-btn" title="Editar"><i class="fas fa-edit" style="font-size:10px"></i></a>
                                                                 <?php if ($usuario_categoria === 'gerente'): ?>
