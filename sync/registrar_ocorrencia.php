@@ -230,6 +230,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['salvar_plantao'])) {
         <div class="flex-1 flex flex-col page-wrapper">
             <header class="top-bar">
                 <div class="top-bar-left">
+                    <button type="button" id="sidebar-toggle" aria-label="Abrir menu"
+                            style="color:#fff; font-size:16px; background:none; border:0; cursor:pointer; margin-right:10px; padding:6px;">
+                        <i class="fas fa-bars"></i>
+                    </button>
                     <i class="fas fa-file-alt"></i>
                     <span>Novo Relatório de Plantão</span>
                 </div>

@@ -54,6 +54,11 @@ if ($current_page !== 'index') {
 <header class="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b px-4 sm:px-8"
         style="border-color: var(--border); background: rgba(6, 19, 40, 0.97);">
     <div class="flex items-center gap-3">
+        <button type="button" id="sidebar-toggle" aria-label="Abrir menu"
+                class="icon-btn shrink-0">
+            <i class="fas fa-bars text-lg"></i>
+        </button>
+
         <nav class="hidden items-center gap-2 text-sm font-medium sm:flex" style="color: var(--text-secondary);" aria-label="Breadcrumb">
             <?php foreach ($breadcrumbs as $index => $crumb): ?>
                 <div class="flex items-center gap-2">

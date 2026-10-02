@@ -40,7 +40,10 @@ $categoria_labels = [
 $categoria_label = $categoria_labels[$usuario_categoria] ?? 'Usuário';
 ?>
 
-<aside id="admin-sidebar" class="flex w-72 flex-col text-white" style="background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-primary) 100%); border-right: 1px solid var(--border);">
+<div id="admin-overlay"></div>
+
+<aside id="admin-sidebar" class="flex w-72 flex-col text-white"
+    style="background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-primary) 100%); border-right: 1px solid var(--border);">
     <!-- Sidebar Header -->
     <div class="flex h-20 items-center justify-between border-b border-white/10 px-6">
         <a href="index.php" class="flex items-center justify-center w-full">
@@ -257,4 +260,95 @@ $categoria_label = $categoria_labels[$usuario_categoria] ?? 'Usuário';
         -ms-overflow-style: none;
         scrollbar-width: none;
     }
+
+    /* Menu lateral: gaveta no celular, coluna fixa no desktop */
+    #admin-overlay {
+        display: none;
+        position: fixed;
+        top: 0; right: 0; bottom: 0; left: 0;
+        z-index: 40;
+        background: rgba(2, 6, 23, 0.6);
+    }
+    #admin-overlay.aberto { display: block; }
+
+    #admin-sidebar {
+        position: fixed;
+        top: 0; bottom: 0; left: 0;
+        z-index: 50;
+        transform: translateX(-100%);
+        transition: transform 0.28s ease;
+        will-change: transform;
+    }
+    #admin-sidebar.aberto { transform: translateX(0); }
+
+    #sidebar-toggle { display: inline-flex; }
+    body.menu-aberto { overflow: hidden; }
+
+    @media (min-width: 1024px) {
+        #admin-sidebar {
+            position: static;
+            transform: none;
+            transition: none;
+        }
+        #admin-overlay { display: none !important; }
+        #sidebar-toggle { display: none !important; }
+        body.menu-aberto { overflow: auto; }
+    }
 </style>
+
+<script>
+// Menu lateral como gaveta no celular: fechado por padrao, abre pelo botao do topo.
+(function () {
+    function initSidebar() {
+        var sidebar = document.getElementById('admin-sidebar');
+        var overlay = document.getElementById('admin-overlay');
+        if (!sidebar) return;
+
+        var btn = document.getElementById('sidebar-toggle');
+        var telaLarga = window.matchMedia('(min-width: 1024px)');
+
+        function abrir() {
+            sidebar.classList.add('aberto');
+            if (overlay) overlay.classList.add('aberto');
+            document.body.classList.add('menu-aberto');
+        }
+        function fechar() {
+            sidebar.classList.remove('aberto');
+            if (overlay) overlay.classList.remove('aberto');
+            document.body.classList.remove('menu-aberto');
+        }
+        function alternar() {
+            sidebar.classList.contains('aberto') ? fechar() : abrir();
+        }
+
+        window.alternarMenu = alternar;
+
+        if (btn) btn.addEventListener('click', function (e) {
+            e.preventDefault();
+            alternar();
+        });
+        if (overlay) overlay.addEventListener('click', fechar);
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') fechar();
+        });
+        sidebar.querySelectorAll('a').forEach(function (a) {
+            a.addEventListener('click', function () {
+                if (!telaLarga.matches) fechar();
+            });
+        });
+        telaLarga.addEventListener('change', function (e) {
+            if (e.matches) fechar();
+        });
+
+        fechar();
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initSidebar);
+    } else {
+        initSidebar();
+    }
+})();
+</script>
+
+
