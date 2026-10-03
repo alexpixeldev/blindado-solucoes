@@ -20,12 +20,15 @@ function CameraFeed({ onTempo }: { onTempo: (s: number) => void }) {
     const v = ref.current;
     if (!v) return;
 
-    // respeita quem pediu menos movimento
-    const semMovimento = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (semMovimento) return;
-
+    // Toca sempre. O video e demonstracao de um atendimento real, nao uma
+    // animacao decorativa: prefers-reduced-motion trata das animacoes de
+    // entrada em globals.css e nao deve impedir o video de rodar.
+    //
+    // Antes havia um `if (reduced-motion) return` aqui, que travava o video
+    // em 0s em maquinas com "reduzir movimento" ligado - comum em empresas -
+    // sem que o visitante pudesse fazer nada.
     v.play().catch(() => {
-      /* o navegador pode bloquear o autoplay; o poster/primeiro frame cobre */
+      /* o navegador pode bloquear o autoplay; o poster cobre o primeiro quadro */
     });
   }, []);
 
@@ -33,10 +36,24 @@ function CameraFeed({ onTempo }: { onTempo: (s: number) => void }) {
     const v = ref.current;
     if (!v) return;
 
-    const avisar = () => onTempo(v.currentTime);
-    // timeupdate dispara ~4x por segundo: o suficiente para mostrar segundos
-    v.addEventListener("timeupdate", avisar);
-    return () => v.removeEventListener("timeupdate", avisar);
+    // requestAnimationFrame em vez de timeupdate: o evento timeupdate dispara
+    // so ~4x por segundo e deixava o cronometro com ate 1s de atraso. Aqui o
+    // tempo e lido a cada quadro, entao o numero acompanha o video de perto.
+    let quadro = 0;
+    let ultimo = -1;
+
+    const tick = () => {
+      const t = v.currentTime;
+      // so redesenha quando o segundo exibido muda
+      if (Math.floor(t) !== ultimo) {
+        ultimo = Math.floor(t);
+        onTempo(t);
+      }
+      quadro = requestAnimationFrame(tick);
+    };
+    quadro = requestAnimationFrame(tick);
+
+    return () => cancelAnimationFrame(quadro);
   }, [onTempo]);
 
   return (
@@ -105,14 +122,19 @@ export function IntercomPanel() {
             <div className="rounded-full bg-slate-950/45 px-4 py-2 backdrop-blur-[2px]">
               <span className="flex items-center gap-2 text-sm font-semibold text-white">
                 <span className="h-2 w-2 shrink-0 animate-pulse rounded-full bg-emerald-400" />
-                Visitante detectado
+                Atendimento iniciado
               </span>
             </div>
           </div>
 
-          {/* marca de tempo do lado inferior */}
-          <span className="pointer-events-none absolute bottom-3 right-3 rounded-lg bg-slate-950/60 px-2 py-1 font-mono text-[10px] text-white backdrop-blur-[2px]">
-            14:32:07
+          {/* tempo de chamada: acompanha o currentTime do video */}
+          <span className="pointer-events-none absolute right-3 bottom-3 flex items-center gap-2 rounded-lg bg-slate-950/60 px-2.5 py-1.5 backdrop-blur-[2px]">
+            <span className="text-[9px] font-bold tracking-widest text-white/70 uppercase">
+              Tempo de chamada
+            </span>
+            <span className="font-mono text-[11px] font-semibold text-white tabular-nums">
+              {formatarDuracao(tempo)}
+            </span>
           </span>
 
           {/* confirmacao de liberacao */}
