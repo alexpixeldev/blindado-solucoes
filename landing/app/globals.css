@@ -1,0 +1,194 @@
+@import "tailwindcss";
+
+@theme {
+  /* Verde intermediario como cor predominante.
+     Escuros existem, mas so para detalhes e rodape. */
+  --color-brand-50: #f2f8f5;
+  --color-brand-100: #dcece5;
+  --color-brand-200: #bcdcd0;
+  --color-brand-300: #8fc4b2;
+  --color-brand-400: #5aa88f;
+  --color-brand-500: #359073;
+  --color-brand-600: #1f7a63;
+  --color-brand-700: #186252;
+  --color-brand-800: #134a3f;
+  --color-brand-900: #0d332b;
+  --color-brand-950: #071c18;
+
+  /* Verde de apoio: usado em detalhes, icones e estados.
+     Nada de acentos de outras paletas. */
+  --color-brand-a: #0b9c78;
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", sans-serif;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 5rem;
+  }
+
+  body {
+    background: #ffffff;
+    color: #17251f;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: clip;
+  }
+
+  ::selection {
+    background: var(--color-brand-600);
+    color: #fff;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-brand-600);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+
+@layer components {
+  .container-page {
+    width: 100%;
+    max-width: 76rem;
+    margin-inline: auto;
+    padding-inline: 1.25rem;
+  }
+
+  @media (min-width: 768px) {
+    .container-page {
+      padding-inline: 2rem;
+    }
+  }
+
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  /* titulo de secao: hierarquia consistente */
+  .titulo-secao {
+    font-size: 1.875rem;
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+  }
+
+  @media (min-width: 768px) {
+    .titulo-secao {
+      font-size: 2.25rem;
+    }
+  }
+}
+
+/* ---------- simulacao do atendimento ---------- */
+
+/* barras de audio do operador falando */
+@keyframes audio-barra {
+  0%,
+  100% {
+    transform: scaleY(0.3);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+.anim-audio {
+  transform-origin: bottom;
+  animation: audio-barra 0.9s ease-in-out infinite;
+}
+
+/* portao abrindo quando o acesso e liberado */
+@keyframes portao-esq {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-105%);
+  }
+}
+
+@keyframes portao-dir {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(105%);
+  }
+}
+
+.anim-portao-esq {
+  animation: portao-esq 0.75s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.anim-portao-dir {
+  animation: portao-dir 0.75s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* anel de status pulsando */
+@keyframes anel {
+  0% {
+    box-shadow: 0 0 0 0 rgb(31 122 99 / 0.45);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgb(31 122 99 / 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgb(31 122 99 / 0);
+  }
+}
+
+.anim-anel {
+  animation: anel 1.8s ease-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .anim-audio,
+  .anim-portao-esq,
+  .anim-portao-dir,
+  .anim-anel {
+    animation: none;
+  }
+}
+
+/* ---------- animacoes de entrada ---------- */
+.reveal {
+  opacity: 0;
+  transform: translate3d(0, 18px, 0);
+  transition:
+    opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+
+.reveal[data-visivel="true"] {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

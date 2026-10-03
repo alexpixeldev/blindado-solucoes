@@ -40,17 +40,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
         $usuario_id = $_SESSION['usuario_id'];
-        $stmt = $conn->prepare("UPDATE entregas SET edificio_id = ?, numero_apartamento = ?, data_entrega = ?, hora_entrega = ?, situacao_recebimento = ?, transportadora = ?, observacao = ?, atualizado_por = ?, data_atualizacao = NOW() WHERE id = ?");
-        $stmt->bind_param("issssssii", $edificio_id, $numero_apartamento, $data_entrega, $hora_entrega, $situacao_recebimento, $transportadora, $observacao, $usuario_id, $id);
-        
-        if ($stmt->execute()) {
-            header("Location: consultar_entrega.php?msg=sucesso");
-            exit();
-        } else {
-            $mensagem = "Erro ao atualizar entrega: " . $conn->error;
+
+        // Confere a transportadora contra a tabela antes de gravar.
+        // A coluna é VARCHAR, mas esta checagem evita gravar lixo e dá uma
+        // mensagem clara em vez de um erro genérico de banco.
+        $chk = $conn->prepare("SELECT id FROM transportadoras WHERE nome = ? LIMIT 1");
+        $chk->bind_param("s", $transportadora);
+        $chk->execute();
+        $transp_existe = (bool) $chk->get_result()->fetch_assoc();
+        $chk->close();
+
+        if (!$transp_existe) {
+            $mensagem = "Transportadora \"$transportadora\" não está cadastrada. Cadastre-a em Configurações de Entrega.";
+            $mensagem_tipo = "error";
+            goto skip_update;
+        }
+
+        // try/catch: o mysqli do PHP 8.1+ lança exceção em vez de retornar
+        // false. Sem isto, qualquer erro de banco vira HTTP 500 em branco.
+        try {
+            $stmt = $conn->prepare("UPDATE entregas SET edificio_id = ?, numero_apartamento = ?, data_entrega = ?, hora_entrega = ?, situacao_recebimento = ?, transportadora = ?, observacao = ?, atualizado_por = ?, data_atualizacao = NOW() WHERE id = ?");
+            $stmt->bind_param("issssssii", $edificio_id, $numero_apartamento, $data_entrega, $hora_entrega, $situacao_recebimento, $transportadora, $observacao, $usuario_id, $id);
+
+            if ($stmt->execute()) {
+                header("Location: consultar_entrega.php?msg=sucesso");
+                exit();
+            } else {
+                $mensagem = "Erro ao atualizar entrega: " . $conn->error;
+                $mensagem_tipo = "error";
+            }
+            $stmt->close();
+        } catch (mysqli_sql_exception $e) {
+            error_log("editar_entrega.php update exception: " . $e->getMessage());
+            $mensagem = "Erro ao atualizar entrega: " . $e->getMessage();
             $mensagem_tipo = "error";
         }
-        $stmt->close();
     } else {
         $mensagem = "Preencha todos os campos obrigatórios!";
         $mensagem_tipo = "error";

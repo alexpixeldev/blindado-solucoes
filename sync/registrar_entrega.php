@@ -30,38 +30,68 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!is_array($apartamentos)) $apartamentos = [$apartamentos];
     if (!is_array($situacoes_arr)) $situacoes_arr = [$situacoes_arr];
 
-      // Operador/supervisor vinculado só registra entrega em edifício da própria base
+// Operador/supervisor vinculado só registra entrega em edifício da própria base
       if (!pode_operar_no_edificio($conn, $edificio_id, $usuario_categoria, $usuario_base_id)) {
           $mensagem = "Você só pode registrar entregas em edifícios da base à qual está vinculado.";
           $mensagem_tipo = 'error';
       } elseif ($edificio_id > 0 && !empty($hora_entrega) && !empty($transportadora) && count($apartamentos) > 0) {
-        $stmt = $conn->prepare("INSERT INTO entregas (edificio_id, numero_apartamento, data_entrega, hora_entrega, situacao_recebimento, transportadora, usuario_id, observacao) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-        if (!$stmt) {
-            $mensagem = "Erro ao preparar insert: " . $conn->error;
+        // Confere a transportadora contra a tabela antes de gravar.
+        // A coluna é VARCHAR, mas esta checagem evita gravar lixo e dá uma
+        // mensagem clara em vez de um erro genérico de banco.
+        $chk = $conn->prepare("SELECT id FROM transportadoras WHERE nome = ? LIMIT 1");
+        $chk->bind_param("s", $transportadora);
+        $chk->execute();
+        $transp_existe = (bool) $chk->get_result()->fetch_assoc();
+        $chk->close();
+
+        if (!$transp_existe) {
+            $mensagem = "Transportadora \"$transportadora\" não está cadastrada. Cadastre-a em Configurações de Entrega.";
             $mensagem_tipo = 'error';
         } else {
-            $successCount = 0;
-            foreach ($apartamentos as $i => $apt) {
-                $numero_apartamento = trim($apt);
-                if ($numero_apartamento === '') continue;
-                $situacao_recebimento = trim($situacoes_arr[$i] ?? '');
-                $observacao = trim($observacoes_arr[$i] ?? '');
-
-                $stmt->bind_param("isssssss", $edificio_id, $numero_apartamento, $data_entrega, $hora_entrega, $situacao_recebimento, $transportadora, $usuario_id, $observacao);
-                if ($stmt->execute()) {
-                    $successCount++;
-                } else {
-                    error_log("registrar_entrega.php insert error: " . $stmt->error);
-                }
-            }
-            if ($successCount > 0) {
-                $mensagem = "{$successCount} entrega(s) registrada(s) com sucesso!";
-                $mensagem_tipo = 'success';
-            } else {
-                $mensagem = "Nenhuma entrega foi registrada. Verifique os dados e tente novamente.";
+            $stmt = $conn->prepare("INSERT INTO entregas (edificio_id, numero_apartamento, data_entrega, hora_entrega, situacao_recebimento, transportadora, usuario_id, observacao) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+            if (!$stmt) {
+                $mensagem = "Erro ao preparar insert: " . $conn->error;
                 $mensagem_tipo = 'error';
+            } else {
+                $successCount = 0;
+                $erros = [];
+                foreach ($apartamentos as $i => $apt) {
+                    $numero_apartamento = trim($apt);
+                    if ($numero_apartamento === '') continue;
+                    $situacao_recebimento = trim($situacoes_arr[$i] ?? '');
+                    $observacao = trim($observacoes_arr[$i] ?? '');
+
+                    // try/catch: o mysqli do PHP 8.1+ lança exceção em vez de
+                    // retornar false. Sem isto, qualquer erro de banco vira 500.
+                    try {
+                        $stmt->bind_param("isssssss", $edificio_id, $numero_apartamento, $data_entrega, $hora_entrega, $situacao_recebimento, $transportadora, $usuario_id, $observacao);
+                        if ($stmt->execute()) {
+                            $successCount++;
+                        } else {
+                            error_log("registrar_entrega.php insert error: " . $stmt->error);
+                            $erros[] = "Apartamento $numero_apartamento: " . $stmt->error;
+                        }
+                    } catch (mysqli_sql_exception $e) {
+                        error_log("registrar_entrega.php insert exception: " . $e->getMessage());
+                        $erros[] = "Apartamento $numero_apartamento: " . $e->getMessage();
+                    }
+                }
+                if ($successCount > 0) {
+                    $mensagem = "{$successCount} entrega(s) registrada(s) com sucesso!";
+                    $mensagem_tipo = 'success';
+                    if (!empty($erros)) {
+                        $mensagem .= " Atenção: " . count($erros) . " não puderam ser gravadas.";
+                    }
+                } else {
+                    $mensagem = "Nenhuma entrega foi registrada. Verifique os dados e tente novamente.";
+                    $mensagem_tipo = 'error';
+                    // detalhe do banco só quando nada entrou
+                    if (!empty($erros)) {
+                        $mensagem .= " Detalhe: " . $erros[0];
+                    }
+                }
+                $stmt->close();
             }
-            $stmt->close();
         }
     } else {
         $mensagem = "Preencha todos os campos obrigatórios!";
