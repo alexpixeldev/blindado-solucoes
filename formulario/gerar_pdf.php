@@ -149,14 +149,7 @@ function cpf_valido($cpf) {
     return $resto === (int)$cpf[10];
 }
 
-// Validação de documentos antes de inserir
-if (!empty($data['inquilinos']) && is_array($data['inquilinos'])) {
-    foreach ($data['inquilinos'] as $inq) {
-        if (!empty($inq['nome']) && !empty($inq['documento']) && !documento_valido($inq['documento'])) {
-            die('Erro: Documento inválido para o hóspede "' . htmlspecialchars(trim($inq['nome'])) . '". Verifique o número digitado.');
-        }
-    }
-}
+// Validacao de documento removida: o campo aceita qualquer texto.
 
 // Validação básica
 if ($edificio_id && $numero_apartamento) {

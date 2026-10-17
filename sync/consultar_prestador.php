@@ -181,6 +181,7 @@ $edificios = $result_edificios ? fetch_all_assoc($result_edificios) : [];
                                     <th>Apt</th>
                                     <th>Empresa/Funcionário</th>
                                     <th>Serviço</th>
+                                    <th>Observação</th>
                                     <th>Registrado por</th>
                                     <th class="text-right">Ações</th>
                                 </tr>
@@ -188,7 +189,7 @@ $edificios = $result_edificios ? fetch_all_assoc($result_edificios) : [];
                             <tbody>
                                 <?php if (empty($prestadores)): ?>
                                     <tr>
-                                        <td colspan="6" class="text-center py-12 text-slate-500">
+                                        <td colspan="7" class="text-center py-12 text-slate-500">
                                             <div class="flex flex-col items-center gap-2">
                                                 <i class="fas fa-user-slash text-4xl text-slate-200"></i>
                                                 <p>Nenhum prestador encontrado para os filtros selecionados.</p>
@@ -217,6 +218,13 @@ $edificios = $result_edificios ? fetch_all_assoc($result_edificios) : [];
                                                     <i class="fas fa-tools text-[10px]"></i>
                                                     <?php echo htmlspecialchars($prest['tipo_servico']); ?>
                                                 </span>
+                                            </td>
+                                            <td class="text-sm text-slate-600 max-w-[240px]">
+                                                <?php if (!empty($prest['observacao'])): ?>
+                                                    <span class="whitespace-pre-line"><?php echo nl2br(htmlspecialchars($prest['observacao'])); ?></span>
+                                                <?php else: ?>
+                                                    <span class="text-slate-300">—</span>
+                                                <?php endif; ?>
                                             </td>
                                             <td class="text-sm text-slate-500">
                                                 <div class="flex flex-col">

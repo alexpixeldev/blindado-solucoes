@@ -179,6 +179,7 @@ $edificios = $result_edificios ? fetch_all_assoc($result_edificios) : [];
                                     <th>Apt</th>
                                     <th>Transportadora</th>
                                     <th>Situação</th>
+                                    <th>Observação</th>
                                     <th>Registrado por</th>
                                     <th class="text-right">Ações</th>
                                 </tr>
@@ -186,7 +187,7 @@ $edificios = $result_edificios ? fetch_all_assoc($result_edificios) : [];
                             <tbody>
                                 <?php if (empty($entregas)): ?>
                                     <tr>
-                                        <td colspan="6" class="text-center py-12 text-slate-500">
+                                        <td colspan="7" class="text-center py-12 text-slate-500">
                                             <div class="flex flex-col items-center gap-2">
                                                 <i class="fas fa-box-open text-4xl text-slate-200"></i>
                                                 <p>Nenhuma entrega encontrada para os filtros selecionados.</p>
@@ -214,6 +215,13 @@ $edificios = $result_edificios ? fetch_all_assoc($result_edificios) : [];
                                                 <span class="text-sm text-slate-600">
                                                     <?php echo ucfirst(str_replace('_', ' ', $ent['situacao_recebimento'])); ?>
                                                 </span>
+                                            </td>
+                                            <td class="text-sm text-slate-600 max-w-[240px]">
+                                                <?php if (!empty($ent['observacao'])): ?>
+                                                    <span class="whitespace-pre-line"><?php echo nl2br(htmlspecialchars($ent['observacao'])); ?></span>
+                                                <?php else: ?>
+                                                    <span class="text-slate-300">—</span>
+                                                <?php endif; ?>
                                             </td>
                                             <td class="text-sm text-slate-500">
                                                 <div class="flex flex-col">

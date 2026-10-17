@@ -234,56 +234,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         die('Erro: ' . $msg);
     }
 
-    // Verificação de duplicata exata:
-    // Bloqueia reenvio das mesmas informações (mesmo edifício + apartamento + mesmas datas),
-    // mas permite o mesmo apartamento em datas diferentes (nova locação legítima).
-    $dup_where = "edificio_id = ? AND numero_apartamento = ?";
-    $dup_types = "is";
-    $dup_params = [$edificio_id, $numero_apartamento];
-    if (!empty($data_entrada)) {
-        $dup_where .= " AND data_entrada = ?";
-        $dup_types .= "s";
-        $dup_params[] = $data_entrada;
-    }
-    if (!empty($data_saida)) {
-        $dup_where .= " AND data_saida = ?";
-        $dup_types .= "s";
-        $dup_params[] = $data_saida;
-    }
-    $stmt_dup = $conn->prepare("SELECT id FROM locacoes WHERE $dup_where LIMIT 1");
-    assert_prepare($stmt_dup, $conn, 'verificacao duplicata');
-    $bind_refs = [$dup_types];
-    foreach ($dup_params as $k => $v) {
-        $bind_refs[] = &$dup_params[$k];
-    }
-    call_user_func_array([$stmt_dup, 'bind_param'], $bind_refs);
-    $stmt_dup->execute();
-    $ja_enviado = $stmt_dup->get_result()->num_rows > 0;
-    $stmt_dup->close();
+    // Verificação de duplicata removida temporariamente.
+    // O bloqueio por "mesmo edifício + apartamento + mesmas datas" impedia
+    // registros legítimos (ex.: adicionar mais hóspedes na mesma estadia).
+    // Agora todo envio é gravado; reativar só com uma chave mais específica.
 
-    if ($ja_enviado) {
-        $msg = 'Estas informações já foram enviadas para este apartamento nesta data. Para registrar uma nova locação, utilize datas e/ou dados diferentes.';
-        if ($is_ajax) {
-            header('Content-Type: application/json; charset=utf-8');
-            echo json_encode(['status' => 'duplicate', 'message' => $msg]);
-            exit;
-        }
-        die('Erro: ' . $msg);
-    }
-
-    if (!empty($_POST['inquilinos']) && is_array($_POST['inquilinos'])) {
-        foreach ($_POST['inquilinos'] as $inq) {
-            if (!empty($inq['nome']) && !empty($inq['documento']) && !documento_valido($inq['documento'])) {
-                $msg = 'Documento inválido para o hóspede "' . trim($inq['nome']) . '". Verifique o número digitado.';
-                if ($is_ajax) {
-                    header('Content-Type: application/json; charset=utf-8');
-                    echo json_encode(['status' => 'error', 'message' => $msg]);
-                    exit;
-                }
-                die('Erro: ' . $msg);
-            }
-        }
-    }
+    // Validacao de documento removida: o campo aceita qualquer texto.
+    // (Edicao apenas do trim para nao gravar espacos nas pontas.)
 
     // 1. Inserir na tabela principal (locacoes)
     $data_locacao = date('Y-m-d');

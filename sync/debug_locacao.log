@@ -84,3 +84,18 @@ post_max_size=40M upload_max_filesize=40M
 POST keys: user_type, locador_nome, locador_ddi, locador_telefone, edificio_id, numero_apartamento, inquilinos, veiculos, data_entrada, data_saida
 FILES summary: inquilinos: nested file array
 post_max_size=40M upload_max_filesize=40M
+[2026-10-09 19:55:20] Início de request POST
+POST keys: locador_nome, locador_telefone, numero_apartamento, data_saida, inquilinos, locador_ddi, edificio_id, data_entrada, user_type
+FILES summary: 
+post_max_size=40M upload_max_filesize=40M
+[09-Oct-2026 19:55:21 Europe/Berlin] salvar_locacao.php: e-mail adm não enviado – Envio de e-mail desabilitado para este edifício. (locacao_id=1829)
+[2026-10-09 19:55:21] Início de request POST
+POST keys: locador_nome, locador_telefone, numero_apartamento, data_saida, inquilinos, locador_ddi, edificio_id, data_entrada, user_type
+FILES summary: 
+post_max_size=40M upload_max_filesize=40M
+[09-Oct-2026 19:55:21 Europe/Berlin] salvar_locacao.php: e-mail adm não enviado – Envio de e-mail desabilitado para este edifício. (locacao_id=1830)
+[2026-10-09 20:00:44] Início de request POST
+POST keys: locador_nome, locador_telefone, numero_apartamento, data_saida, inquilinos, locador_ddi, edificio_id, data_entrada, user_type
+FILES summary: 
+post_max_size=40M upload_max_filesize=40M
+[09-Oct-2026 20:00:44 Europe/Berlin] salvar_locacao.php: e-mail adm não enviado – Envio de e-mail desabilitado para este edifício. (locacao_id=1831)

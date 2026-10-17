@@ -494,6 +494,15 @@ if (!empty($locacaoIds)) {
                                     <?php if ($responsavel !== ''): ?>
                                     <span class="loc-card-registro">Locação registrada por: <?= htmlspecialchars($responsavel) ?></span>
                                     <?php endif; ?>
+                                    <?php if (!empty($loc['locador_telefone'])): ?>
+                                    <?php
+                                        $tel_whats = preg_replace('/\D/', '', $loc['locador_telefone']);
+                                        if ($tel_whats !== '' && strlen($tel_whats) <= 11) { $tel_whats = '55' . $tel_whats; }
+                                    ?>
+                                    <span class="loc-card-registro">WhatsApp do locador: <?= htmlspecialchars($loc['locador_telefone']) ?></span>
+                                    <a href="https://wa.me/<?= $tel_whats ?>" target="_blank" rel="noopener" class="icon-btn" style="background:#25d366" title="Abrir no WhatsApp"><i class="fab fa-whatsapp"></i></a>
+                                    <?= btnCopiar($loc['locador_telefone']) ?>
+                                    <?php endif; ?>
                                 </div>
                                 <span class="loc-card-date"><?= date('d/m/Y', strtotime($loc['data_registro'] ?? $loc['data_locacao'] ?? 'now')) ?> <?= date('H:i', strtotime($loc['data_registro'] ?? $loc['data_locacao'] ?? 'now')) ?></span>
                                 <?php if ($usuario_categoria === 'gerente'): ?>
