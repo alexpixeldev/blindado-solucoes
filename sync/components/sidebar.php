@@ -84,9 +84,13 @@ $categoria_label = $categoria_labels[$usuario_categoria] ?? 'Usuário';
             <div class="space-y-0.5">
                 <a href="listar_locacoes.php" class="group flex items-center gap-3 rounded-xl px-4 py-2 text-sm font-semibold transition-all <?php echo isActive('listar_locacoes.php', $current_page); ?>">
                     <i class="fas fa-key text-lg"></i>
-                    <span>Locações</span>
+                    <span>Locações Pendentes</span>
                 </a>
                 <?php if (in_array($usuario_categoria, ['operador', 'supervisor_monitoramento', 'gerente', 'diretor'])): ?>
+                    <a href="locacoes_confirmadas.php" class="group flex items-center gap-3 rounded-xl px-4 py-2 text-sm font-semibold transition-all <?php echo isActive('locacoes_confirmadas.php', $current_page); ?>">
+                        <i class="fas fa-check-circle text-lg"></i>
+                        <span>Locações Confirmadas</span>
+                    </a>
                     <a href="registrar_ocorrencia.php" class="group flex items-center gap-3 rounded-xl px-4 py-2 text-sm font-semibold transition-all <?php echo isActive('registrar_ocorrencia.php', $current_page); ?>">
                         <i class="fas fa-edit text-lg"></i>
                         <span>Registrar Relatório</span>

@@ -23,7 +23,10 @@ if ($executar) {
         'observacoes' => "TEXT",
         'tipo_usuario' => "VARCHAR(50) DEFAULT 'locatario'",
         'edificio_id' => "INT NOT NULL",
-        'numero_apartamento' => "VARCHAR(20)"
+        'numero_apartamento' => "VARCHAR(20)",
+        'status' => "VARCHAR(20) NOT NULL DEFAULT 'pendente'",
+        'confirmado_por' => "VARCHAR(255) NULL",
+        'confirmado_em' => "DATETIME NULL"
     ];
 
     foreach ($colunas_necessarias as $coluna => $definicao) {

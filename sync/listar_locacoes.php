@@ -8,6 +8,21 @@ function btnCopiar($texto) {
     return '<button type="button" class="icon-btn" onclick=\'copiarTexto(' . $js . ', this)\' onmouseover="this.style.background=\'#64748b\'" onmouseout="this.style.background=\'#94a3b8\'" title="Copiar"><i class="fas fa-copy"></i></button>';
 }
 
+// Auto-migracao idempotente das colunas de status de confirmacao
+$colunas_locacao_status = [
+    'status' => "VARCHAR(20) NOT NULL DEFAULT 'pendente'",
+    'confirmado_por' => "VARCHAR(255) NULL",
+    'confirmado_em' => "DATETIME NULL",
+];
+foreach ($colunas_locacao_status as $coluna => $definicao) {
+    $chk = $conn->query("SHOW COLUMNS FROM locacoes LIKE '$coluna'");
+    if ($chk && $chk->num_rows === 0) {
+        $conn->query("ALTER TABLE locacoes ADD COLUMN $coluna $definicao");
+    }
+}
+$chk_status = $conn->query("SHOW COLUMNS FROM locacoes LIKE 'status'");
+$tem_status = $chk_status && $chk_status->num_rows > 0;
+
 $usuario_categoria = $_SESSION['usuario_categoria'] ?? '';
 $usuario_base_id = null;
 if (in_array($usuario_categoria, ['operador', 'supervisor_monitoramento'])) {
@@ -79,6 +94,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_delete_locacoes'
     }
 }
 
+// Quem pode confirmar locacoes (mesmo publico que enxerga o menu)
+$pode_confirmar = in_array($usuario_categoria, ['operador', 'supervisor_monitoramento', 'gerente', 'diretor'], true);
+
+// Confirmar locacao (sai da lista de pendentes)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirmar_locacao']) && $pode_confirmar) {
+    $id_confirmar = filter_input(INPUT_POST, 'id_confirmar', FILTER_VALIDATE_INT);
+    if ($id_confirmar) {
+        $confirmado_por = $_SESSION['usuario_nome_real'] ?? $_SESSION['usuario_nome'] ?? 'Usuario';
+        $stmt = $conn->prepare("UPDATE locacoes SET status = 'confirmada', confirmado_por = ?, confirmado_em = NOW() WHERE id = ?");
+        $stmt->bind_param("si", $confirmado_por, $id_confirmar);
+        if ($stmt->execute()) {
+            $mensagem = "Locação confirmada com sucesso!";
+            $mensagem_tipo = "success";
+        } else {
+            $mensagem = "Erro ao confirmar locação: " . $conn->error;
+            $mensagem_tipo = "error";
+        }
+        $stmt->close();
+    }
+}
+
 // Initialize filter variables
 $selected_filter = filter_input(INPUT_GET, 'edificio_id', FILTER_DEFAULT);
 $filtro_edificio = null;
@@ -109,7 +145,7 @@ if (intval($usuario_base_id) > 0) {
                 e.nome as nome_edificio
             FROM locacoes l
         LEFT JOIN edificios e ON l.edificio_id = e.id
-        WHERE 1=1";
+        WHERE 1=1" . ($tem_status ? " AND (l.status IS NULL OR l.status = 'pendente')" : "");
 
 $params = [];
 $types = "";
@@ -181,7 +217,7 @@ if (!empty($locacaoIds)) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Locações | Blindado Soluções</title>
+    <title>Locações Pendentes | Blindado Soluções</title>
     <link rel="icon" type="image/png" href="../img/escudo.png">
     
     <!-- Tailwind CSS -->
@@ -353,8 +389,8 @@ if (!empty($locacaoIds)) {
             <main class="flex-1 overflow-y-auto p-4 sm:p-8 custom-scrollbar">
                 <!-- Page Header -->
                 <div class="mb-8 animate-fade-in">
-                    <h1 class="text-2xl font-bold text-slate-900 sm:text-3xl">Registros de Locações</h1>
-                    <p class="mt-1 text-slate-500">Visualize e gerencie as fichas de locação preenchidas pelos usuários.</p>
+                    <h1 class="text-2xl font-bold text-slate-900 sm:text-3xl">Locações Pendentes</h1>
+                    <p class="mt-1 text-slate-500">Confirme as fichas de locação feitas. Ao confirmar, a locação sai desta lista.</p>
                 </div>
 
                 <?php if ($mensagem): ?>
@@ -505,6 +541,12 @@ if (!empty($locacaoIds)) {
                                     <?php endif; ?>
                                 </div>
                                 <span class="loc-card-date"><?= date('d/m/Y', strtotime($loc['data_registro'] ?? $loc['data_locacao'] ?? 'now')) ?> <?= date('H:i', strtotime($loc['data_registro'] ?? $loc['data_locacao'] ?? 'now')) ?></span>
+                                <?php if ($pode_confirmar): ?>
+                                    <form method="POST" class="loc-card-delete" onsubmit="return confirm('Confirmar que esta locação foi feita? Ela sairá da lista de pendentes e irá para Locações Confirmadas.');">
+                                        <input type="hidden" name="id_confirmar" value="<?= $loc['id'] ?>">
+                                        <button type="submit" name="confirmar_locacao" class="icon-btn-green" title="Confirmar locação"><i class="fas fa-check" style="font-size:10px"></i></button>
+                                    </form>
+                                <?php endif; ?>
                                 <?php if ($usuario_categoria === 'gerente'): ?>
                                     <form method="POST" class="loc-card-delete" onsubmit="return confirm('Tem certeza que deseja excluir esta locação?');">
                                         <input type="hidden" name="id_delete" value="<?= $loc['id'] ?>">

@@ -267,7 +267,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['salvar_plantao'])) {
                                 </script>
                             </div>
                         </div>
-                        <div class="meta-row"><span class="meta-label"><i class="fas fa-user"></i> Operador 2</span><div class="meta-value"><div class="autocomplete-wrap"><input type="text" id="operador2-input" class="autocomplete-input" placeholder="Digite o nome do operador (opcional)" autocomplete="off"><input type="hidden" name="operador2_nome" id="operador2-nome"><div class="autocomplete-dropdown" id="operador2-dropdown"></div></div></div></div>
+                        <div class="meta-row"><span class="meta-label"><i class="fas fa-user"></i> Operador 2</span><div class="meta-value"><div class="autocomplete-wrap"><input type="text" id="operador2-input" class="autocomplete-input" placeholder="Digite o nome do operador" autocomplete="off"><input type="hidden" name="operador2_nome" id="operador2-nome"><div class="autocomplete-dropdown" id="operador2-dropdown"></div></div></div></div>
                         <div class="meta-row">
                             <span class="meta-label"><i class="fas fa-calendar-alt"></i> Turno</span>
                             <div class="meta-value">
@@ -402,10 +402,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['salvar_plantao'])) {
             });
         }
 
-        initAutocomplete('supervisor-input', 'supervisor-nome', 'supervisor-dropdown', 'supervisor,gerente,diretor');
-        initAutocomplete('operador1-input', 'operador1-nome', 'operador1-dropdown', 'operador');
-        initAutocomplete('operador2-input', 'operador2-nome', 'operador2-dropdown', 'operador');
-        initAutocomplete('operador3-input', 'operador3-nome', 'operador3-dropdown', 'operador');
+        initAutocomplete('supervisor-input', 'supervisor-nome', 'supervisor-dropdown', 'supervisor_monitoramento,gerente,diretor');
+        initAutocomplete('operador1-input', 'operador1-nome', 'operador1-dropdown', '');
+        initAutocomplete('operador2-input', 'operador2-nome', 'operador2-dropdown', '');
+        initAutocomplete('operador3-input', 'operador3-nome', 'operador3-dropdown', '');
 
         // Atualizar título
         function updateTitle() {

@@ -109,7 +109,7 @@ $edificios = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
             #btn-prev, #btn-next { padding: 0.625rem 1rem !important; font-size: 13px !important; }
 
             /* Flatpickr day cells smaller */
-            .flatpickr-day { width: 30px !important; max-width: 30px !important; height: 30px !important; line-height: 30px !important; font-size: 12px !important; margin: 0 !important; }
+            .flatpickr-day { width: auto !important; max-width: none !important; height: 30px !important; line-height: 30px !important; font-size: 12px !important; margin: 0 !important; }
             .flatpickr-days { max-width: 100% !important; }
             .dayContainer { max-width: 100% !important; }
         }
@@ -207,9 +207,29 @@ $edificios = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
             background: #ffffff;
         }
 
+        .flatpickr-rContainer {
+            width: 100%;
+        }
+
         .flatpickr-weekdays {
             padding: 8px 10px 0;
             background: #ffffff;
+            display: -webkit-box;
+            display: -webkit-flex;
+            display: -ms-flexbox;
+            display: flex;
+            -webkit-box-align: center;
+            -webkit-align-items: center;
+            -ms-flex-align: center;
+            align-items: center;
+            height: auto;
+        }
+
+        .flatpickr-weekdays .flatpickr-weekdaycontainer {
+            display: -ms-grid;
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            width: 100%;
         }
 
         span.flatpickr-weekday {
@@ -223,13 +243,19 @@ $edificios = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
             padding: 6px 0;
             height: auto;
             line-height: 1;
+            display: block;
+            width: auto;
+            max-width: none;
+            text-align: center;
+            margin: 0;
         }
 
         .flatpickr-days {
             border: none;
             border-radius: 12px;
             width: 100%;
-            max-width: 296px;
+            max-width: none;
+            padding: 0 10px;
         }
 
         .flatpickr-day {
@@ -240,9 +266,9 @@ $edificios = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
             border: none;
             line-height: 38px;
             height: 38px;
-            margin: 1px;
-            width: 38px;
-            max-width: 38px;
+            margin: 0;
+            width: auto;
+            max-width: none;
             transition: all 0.15s ease;
         }
 
@@ -334,7 +360,12 @@ $edificios = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
         }
 
         .dayContainer {
-            max-width: 296px;
+            display: -ms-grid;
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            width: 100%;
+            min-width: 0;
+            max-width: 100%;
         }
 
         /* Animação de abertura */
