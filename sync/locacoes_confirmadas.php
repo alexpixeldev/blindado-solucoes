@@ -114,6 +114,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reabrir_locacao']) &&
     }
 }
 
+// Bulk reabrir locacoes
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_reabrir_locacoes']) && $pode_confirmar) {
+    $ids_raw = $_POST['locacao_ids'] ?? [];
+    $ids = array_filter(array_map('intval', $ids_raw));
+    if (!empty($ids)) {
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        $types = str_repeat('i', count($ids));
+        $stmt = $conn->prepare("UPDATE locacoes SET status = 'pendente', confirmado_por = NULL, confirmado_em = NULL WHERE id IN ($placeholders)");
+        $stmt->bind_param($types, ...$ids);
+        if ($stmt->execute()) {
+            $mensagem = count($ids) . " locação(ões) reaberta(s) (voltaram para pendentes).";
+            $mensagem_tipo = "success";
+        } else {
+            $mensagem = "Erro ao reabrir locações: " . $conn->error;
+            $mensagem_tipo = "error";
+        }
+        $stmt->close();
+    }
+}
+
 // Initialize filter variables
 $selected_filter = filter_input(INPUT_GET, 'edificio_id', FILTER_DEFAULT);
 $filtro_edificio = null;
@@ -479,13 +499,18 @@ if (!empty($locacaoIds)) {
                             </div>
                             <div>
                                 <p class="text-sm font-bold text-red-800"><span id="selectedCount">0</span> locação(ões) selecionada(s)</p>
-                                <p class="text-xs text-red-500">Selecione os registros que deseja excluir</p>
+                                <p class="text-xs text-red-500">Selecione os registros que deseja reabrir ou excluir</p>
                             </div>
                         </div>
-                        <div class="flex gap-2 ml-auto">
+                        <div class="flex flex-wrap gap-2 ml-auto justify-end">
                             <button type="button" onclick="clearSelection()" class="btn btn-cancel btn-sm">
                                 <i class="fas fa-times"></i> Limpar
                             </button>
+                            <?php if ($pode_confirmar): ?>
+                            <button type="button" onclick="bulkReabrir()" class="btn btn-primary btn-sm">
+                                <i class="fas fa-undo"></i> Reabrir Selecionadas
+                            </button>
+                            <?php endif; ?>
                             <button type="button" onclick="bulkDelete()" class="btn btn-danger btn-sm">
                                 <i class="fas fa-trash-alt"></i> Excluir Selecionadas
                             </button>
@@ -494,6 +519,9 @@ if (!empty($locacaoIds)) {
                 </div>
                 <form id="bulkDeleteForm" method="POST" class="hidden">
                     <input type="hidden" name="bulk_delete_locacoes" value="1">
+                </form>
+                <form id="bulkReabrirForm" method="POST" class="hidden">
+                    <input type="hidden" name="bulk_reabrir_locacoes" value="1">
                 </form>
                 <?php endif; ?>
 
@@ -733,13 +761,13 @@ if (!empty($locacaoIds)) {
             if (bar) bar.classList.add('hidden');
         }
 
-        function bulkDelete() {
+        function bulkReabrir() {
             const checked = document.querySelectorAll('.locacao-checkbox:checked');
             if (checked.length === 0) return;
 
-            if (!confirm('Tem certeza que deseja excluir ' + checked.length + ' locação(ões)? Esta ação não pode ser desfeita.')) return;
+            if (!confirm('Tem certeza que deseja REABRIR ' + checked.length + ' locação(ões)? Elas voltarão para a lista de pendentes.')) return;
 
-            const form = document.getElementById('bulkDeleteForm');
+            const form = document.getElementById('bulkReabrirForm');
             checked.forEach(cb => {
                 const input = document.createElement('input');
                 input.type = 'hidden';

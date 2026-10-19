@@ -97,6 +97,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_delete_locacoes'
 // Quem pode confirmar locacoes (mesmo publico que enxerga o menu)
 $pode_confirmar = in_array($usuario_categoria, ['operador', 'supervisor_monitoramento', 'gerente', 'diretor'], true);
 
+// Process bulk confirmation
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_confirm_locacoes']) && $pode_confirmar) {
+    $ids_raw = $_POST['locacao_ids'] ?? [];
+    $ids = array_filter(array_map('intval', $ids_raw));
+    if (!empty($ids)) {
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        $types = str_repeat('i', count($ids));
+        $confirmado_por = $_SESSION['usuario_nome_real'] ?? $_SESSION['usuario_nome'] ?? 'Usuario';
+
+        $stmt = $conn->prepare("UPDATE locacoes SET status = 'confirmada', confirmado_por = ?, confirmado_em = NOW() WHERE id IN ($placeholders)");
+        $bindParams = array_merge([$confirmado_por], $ids);
+        $bindTypes = 's' . $types;
+        $stmt->bind_param($bindTypes, ...$bindParams);
+        if ($stmt->execute()) {
+            $mensagem = count($ids) . " locação(ões) confirmada(s) com sucesso!";
+            $mensagem_tipo = "success";
+        } else {
+            $mensagem = "Erro ao confirmar locações: " . $conn->error;
+            $mensagem_tipo = "error";
+        }
+        $stmt->close();
+    }
+}
+
+// Quem pode confirmar locacoes (mesmo publico que enxerga o menu) — definido acima, antes do bulk confirm.
+
 // Confirmar locacao (sai da lista de pendentes)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirmar_locacao']) && $pode_confirmar) {
     $id_confirmar = filter_input(INPUT_POST, 'id_confirmar', FILTER_VALIDATE_INT);
@@ -480,13 +506,18 @@ if (!empty($locacaoIds)) {
                             </div>
                             <div>
                                 <p class="text-sm font-bold text-red-800"><span id="selectedCount">0</span> locação(ões) selecionada(s)</p>
-                                <p class="text-xs text-red-500">Selecione os registros que deseja excluir</p>
+                                <p class="text-xs text-red-500">Selecione os registros que deseja confirmar ou excluir</p>
                             </div>
                         </div>
-                        <div class="flex gap-2 ml-auto">
+                        <div class="flex flex-wrap gap-2 ml-auto justify-end">
                             <button type="button" onclick="clearSelection()" class="btn btn-cancel btn-sm">
                                 <i class="fas fa-times"></i> Limpar
                             </button>
+                            <?php if ($pode_confirmar): ?>
+                            <button type="button" onclick="bulkConfirm()" class="btn btn-primary btn-sm">
+                                <i class="fas fa-check"></i> Confirmar Selecionadas
+                            </button>
+                            <?php endif; ?>
                             <button type="button" onclick="bulkDelete()" class="btn btn-danger btn-sm">
                                 <i class="fas fa-trash-alt"></i> Excluir Selecionadas
                             </button>
@@ -495,6 +526,9 @@ if (!empty($locacaoIds)) {
                 </div>
                 <form id="bulkDeleteForm" method="POST" class="hidden">
                     <input type="hidden" name="bulk_delete_locacoes" value="1">
+                </form>
+                <form id="bulkConfirmForm" method="POST" class="hidden">
+                    <input type="hidden" name="bulk_confirm_locacoes" value="1">
                 </form>
                 <?php endif; ?>
 
@@ -733,13 +767,13 @@ if (!empty($locacaoIds)) {
             if (bar) bar.classList.add('hidden');
         }
 
-        function bulkDelete() {
+        function bulkConfirm() {
             const checked = document.querySelectorAll('.locacao-checkbox:checked');
             if (checked.length === 0) return;
 
-            if (!confirm('Tem certeza que deseja excluir ' + checked.length + ' locação(ões)? Esta ação não pode ser desfeita.')) return;
+            if (!confirm('Tem certeza que deseja CONFIRMAR ' + checked.length + ' locação(ões)? Elas irão sair da lista de pendentes e para as Locações Confirmadas.')) return;
 
-            const form = document.getElementById('bulkDeleteForm');
+            const form = document.getElementById('bulkConfirmForm');
             checked.forEach(cb => {
                 const input = document.createElement('input');
                 input.type = 'hidden';
