@@ -459,6 +459,23 @@ if (!empty($locacaoIds)) {
                             <div>
                                 <a href="locacoes_confirmadas.php" class="icon-btn" title="Limpar Filtros"><i class="fas fa-sync-alt" style="font-size:10px"></i></a>
                             </div>
+
+                            <div class="space-y-2" style="grid-column: 1 / -1;">
+                                <label class="form-label" for="buscaLocacao">Busca</label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                        <i class="fas fa-search text-slate-400 text-sm"></i>
+                                    </div>
+                                    <input type="text" id="buscaLocacao" data-busca-cliente autocomplete="off"
+                                        class="form-input pl-11 pr-10"
+                                        placeholder="Buscar por nome, documento, placa, modelo, edifício...">
+                                    <button type="button" id="buscaLocacaoClear"
+                                        class="hidden absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600"
+                                        title="Limpar busca">
+                                        <i class="fas fa-times text-xs"></i>
+                                    </button>
+                                </div>
+                            </div>
                         </form>
                     </div>
                 </div>
@@ -476,7 +493,7 @@ if (!empty($locacaoIds)) {
                             }
                             
                             // Adiciona evento de change nos campos
-                            const inputs = form.querySelectorAll('select, input:not([type="checkbox"])');
+                            const inputs = form.querySelectorAll('select, input:not([type="checkbox"]):not([data-busca-cliente])');
                             inputs.forEach(input => {
                                 input.addEventListener('change', function() {
                                     form.submit();
@@ -553,10 +570,13 @@ if (!empty($locacaoIds)) {
                                 <div class="flex items-center gap-2 min-w-0 flex-wrap">
                                     <span class="loc-card-title"><?= htmlspecialchars($loc['nome_edificio']) ?></span>
                                     <span class="loc-card-apt">Apartamento <?= htmlspecialchars($loc['numero_apartamento']) ?></span>
-                                    <?php $responsavel = $loc['registrador_nome'] ?? ''; if ($responsavel === '') { $responsavel = $loc['locador_nome'] ?? ''; } ?>
-                                    <?php if ($responsavel !== ''): ?>
-                                    <span class="loc-card-registro">Locação registrada por: <?= htmlspecialchars($responsavel) ?></span>
-                                    <?php endif; ?>
+                                    <?php
+                                        $responsavel = trim((string)($loc['registrador_nome'] ?? ''));
+                                        if ($responsavel === '') {
+                                            $responsavel = trim((string)($loc['locador_nome'] ?? ''));
+                                        }
+                                    ?>
+                                    <span class="loc-card-registro">Locação registrada por: <?= htmlspecialchars($responsavel !== '' ? $responsavel : '—') ?></span>
                                     <?php if (!empty($loc['locador_telefone'])): ?>
                                     <?php
                                         $tel_whats = preg_replace('/\D/', '', $loc['locador_telefone']);
@@ -653,6 +673,14 @@ if (!empty($locacaoIds)) {
                             </div>
                         </div>
                         <?php endforeach; ?>
+                        <div id="buscaVazio" class="loc-card hidden">
+                            <div class="loc-card-body text-center py-12 text-slate-500">
+                                <div class="flex flex-col items-center gap-2">
+                                    <i class="fas fa-search text-4xl text-slate-200"></i>
+                                    <p>Nenhuma locação encontrada para "<span id="buscaVazioTermo"></span>".</p>
+                                </div>
+                            </div>
+                        </div>
                     <?php endif; ?>
                 </div>
             </main>
@@ -729,7 +757,11 @@ if (!empty($locacaoIds)) {
 
             if (selectAll) {
                 selectAll.addEventListener('change', function() {
-                    checkboxes.forEach(cb => cb.checked = this.checked);
+                    checkboxes.forEach(cb => {
+                        const card = cb.closest('.loc-card');
+                        const visivel = !card || card.style.display !== 'none';
+                        if (visivel) cb.checked = this.checked;
+                    });
                     updateBulkBar();
                 });
 
@@ -749,6 +781,66 @@ if (!empty($locacaoIds)) {
                 if (bulkActionBar) {
                     bulkActionBar.classList.toggle('hidden', checked === 0);
                     if (selectedCountEl) selectedCountEl.textContent = checked;
+                }
+            }
+
+            // Busca instantânea (nome, documento, placa, modelo, edifício etc.)
+            const buscaInput = document.getElementById('buscaLocacao');
+            const buscaClear = document.getElementById('buscaLocacaoClear');
+            const buscaVazio = document.getElementById('buscaVazio');
+            const buscaVazioTermo = document.getElementById('buscaVazioTermo');
+
+            if (buscaInput) {
+                const cards = Array.from(document.querySelectorAll('.locacoes-list > .loc-card')).filter(c => c.id !== 'buscaVazio');
+
+                const normalizar = (txt) => (txt || '')
+                    .toLowerCase()
+                    .normalize('NFD')
+                    .replace(/[\u0300-\u036f]/g, '')
+                    .replace(/\s+/g, ' ')
+                    .trim();
+
+                // Pré-indexa o texto de cada card
+                const index = cards.map(card => ({ card, texto: normalizar(card.innerText) }));
+
+                function aplicarBusca() {
+                    const termo = normalizar(buscaInput.value);
+                    let visiveis = 0;
+
+                    index.forEach(({ card, texto }) => {
+                        const mostra = termo === '' || texto.includes(termo);
+                        card.style.display = mostra ? '' : 'none';
+                        if (mostra) visiveis++;
+                        // Desmarca checkbox de card oculto para não ir junto em ações em massa
+                        if (!mostra) {
+                            const cb = card.querySelector('.locacao-checkbox');
+                            if (cb && cb.checked) {
+                                cb.checked = false;
+                                updateBulkBar();
+                            }
+                        }
+                    });
+
+                    if (buscaClear) buscaClear.classList.toggle('hidden', termo === '');
+                    if (buscaVazio) {
+                        buscaVazio.classList.toggle('hidden', visiveis > 0);
+                        if (buscaVazioTermo) buscaVazioTermo.textContent = buscaInput.value.trim();
+                    }
+                }
+
+                buscaInput.addEventListener('input', aplicarBusca);
+
+                // Enter dentro do campo de busca não deve recarregar a página (form GET ao lado)
+                buscaInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') e.preventDefault();
+                });
+
+                if (buscaClear) {
+                    buscaClear.addEventListener('click', function() {
+                        buscaInput.value = '';
+                        buscaInput.focus();
+                        aplicarBusca();
+                    });
                 }
             }
         });

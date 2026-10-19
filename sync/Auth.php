@@ -1,13 +1,11 @@
 <?php
 
+require_once __DIR__ . '/session_boot.php';
+
 class Auth {
     private static $user = null;
     
     public static function check() {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
-        
         return isset($_SESSION['usuario_id']);
     }
     
@@ -69,7 +67,6 @@ class Auth {
         );
         
         if ($user && password_verify($password, $user['senha'])) {
-            session_start();
             $_SESSION['usuario_id'] = $user['id'];
             $_SESSION['usuario_nome'] = $user['nome'];
             $_SESSION['usuario_email'] = $user['email'];
@@ -84,7 +81,7 @@ class Auth {
     }
     
     public static function logout() {
-        session_start();
+        $_SESSION = [];
         session_destroy();
         self::$user = null;
         

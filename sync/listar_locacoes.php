@@ -560,10 +560,13 @@ if (!empty($locacaoIds)) {
                                 <div class="flex items-center gap-2 min-w-0 flex-wrap">
                                     <span class="loc-card-title"><?= htmlspecialchars($loc['nome_edificio']) ?></span>
                                     <span class="loc-card-apt">Apartamento <?= htmlspecialchars($loc['numero_apartamento']) ?></span>
-                                    <?php $responsavel = $loc['registrador_nome'] ?? ''; if ($responsavel === '') { $responsavel = $loc['locador_nome'] ?? ''; } ?>
-                                    <?php if ($responsavel !== ''): ?>
-                                    <span class="loc-card-registro">Locação registrada por: <?= htmlspecialchars($responsavel) ?></span>
-                                    <?php endif; ?>
+                                    <?php
+                                        $responsavel = trim((string)($loc['registrador_nome'] ?? ''));
+                                        if ($responsavel === '') {
+                                            $responsavel = trim((string)($loc['locador_nome'] ?? ''));
+                                        }
+                                    ?>
+                                    <span class="loc-card-registro">Locação registrada por: <?= htmlspecialchars($responsavel !== '' ? $responsavel : '—') ?></span>
                                     <?php if (!empty($loc['locador_telefone'])): ?>
                                     <?php
                                         $tel_whats = preg_replace('/\D/', '', $loc['locador_telefone']);

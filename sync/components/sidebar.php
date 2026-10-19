@@ -1,7 +1,5 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+require_once __DIR__ . '/../session_boot.php';
 
 $usuario_nome = $_SESSION['usuario_nome_real'] ?: ($_SESSION['usuario_nome'] ?: 'Usuário');
 $usuario_categoria = $_SESSION['usuario_categoria'] ?? '';
