@@ -11,6 +11,11 @@ if (!in_array($usuario_categoria, ['supervisor_monitoramento', 'gerente'])) {
 
 $usuario_base_id = escopo_base_sessao($conn, $usuario_categoria);
 
+$erro_validacao = '';
+$erro_validacao_tipo = 'error';
+// Valores digitados no formulario, preservados quando ha erro
+$form = [];
+
 if (isset($_POST['add_edificio'])) {
     $nome_edificio = trim($_POST['nome_edificio']);
     // Supervisor vinculado a uma base só cadastra edifício na própria base
@@ -19,6 +24,7 @@ if (isset($_POST['add_edificio'])) {
     $localizacao = trim($_POST['localizacao'] ?? '');
     $sindico_nome = trim($_POST['sindico_nome'] ?? '');
     $sindico_contato = trim($_POST['sindico_contato'] ?? '');
+    $sindico_email = trim($_POST['sindico_email'] ?? '');
     $administradora_id = !empty($_POST['administradora_id']) ? $_POST['administradora_id'] : null;
     $observacao_ficha_locacao = trim($_POST['observacao_ficha_locacao'] ?? '');
     $elevador_empresa = trim($_POST['elevador_empresa'] ?? '');
@@ -26,8 +32,29 @@ if (isset($_POST['add_edificio'])) {
     $latitude = !empty($_POST['latitude']) ? trim($_POST['latitude']) : null;
     $longitude = !empty($_POST['longitude']) ? trim($_POST['longitude']) : null;
     $sindico_id = null;
+
+    // Preserva o que foi digitado para nao perder dados em caso de erro
+    $form = [
+        'nome_edificio' => $nome_edificio,
+        'base_id' => $base_id,
+        'endereco' => $endereco,
+        'localizacao' => $localizacao,
+        'sindico_nome' => $sindico_nome,
+        'sindico_contato' => $sindico_contato,
+        'sindico_email' => $sindico_email,
+        'administradora_id' => $administradora_id,
+        'observacao_ficha_locacao' => $observacao_ficha_locacao,
+        'elevador_empresa' => $elevador_empresa,
+        'elevador_contato' => $elevador_contato,
+        'latitude' => $latitude,
+        'longitude' => $longitude,
+    ];
+
+    if ($sindico_email !== '' && !filter_var($sindico_email, FILTER_VALIDATE_EMAIL)) {
+        $erro_validacao = "E-mail do síndico inválido. Confira o endereço informado e tente novamente.";
+    }
     
-    if (!empty($nome_edificio) && !empty($base_id)) {
+    if (!$erro_validacao && !empty($nome_edificio) && !empty($base_id)) {
         // Verificar se o nome do síndico já existe
         if (!empty($sindico_nome)) {
             $stmt_check = $conn->prepare("SELECT s.id, s.nome, GROUP_CONCAT(e.nome ORDER BY e.nome SEPARATOR ', ') AS edificios 
@@ -61,8 +88,8 @@ if (isset($_POST['add_edificio'])) {
             }
         }
         
-        $stmt = $conn->prepare("INSERT INTO edificios (nome, base_id, endereco, localizacao, sindico_nome, sindico_contato, administradora_id, observacao_ficha_locacao, sindico_id, elevador_empresa, elevador_contato, latitude, longitude) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("sissssissssdd", $nome_edificio, $base_id, $endereco, $localizacao, $sindico_nome, $sindico_contato, $administradora_id, $observacao_ficha_locacao, $sindico_id, $elevador_empresa, $elevador_contato, $latitude, $longitude);
+        $stmt = $conn->prepare("INSERT INTO edificios (nome, base_id, endereco, localizacao, sindico_nome, sindico_contato, sindico_email, administradora_id, observacao_ficha_locacao, sindico_id, elevador_empresa, elevador_contato, latitude, longitude) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("sissssssisssdd", $nome_edificio, $base_id, $endereco, $localizacao, $sindico_nome, $sindico_contato, $sindico_email, $administradora_id, $observacao_ficha_locacao, $sindico_id, $elevador_empresa, $elevador_contato, $latitude, $longitude);
         if ($stmt->execute()) {
             $_SESSION['mensagem'] = "Edifício '$nome_edificio' adicionado com sucesso!";
             $_SESSION['mensagem_tipo'] = "success";
@@ -79,8 +106,8 @@ if (isset($_POST['add_edificio'])) {
 $bases = $conn->query("SELECT id, nome FROM bases WHERE status = 'ativo'" . filtro_base_sql($usuario_categoria, $usuario_base_id, 'id') . " ORDER BY nome ASC")->fetch_all(MYSQLI_ASSOC);
 $administradoras = $conn->query("SELECT id, nome FROM administradoras ORDER BY nome ASC")->fetch_all(MYSQLI_ASSOC);
 
-$mensagem = '';
-$mensagem_tipo = 'info';
+$mensagem = $erro_validacao;
+$mensagem_tipo = $erro_validacao ? $erro_validacao_tipo : 'info';
 $sindico_duplicado = null;
 
 if (isset($_SESSION['mensagem'])) {
@@ -196,7 +223,7 @@ if (isset($_SESSION['sindico_duplicado'])) {
                                         <select name="base_id" class="form-input appearance-none pr-10" required>
                                             <option value="">-- Selecione a Base --</option>
                                             <?php foreach ($bases as $base): ?>
-                                                <option value="<?php echo $base['id']; ?>"><?php echo htmlspecialchars($base['nome']); ?></option>
+                                                <option value="<?php echo $base['id']; ?>" <?php echo (isset($form['base_id']) && $form['base_id'] == $base['id']) ? 'selected' : ''; ?>><?php echo htmlspecialchars($base['nome']); ?></option>
                                             <?php endforeach; ?>
                                         </select>
                                         <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
@@ -207,31 +234,35 @@ if (isset($_SESSION['sindico_duplicado'])) {
                                 </div>
                                 <div class="space-y-2">
                                     <label class="form-label">Nome do Edifício *</label>
-                                    <input type="text" name="nome_edificio" class="form-input" placeholder="Ex: Edifício Solar" required>
+                                    <input type="text" name="nome_edificio" class="form-input" placeholder="Ex: Edifício Solar" required value="<?php echo htmlspecialchars($form['nome_edificio'] ?? ''); ?>">
                                 </div>
                                 <div class="space-y-2 md:col-span-2">
                                     <label class="form-label">Endereço Completo</label>
-                                    <input type="text" name="endereco" class="form-input" placeholder="Ex: Rua das Flores, 123 - Centro">
+                                    <input type="text" name="endereco" class="form-input" placeholder="Ex: Rua das Flores, 123 - Centro" value="<?php echo htmlspecialchars($form['endereco'] ?? ''); ?>">
                                 </div>
                                 <div class="space-y-2 md:col-span-2">
                                     <label class="form-label">Localização (Link do Google Maps)</label>
-                                    <input type="text" name="localizacao" class="form-input" placeholder="https://maps.google.com/...">
+                                    <input type="text" name="localizacao" class="form-input" placeholder="https://maps.google.com/..." value="<?php echo htmlspecialchars($form['localizacao'] ?? ''); ?>">
                                 </div>
                                 <div class="space-y-2">
                                     <label class="form-label">Latitude</label>
-                                    <input type="text" name="latitude" class="form-input" placeholder="Ex: -20.319386">
+                                    <input type="text" name="latitude" class="form-input" placeholder="Ex: -20.319386" value="<?php echo htmlspecialchars($form['latitude'] ?? ''); ?>">
                                 </div>
                                 <div class="space-y-2">
                                     <label class="form-label">Longitude</label>
-                                    <input type="text" name="longitude" class="form-input" placeholder="Ex: -40.337989">
+                                    <input type="text" name="longitude" class="form-input" placeholder="Ex: -40.337989" value="<?php echo htmlspecialchars($form['longitude'] ?? ''); ?>">
                                 </div>
                                 <div class="space-y-2">
                                     <label class="form-label">Nome do Síndico</label>
-                                    <input type="text" name="sindico_nome" class="form-input" placeholder="Nome do síndico do edifício">
+                                    <input type="text" name="sindico_nome" class="form-input" placeholder="Nome do síndico do edifício" value="<?php echo htmlspecialchars($form['sindico_nome'] ?? ''); ?>">
                                 </div>
                                 <div class="space-y-2">
                                     <label class="form-label">Contato do Síndico</label>
-                                    <input type="text" name="sindico_contato" class="form-input" placeholder="WhatsApp ou Telefone">
+                                    <input type="text" name="sindico_contato" class="form-input" placeholder="WhatsApp ou Telefone" value="<?php echo htmlspecialchars($form['sindico_contato'] ?? ''); ?>">
+                                </div>
+                                <div class="space-y-2 md:col-span-2">
+                                    <label class="form-label">E-mail do Síndico</label>
+                                    <input type="email" name="sindico_email" class="form-input" placeholder="email@exemplo.com" value="<?php echo htmlspecialchars($form['sindico_email'] ?? ''); ?>">
                                 </div>
                                 <div class="space-y-2 md:col-span-2">
                                     <label class="form-label">Administradora</label>
@@ -240,7 +271,7 @@ if (isset($_SESSION['sindico_duplicado'])) {
                                             <select name="administradora_id" class="form-input appearance-none pr-10">
                                                 <option value="">-- Selecione a Administradora (Opcional) --</option>
                                                 <?php foreach ($administradoras as $adm): ?>
-                                                    <option value="<?php echo $adm['id']; ?>"><?php echo htmlspecialchars($adm['nome']); ?></option>
+                                                    <option value="<?php echo $adm['id']; ?>" <?php echo (isset($form['administradora_id']) && $form['administradora_id'] == $adm['id']) ? 'selected' : ''; ?>><?php echo htmlspecialchars($adm['nome']); ?></option>
                                                 <?php endforeach; ?>
                                             </select>
                                             <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
@@ -252,15 +283,15 @@ if (isset($_SESSION['sindico_duplicado'])) {
                                 </div>
                                 <div class="space-y-2">
                                     <label class="form-label">Empresa de Elevadores</label>
-                                    <input type="text" name="elevador_empresa" class="form-input" placeholder="Nome da empresa de elevadores">
+                                    <input type="text" name="elevador_empresa" class="form-input" placeholder="Nome da empresa de elevadores" value="<?php echo htmlspecialchars($form['elevador_empresa'] ?? ''); ?>">
                                 </div>
                                 <div class="space-y-2">
                                     <label class="form-label">Contato da Empresa de Elevadores</label>
-                                    <input type="text" name="elevador_contato" class="form-input" placeholder="WhatsApp ou Telefone">
+                                    <input type="text" name="elevador_contato" class="form-input" placeholder="WhatsApp ou Telefone" value="<?php echo htmlspecialchars($form['elevador_contato'] ?? ''); ?>">
                                 </div>
                                 <div class="space-y-2 md:col-span-2">
                                     <label class="form-label">Observação ficha locação</label>
-                                    <textarea name="observacao_ficha_locacao" class="form-input min-h-[120px]" placeholder="Insira aqui observações detalhadas para a ficha de locação..."></textarea>
+                                    <textarea name="observacao_ficha_locacao" class="form-input min-h-[120px]" placeholder="Insira aqui observações detalhadas para a ficha de locação..."><?php echo htmlspecialchars($form['observacao_ficha_locacao'] ?? ''); ?></textarea>
                                 </div>
                             </div>
 

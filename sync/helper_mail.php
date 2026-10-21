@@ -32,12 +32,9 @@ function enviar_email_locacao_adm($conn, array $items) {
     $edificioId    = intval($items['edificio_id'] ?? 0);
     $admNome       = $items['administradora_nome'] ?? '';
     $admEmail      = trim($items['administradora_email'] ?? '');
-    $edificioNome  = $items['edificio_nome'] ?? '';
-    $apt           = $items['numero_apartamento'] ?? '';
 
     // Regra 1: edifício deve ter envio de e-mail habilitado
-    $r = $conn->query("SELECT enviar_email_adm FROM edificios WHERE id = $edificioId");
-    $enabled = $r ? (int)($r->fetch_assoc()['enviar_email_adm'] ?? 0) : 0;
+    $enabled = ler_toggle_envio_email($conn, $edificioId, 'enviar_email_adm');
     if ($enabled !== 1) {
         return ['success' => false, 'message' => 'Envio de e-mail desabilitado para este edifício.'];
     }
@@ -46,6 +43,68 @@ function enviar_email_locacao_adm($conn, array $items) {
     if ($admEmail === '' || !filter_var($admEmail, FILTER_VALIDATE_EMAIL)) {
         return ['success' => false, 'message' => 'Administradora sem e-mail válido cadastrado.'];
     }
+
+    return enviar_email_locacao_para($conn, $items, $admEmail, $admNome);
+}
+
+/**
+ * Envia o e-mail da locação para o síndico do edifício.
+ *
+ * Regras:
+ *  - Só envia se o edifício tiver o toggle `enviar_email_sindico` habilitado.
+ *  - Só envia se o edifício tiver e-mail de síndico preenchido e válido.
+ *
+ * @return array ['success' => bool, 'message' => string]
+ */
+function enviar_email_locacao_sindico($conn, array $items) {
+    $edificioId    = intval($items['edificio_id'] ?? 0);
+    $sindicoNome   = $items['sindico_nome'] ?? '';
+    $sindicoEmail  = trim($items['sindico_email'] ?? '');
+
+    // Regra 1: edifício deve ter envio de e-mail para síndico habilitado
+    $enabled = ler_toggle_envio_email($conn, $edificioId, 'enviar_email_sindico');
+    if ($enabled !== 1) {
+        return ['success' => false, 'message' => 'Envio de e-mail para o síndico desabilitado para este edifício.'];
+    }
+
+    // Regra 2: edifício deve ter e-mail de síndico válido
+    if ($sindicoEmail === '' || !filter_var($sindicoEmail, FILTER_VALIDATE_EMAIL)) {
+        return ['success' => false, 'message' => 'Edifício sem e-mail de síndico válido cadastrado.'];
+    }
+
+    return enviar_email_locacao_para($conn, $items, $sindicoEmail, $sindicoNome);
+}
+
+/**
+ * Lê um toggle de envio de e-mail do edifício (0 ou 1).
+ * Retorna 0 se a coluna ainda não existir no banco.
+ */
+function ler_toggle_envio_email($conn, $edificioId, $coluna) {
+    if ($edificioId <= 0) {
+        return 0;
+    }
+    $colunasPermitidas = ['enviar_email_adm', 'enviar_email_sindico'];
+    if (!in_array($coluna, $colunasPermitidas, true)) {
+        return 0;
+    }
+    $check = @$conn->query("SHOW COLUMNS FROM edificios LIKE '$coluna'");
+    if (!$check || $check->num_rows == 0) {
+        return 0;
+    }
+    $r = @$conn->query("SELECT `$coluna` FROM edificios WHERE id = " . intval($edificioId));
+    if (!$r) {
+        return 0;
+    }
+    $row = $r->fetch_assoc();
+    return $row ? (int)($row[$coluna] ?? 0) : 0;
+}
+
+/**
+ * Monta e envia o e-mail da locação para um destinatário.
+ */
+function enviar_email_locacao_para($conn, array $items, $destEmail, $destNome = '') {
+    $edificioNome  = $items['edificio_nome'] ?? '';
+    $apt           = $items['numero_apartamento'] ?? '';
 
     $config = require __DIR__ . '/mail_config.php';
 
@@ -68,11 +127,11 @@ function enviar_email_locacao_adm($conn, array $items) {
 
         $mail->setFrom($config['from_email'], $config['from_name']);
 
-        // Destinatário: administradora (nome amigável quando disponível)
-        if (!empty($admNome)) {
-            $mail->addAddress($admEmail, $admNome);
+        // Destinatário (nome amigável quando disponível)
+        if (!empty($destNome)) {
+            $mail->addAddress($destEmail, $destNome);
         } else {
-            $mail->addAddress($admEmail);
+            $mail->addAddress($destEmail);
         }
 
         $mail->Subject = $subject;

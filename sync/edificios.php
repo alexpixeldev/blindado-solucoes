@@ -185,6 +185,8 @@ $has_elevador = column_exists($conn, 'edificios', 'elevador_empresa');
 $has_selfie_col = column_exists($conn, 'edificios', 'requer_selfie');
 $has_retirada_col = column_exists($conn, 'edificios', 'retirada_lixo');
 $has_email_adm_col = column_exists($conn, 'edificios', 'enviar_email_adm');
+$has_email_sindico_col = column_exists($conn, 'edificios', 'enviar_email_sindico');
+$has_sindico_email_col = column_exists($conn, 'edificios', 'sindico_email');
 
 $has_controle_faciais = table_exists($conn, 'controle_faciais');
 $has_controle_ata = table_exists($conn, 'controle_ata');
@@ -241,7 +243,8 @@ switch ($tab) {
         $all_subs = array_filter([$sub_facial, $sub_ata, $sub_radio, $sub_dvr, $sub_ramais, $sub_ramal_cat]);
         $subquery_block = $all_subs ? ',' . implode(',', $all_subs) : '';
 
-        $query = "SELECT e.id, e.nome AS nome_edificio, e.endereco, e.sindico_nome, e.sindico_contato, e.administradora_id,
+        $sindico_email_col = $has_sindico_email_col ? 'e.sindico_email' : "'' AS sindico_email";
+        $query = "SELECT e.id, e.nome AS nome_edificio, e.endereco, e.sindico_nome, e.sindico_contato, $sindico_email_col, e.administradora_id,
                          $extra_cols
                          b.nome AS nome_base, b.status AS status, a.nome AS nome_administradora,
                          a.telefone AS administradora_telefone, a.email AS administradora_email
@@ -254,7 +257,9 @@ switch ($tab) {
         if (intval($usuario_base_id) > 0) $where_clauses[] = "e.base_id = " . intval($usuario_base_id);
         if ($search) {
             $s = $conn->real_escape_string($search);
-            $where_clauses[] = "(e.nome LIKE '%$s%' OR b.nome LIKE '%$s%' OR e.endereco LIKE '%$s%' OR e.sindico_nome LIKE '%$s%')";
+            $search_fields = "(e.nome LIKE '%$s%' OR b.nome LIKE '%$s%' OR e.endereco LIKE '%$s%' OR e.sindico_nome LIKE '%$s%')";
+            if ($has_sindico_email_col) $search_fields .= " OR e.sindico_email LIKE '%$s%'";
+            $where_clauses[] = $search_fields;
         }
         if (!empty($where_clauses)) $query .= " WHERE " . implode(" AND ", $where_clauses);
         $query .= " ORDER BY b.nome, e.nome";
@@ -266,8 +271,9 @@ switch ($tab) {
     case 'faciais_locacao':
         $selfie_col = $has_selfie_col ? 'e.requer_selfie' : '0 AS requer_selfie';
         $email_adm_col = $has_email_adm_col ? 'e.enviar_email_adm' : '0 AS enviar_email_adm';
+        $email_sindico_col = $has_email_sindico_col ? 'e.enviar_email_sindico' : '0 AS enviar_email_sindico';
         $facial_base_cond = intval($usuario_base_id) > 0 ? " WHERE b.id = " . intval($usuario_base_id) : '';
-        $query = "SELECT e.id, e.nome, $selfie_col, $email_adm_col, b.nome AS nome_base
+        $query = "SELECT e.id, e.nome, $selfie_col, $email_adm_col, $email_sindico_col, b.nome AS nome_base
                   FROM edificios e
                   JOIN bases b ON e.base_id = b.id
                   $facial_base_cond
@@ -514,16 +520,27 @@ unset($_SESSION['mensagem'], $_SESSION['mensagem_tipo']);
                                                     </label>
                                                 </div>
                                                 <div class="w-px self-stretch bg-slate-200"></div>
-                                                <!-- Toggle E-mail Administradora -->
-                                                <div class="flex flex-col items-start gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm" style="width:170px; flex-shrink:0;">
+                                                <!-- Toggle E-mail (Administradora e Síndico) -->
+                                                <div class="flex flex-col items-start gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm" style="width:240px; flex-shrink:0;">
                                                     <span class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-500">
-                                                        <i class="fas fa-envelope text-slate-400"></i> E-mail Adm
+                                                        <i class="fas fa-envelope text-slate-400"></i> E-MAIL
                                                     </span>
-                                                    <label class="relative inline-flex items-center cursor-pointer" title="Enviar e-mail à administradora ao registrar locação">
-                                                        <input type="checkbox" class="sr-only peer" onchange="toggleEmailAdm(<?= $item['id'] ?>, this)" <?= $item['enviar_email_adm'] ? 'checked' : '' ?>>
-                                                        <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
-                                                        <span class="ml-2 text-xs font-medium <?= $item['enviar_email_adm'] ? 'text-primary-600' : 'text-slate-400' ?>"><?= $item['enviar_email_adm'] ? 'Habilitado' : 'Desabilitado' ?></span>
-                                                    </label>
+                                                    <div class="flex items-center gap-2 w-full">
+                                                        <span class="w-14 shrink-0 text-xs font-medium text-slate-500">Adm</span>
+                                                        <label class="relative inline-flex items-center cursor-pointer" title="Enviar e-mail à administradora ao registrar locação">
+                                                            <input type="checkbox" class="sr-only peer" onchange="toggleEmailAdm(<?= $item['id'] ?>, this)" <?= $item['enviar_email_adm'] ? 'checked' : '' ?>>
+                                                            <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
+                                                            <span class="ml-2 text-xs font-medium <?= $item['enviar_email_adm'] ? 'text-primary-600' : 'text-slate-400' ?>"><?= $item['enviar_email_adm'] ? 'Habilitado' : 'Desabilitado' ?></span>
+                                                        </label>
+                                                    </div>
+                                                    <div class="flex items-center gap-2 w-full">
+                                                        <span class="w-14 shrink-0 text-xs font-medium text-slate-500">Síndico</span>
+                                                        <label class="relative inline-flex items-center cursor-pointer" title="Enviar e-mail ao síndico ao registrar locação">
+                                                            <input type="checkbox" class="sr-only peer" onchange="toggleEmailSindico(<?= $item['id'] ?>, this)" <?= $item['enviar_email_sindico'] ? 'checked' : '' ?>>
+                                                            <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
+                                                            <span class="ml-2 text-xs font-medium <?= $item['enviar_email_sindico'] ? 'text-primary-600' : 'text-slate-400' ?>"><?= $item['enviar_email_sindico'] ? 'Habilitado' : 'Desabilitado' ?></span>
+                                                        </label>
+                                                    </div>
                                                 </div>
                                                 <?php else: ?>
                                                 <div class="flex flex-col items-start gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm" style="width:170px; flex-shrink:0;">
@@ -533,11 +550,18 @@ unset($_SESSION['mensagem'], $_SESSION['mensagem_tipo']);
                                                     <span class="text-sm font-medium <?= $item['requer_selfie'] ? 'text-green-600' : 'text-slate-400' ?>"><?= $item['requer_selfie'] ? 'Habilitado' : 'Desabilitado' ?></span>
                                                 </div>
                                                 <div class="w-px self-stretch bg-slate-200"></div>
-                                                <div class="flex flex-col items-start gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm" style="width:170px; flex-shrink:0;">
+                                                <div class="flex flex-col items-start gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm" style="width:240px; flex-shrink:0;">
                                                     <span class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-500">
-                                                        <i class="fas fa-envelope text-slate-400"></i> E-mail Adm
+                                                        <i class="fas fa-envelope text-slate-400"></i> E-MAIL
                                                     </span>
-                                                    <span class="text-sm font-medium <?= $item['enviar_email_adm'] ? 'text-green-600' : 'text-slate-400' ?>"><?= $item['enviar_email_adm'] ? 'Habilitado' : 'Desabilitado' ?></span>
+                                                    <div class="flex items-center gap-2 w-full">
+                                                        <span class="w-14 shrink-0 text-xs font-medium text-slate-500">Adm</span>
+                                                        <span class="text-sm font-medium <?= $item['enviar_email_adm'] ? 'text-green-600' : 'text-slate-400' ?>"><?= $item['enviar_email_adm'] ? 'Habilitado' : 'Desabilitado' ?></span>
+                                                    </div>
+                                                    <div class="flex items-center gap-2 w-full">
+                                                        <span class="w-14 shrink-0 text-xs font-medium text-slate-500">Síndico</span>
+                                                        <span class="text-sm font-medium <?= $item['enviar_email_sindico'] ? 'text-green-600' : 'text-slate-400' ?>"><?= $item['enviar_email_sindico'] ? 'Habilitado' : 'Desabilitado' ?></span>
+                                                    </div>
                                                 </div>
                                                 <?php endif; ?>
                                             </div>
@@ -807,7 +831,10 @@ unset($_SESSION['mensagem'], $_SESSION['mensagem_tipo']);
                                                     <p class="text-[10px] uppercase tracking-[0.2em] text-slate-400">Síndico</p>
                                                     <p class="mt-1 truncate text-sm font-semibold text-slate-900"><?= render_card_value($item['sindico_nome'] ?? 'Síndico não informado') ?></p>
                                                     <?php if (!empty($item['sindico_contato'])): ?>
-                                                        <p class="truncate text-xs text-slate-500 mt-1"><?= htmlspecialchars($item['sindico_contato']) ?></p>
+                                                        <p class="truncate text-xs text-slate-500 mt-1"><i class="fas fa-phone mr-1.5 text-slate-400"></i><?= htmlspecialchars($item['sindico_contato']) ?></p>
+                                                    <?php endif; ?>
+                                                    <?php if (!empty($item['sindico_email'])): ?>
+                                                        <p class="truncate text-xs text-slate-500 mt-1"><i class="fas fa-envelope mr-1.5 text-slate-400"></i><?= htmlspecialchars($item['sindico_email']) ?></p>
                                                     <?php endif; ?>
                                                 </div>
                                             </div>
@@ -879,6 +906,13 @@ unset($_SESSION['mensagem'], $_SESSION['mensagem_tipo']);
     <?php include 'components/footer.php'; ?>
     
     <script>
+        function atualizarStatusToggle(checkbox, ativo, texto) {
+            const status = checkbox.nextElementSibling.nextElementSibling;
+            status.textContent = texto;
+            status.classList.toggle('text-primary-600', ativo);
+            status.classList.toggle('text-slate-400', !ativo);
+        }
+
         function toggleSelfie(edificioId, checkbox) {
             const newValue = checkbox.checked ? 1 : 0;
             const statusText = checkbox.checked ? 'Habilitado' : 'Desabilitado';
@@ -893,7 +927,7 @@ unset($_SESSION['mensagem'], $_SESSION['mensagem_tipo']);
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    checkbox.nextElementSibling.nextElementSibling.textContent = statusText;
+                    atualizarStatusToggle(checkbox, checkbox.checked, statusText);
                 } else {
                     alert('Erro ao atualizar: ' + data.message);
                     checkbox.checked = !checkbox.checked;
@@ -908,7 +942,7 @@ unset($_SESSION['mensagem'], $_SESSION['mensagem_tipo']);
 
         function toggleRetirada(edificioId, checkbox) {
             const newValue = checkbox.checked ? 1 : 0;
-            const statusText = checkbox.checked ? 'Sim' : 'Não';
+            const statusText = checkbox.checked ? 'Habilitado' : 'Desabilitado';
             
             fetch('toggle_retirada_lixo.php', {
                 method: 'POST',
@@ -920,7 +954,7 @@ unset($_SESSION['mensagem'], $_SESSION['mensagem_tipo']);
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    checkbox.nextElementSibling.nextElementSibling.textContent = statusText;
+                    atualizarStatusToggle(checkbox, checkbox.checked, statusText);
                 } else {
                     alert('Erro ao atualizar: ' + data.message);
                     checkbox.checked = !checkbox.checked;
@@ -935,6 +969,7 @@ unset($_SESSION['mensagem'], $_SESSION['mensagem_tipo']);
 
         function toggleEmailAdm(edificioId, checkbox) {
             const newValue = checkbox.checked ? 1 : 0;
+            const statusText = checkbox.checked ? 'Habilitado' : 'Desabilitado';
 
             fetch('toggle_email_adm.php', {
                 method: 'POST',
@@ -945,7 +980,9 @@ unset($_SESSION['mensagem'], $_SESSION['mensagem_tipo']);
             })
             .then(response => response.json())
             .then(data => {
-                if (!data.success) {
+                if (data.success) {
+                    atualizarStatusToggle(checkbox, checkbox.checked, statusText);
+                } else {
                     alert('Erro ao atualizar: ' + data.message);
                     checkbox.checked = !checkbox.checked;
                 }
@@ -953,6 +990,33 @@ unset($_SESSION['mensagem'], $_SESSION['mensagem_tipo']);
             .catch(error => {
                 console.error('Erro:', error);
                 alert('Erro ao atualizar envio de e-mail');
+                checkbox.checked = !checkbox.checked;
+            });
+        }
+
+        function toggleEmailSindico(edificioId, checkbox) {
+            const newValue = checkbox.checked ? 1 : 0;
+            const statusText = checkbox.checked ? 'Habilitado' : 'Desabilitado';
+
+            fetch('toggle_email_sindico.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'edificio_id=' + edificioId + '&valor=' + newValue
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    atualizarStatusToggle(checkbox, checkbox.checked, statusText);
+                } else {
+                    alert('Erro ao atualizar: ' + data.message);
+                    checkbox.checked = !checkbox.checked;
+                }
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                alert('Erro ao atualizar envio de e-mail para o síndico');
                 checkbox.checked = !checkbox.checked;
             });
         }

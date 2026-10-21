@@ -42,6 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $localizacao = $_POST['localizacao'] ?? '';
     $sindico_nome = $_POST['sindico_nome'] ?? '';
     $sindico_contato = $_POST['sindico_contato'] ?? '';
+    $sindico_email = trim($_POST['sindico_email'] ?? '');
     $administradora_id = !empty($_POST['administradora_id']) ? $_POST['administradora_id'] : null;
     $observacao_ficha_locacao = trim($_POST['observacao_ficha_locacao'] ?? '');
     $elevador_empresa = $_POST['elevador_empresa'] ?? '';
@@ -56,6 +57,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $mensagem = "Você só pode editar edifícios da base à qual está vinculado.";
     } elseif (empty($nome) || empty($base_id)) {
         $mensagem = "O nome do edifício e a base são obrigatórios.";
+    } elseif ($sindico_email !== '' && !filter_var($sindico_email, FILTER_VALIDATE_EMAIL)) {
+        $mensagem = "E-mail do síndico inválido. Confira o endereço informado e tente novamente.";
     } else {
         // Pegar o nome antigo do síndico antes de atualizar
         $stmt_old = $conn->prepare("SELECT sindico_nome FROM edificios WHERE id = ?");
@@ -65,8 +68,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $old_sindico_nome = $old_edificio['sindico_nome'];
         $stmt_old->close();
 
-        $stmt = $conn->prepare("UPDATE edificios SET nome = ?, base_id = ?, endereco = ?, localizacao = ?, sindico_nome = ?, sindico_contato = ?, administradora_id = ?, observacao_ficha_locacao = ?, elevador_empresa = ?, elevador_contato = ?, latitude = ?, longitude = ? WHERE id = ?");
-        $stmt->bind_param("sissssisssddi", $nome, $base_id, $endereco, $localizacao, $sindico_nome, $sindico_contato, $administradora_id, $observacao_ficha_locacao, $elevador_empresa, $elevador_contato, $latitude, $longitude, $id);
+        $stmt = $conn->prepare("UPDATE edificios SET nome = ?, base_id = ?, endereco = ?, localizacao = ?, sindico_nome = ?, sindico_contato = ?, sindico_email = ?, administradora_id = ?, observacao_ficha_locacao = ?, elevador_empresa = ?, elevador_contato = ?, latitude = ?, longitude = ? WHERE id = ?");
+        $stmt->bind_param("sissssssissddi", $nome, $base_id, $endereco, $localizacao, $sindico_nome, $sindico_contato, $sindico_email, $administradora_id, $observacao_ficha_locacao, $elevador_empresa, $elevador_contato, $latitude, $longitude, $id);
         
         if ($stmt->execute()) {
             // Sincronizar o nome do síndico na tabela sindicos se mudou
@@ -103,6 +106,11 @@ if ($result->num_rows === 1) {
     exit();
 }
 $stmt->close();
+
+// Em caso de erro, mantem o e-mail digitado para o usuario poder corrigir
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['sindico_email'])) {
+    $edificio['sindico_email'] = trim($_POST['sindico_email']);
+}
 
 // Fetch all bases for the dropdown
 $bases_result = @$conn->query("SELECT * FROM bases WHERE status = 'ativo'" . filtro_base_sql($usuario_categoria, $usuario_base_id, 'id') . " ORDER BY nome ASC");
@@ -213,6 +221,10 @@ if ($check_adm && $check_adm->num_rows > 0) {
                                 <div class="space-y-2">
                                     <label class="form-label">Contato do Síndico</label>
                                     <input type="text" name="sindico_contato" class="form-input" value="<?php echo htmlspecialchars($edificio['sindico_contato'] ?? ''); ?>">
+                                </div>
+                                <div class="space-y-2 md:col-span-2">
+                                    <label class="form-label">E-mail do Síndico</label>
+                                    <input type="email" name="sindico_email" class="form-input" placeholder="email@exemplo.com" value="<?php echo htmlspecialchars($edificio['sindico_email'] ?? ''); ?>">
                                 </div>
                                 <div class="space-y-2 md:col-span-2">
                                     <label class="form-label">Administradora</label>

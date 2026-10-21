@@ -328,7 +328,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // 4. Enviar e-mail à administradora (se habilitado para este edifício)
         require_once __DIR__ . '/../sync/helper_mail.php';
-        $stmt_edif = $conn->prepare("SELECT e.id AS edificio_id, e.nome AS edificio_nome, e.endereco AS edificio_endereco, a.id AS administradora_id, a.nome AS administradora_nome, a.email AS administradora_email
+        $stmt_edif = $conn->prepare("SELECT e.id AS edificio_id, e.nome AS edificio_nome, e.endereco AS edificio_endereco, e.sindico_nome AS sindico_nome, e.sindico_email AS sindico_email, a.id AS administradora_id, a.nome AS administradora_nome, a.email AS administradora_email
             FROM edificios e
             LEFT JOIN administradoras a ON e.administradora_id = a.id
             WHERE e.id = ?");
@@ -342,6 +342,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'edificio_id'          => $edif_row['edificio_id'],
                     'edificio_nome'        => $edif_row['edificio_nome'],
                     'edificio_endereco'    => $edif_row['edificio_endereco'] ?? '',
+                    'sindico_nome'         => $edif_row['sindico_nome'] ?? '',
+                    'sindico_email'        => $edif_row['sindico_email'] ?? '',
                     'administradora_id'    => $edif_row['administradora_id'],
                     'administradora_nome'  => $edif_row['administradora_nome'] ?? '',
                     'administradora_email' => $edif_row['administradora_email'] ?? '',
@@ -360,6 +362,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $mail_result = enviar_email_locacao_adm($conn, $mail_items);
                 if (!$mail_result['success']) {
                     error_log("salvar_locacao.php: e-mail adm não enviado – " . $mail_result['message'] . " (locacao_id=$locacao_id)");
+                }
+                $mail_result_sindico = enviar_email_locacao_sindico($conn, $mail_items);
+                if (!$mail_result_sindico['success']) {
+                    error_log("salvar_locacao.php: e-mail síndico não enviado – " . $mail_result_sindico['message'] . " (locacao_id=$locacao_id)");
                 }
             }
         }
