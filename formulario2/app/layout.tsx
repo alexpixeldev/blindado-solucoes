@@ -44,14 +44,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
         {children}
 
-        <Script
-          src="https://trackingjs.com/bower/tracking.js/build/tracking-min.js"
-          strategy="afterInteractive"
-        />
-        <Script
-          src="https://trackingjs.com/bower/tracking.js/build/data/face-min.js"
-          strategy="afterInteractive"
-        />
+        <Script src={`${basePath}/js/tracking-min.js`} strategy="afterInteractive" />
+        <Script src={`${basePath}/js/face-min.js`} strategy="afterInteractive" />
       </body>
     </html>
   );
