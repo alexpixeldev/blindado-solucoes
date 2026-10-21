@@ -64,8 +64,6 @@ export default function Step2(p: Props) {
                       <i className="fas fa-location-dot text-[10px]"></i>
                       <span className="truncate">{edificio.localizacao}</span>
                     </p>
-                  ) : edificio.nome_base ? (
-                    <p className="mt-0.5 text-xs text-slate-400">{edificio.nome_base}</p>
                   ) : null}
                   {selected && p.numeroApartamento && (
                     <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-primary-600 px-2.5 py-0.5 text-[11px] font-bold text-white">

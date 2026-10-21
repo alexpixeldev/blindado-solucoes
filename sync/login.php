@@ -35,6 +35,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['usuario_base_id'] = $usuario['base_id'] ?? null;
         $_SESSION['login_time'] = time();
 
+        // Marca o corte mais recente (06:50 / 18:50) para so deslogar no proximo.
+        date_default_timezone_set('America/Sao_Paulo');
+        $agora = time();
+        $corte_atual = 0;
+        foreach ([-1, 0] as $offset_dias) {
+            $dia = strtotime(date('Y-m-d', $agora + $offset_dias * 86400));
+            foreach ([6 * 3600 + 50 * 60, 18 * 3600 + 50 * 60] as $segundos) {
+                $momento = $dia + $segundos;
+                if ($momento <= $agora && $momento > $corte_atual) {
+                    $corte_atual = $momento;
+                }
+            }
+        }
+        $_SESSION['ultimo_corte_aplicado'] = $corte_atual;
+
         header('Location: index.php');
         exit();
     } else {

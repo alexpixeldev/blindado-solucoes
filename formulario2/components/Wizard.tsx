@@ -63,6 +63,15 @@ export default function Wizard() {
   const [submitting, setSubmitting] = useState(false);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 639px)');
+    const apply = () => setIsMobile(mq.matches);
+    apply();
+    mq.addEventListener('change', apply);
+    return () => mq.removeEventListener('change', apply);
+  }, []);
 
   useEffect(() => {
     fetchEdificios()
@@ -279,11 +288,11 @@ export default function Wizard() {
           </div>
         </header>
 
-        <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center px-4 pb-12 pt-24 sm:px-6 sm:pt-28">
+        <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-4 pb-12 pt-24 sm:px-6 sm:pt-28">
           <h1 className="sr-only">Formulário de Locação</h1>
 
-          <div className="gradient-border overflow-hidden rounded-[2rem] shadow-card">
-            <div className="bg-white/95 backdrop-blur-xl">
+          <div className="gradient-border flex flex-1 flex-col overflow-hidden rounded-[2rem] shadow-card">
+            <div className="flex flex-1 flex-col bg-white/95 backdrop-blur-xl">
               {loadError && (
                 <div className="m-5 flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 animate-fade-in sm:m-6">
                   <i className="fas fa-triangle-exclamation mt-0.5 text-red-500"></i>
@@ -291,7 +300,7 @@ export default function Wizard() {
                 </div>
               )}
 
-              <div className="p-5 sm:p-8">
+              <div className="flex flex-1 flex-col p-5 sm:p-8">
                 <AnimatePresence mode="wait" custom={direction} initial={false}>
                   <motion.div
                     key={currentStep}
@@ -300,12 +309,14 @@ export default function Wizard() {
                     initial="enter"
                     animate="center"
                     exit="exit"
+                    className="flex flex-1 flex-col"
                   >
                     <motion.div
                       drag="x"
                       dragDirectionLock
                       dragConstraints={{ left: 0, right: 0 }}
                       dragElastic={0.12}
+                      className="flex h-full flex-1 flex-col"
                       onDragEnd={(_, info) => {
                         if (info.offset.x < -80) goNext();
                         else if (info.offset.x > 80) goPrev();
@@ -451,7 +462,14 @@ export default function Wizard() {
 
         <AnimatePresence>
           {modalOpen && (
-            <div className="fixed inset-0 z-[60] flex items-end justify-center p-0 sm:items-center sm:p-4">
+            <div
+              className="fixed inset-0 z-[60] flex justify-center"
+              style={
+                isMobile
+                  ? { alignItems: 'flex-start', padding: '1rem', paddingTop: '5.5rem' }
+                  : { alignItems: 'center', padding: '1rem' }
+              }
+            >
               <motion.div
                 className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
                 initial={{ opacity: 0 }}
@@ -460,15 +478,16 @@ export default function Wizard() {
                 onClick={() => setModalOpen(false)}
               />
               <motion.div
-                className="relative w-full max-w-md overflow-hidden rounded-t-[2rem] bg-white shadow-2xl sm:rounded-[2rem]"
+                className="relative max-h-[70vh] w-full overflow-y-auto overflow-x-hidden rounded-[2rem] bg-white shadow-2xl"
+                style={{ maxWidth: '28rem' }}
                 initial={{ opacity: 0, y: 40, scale: 0.98 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 30, scale: 0.98 }}
                 transition={{ type: 'spring', stiffness: 260, damping: 26 }}
               >
-                <div className="relative flex items-center justify-between overflow-hidden bg-brand-gradient p-5 text-white sm:p-6">
+                <div className="relative flex items-center justify-between overflow-hidden bg-brand-gradient p-4 text-white sm:p-6">
                   <div className="pointer-events-none absolute -right-6 -top-8 h-28 w-28 rounded-full bg-white/10" />
-                  <h3 className="relative flex items-center gap-2 text-lg font-bold sm:text-xl">
+                  <h3 className="relative flex items-center gap-2 text-base font-bold sm:text-xl">
                     <i className="fas fa-door-open"></i>
                     Número do Apartamento
                   </h3>
@@ -482,10 +501,10 @@ export default function Wizard() {
                   </button>
                 </div>
 
-                <div className="space-y-6 p-6 sm:p-8">
+                <div className={isMobile ? 'space-y-4 p-4' : 'space-y-6 p-6 sm:p-8'}>
                   <div className="text-center">
-                    <p className="text-sm text-slate-500">Informe o número do apartamento para o edifício:</p>
-                    <p className="mt-1 text-lg font-bold text-slate-900">{modalEdificio?.nome_edificio}</p>
+                    <p className="text-xs text-slate-500 sm:text-sm">Informe o número do apartamento para o edifício:</p>
+                    <p className="mt-0.5 text-base font-bold text-slate-900 sm:mt-1 sm:text-lg">{modalEdificio?.nome_edificio}</p>
                   </div>
 
                   <Field label="Número do Apartamento" error={modalError}>

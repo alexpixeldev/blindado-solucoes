@@ -9,14 +9,22 @@ if (!isset($_SESSION['usuario_id'])) {
     exit();
 }
 
-// Logout programado: TODO usuario logado e deslogado nos horarios de troca de
-// plantao (06:50 e 18:50, horario de Brasilia), independente de quando entrou.
-// A janela de cada turno comeca no horario de troca e vai ate a proxima.
+// Logout automatico nos horarios de Brasilia: 06:50 e 18:50.
+// Apenas desloga quem estiver logado nesse horario. O usuario pode logar
+// novamente normalmente e sera deslogado de novo no proximo horario de corte.
 date_default_timezone_set('America/Sao_Paulo');
-$hora_atual = date('Y-m-d') . ' ' . ((int) date('H') * 3600 + (int) date('i') * 60 >= 18 * 3600 + 50 * 60
-    ? '18:50'
-    : ((int) date('H') * 3600 + (int) date('i') * 60 >= 6 * 3600 + 50 * 60 ? '06:50' : 'pre-06:50'));
-if (($_SESSION['turno_corte'] ?? null) !== $hora_atual) {
+$agora = time();
+$corte_atual = 0;
+foreach ([-1, 0] as $offset_dias) {
+    $dia = strtotime(date('Y-m-d', $agora + $offset_dias * 86400));
+    foreach ([6 * 3600 + 50 * 60, 18 * 3600 + 50 * 60] as $segundos) {
+        $momento = $dia + $segundos;
+        if ($momento <= $agora && $momento > $corte_atual) {
+            $corte_atual = $momento;
+        }
+    }
+}
+if ($corte_atual > 0 && ($_SESSION['ultimo_corte_aplicado'] ?? 0) < $corte_atual) {
     $_SESSION = [];
     if (ini_get('session.use_cookies')) {
         $params = session_get_cookie_params();

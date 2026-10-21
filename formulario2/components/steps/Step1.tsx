@@ -15,22 +15,29 @@ interface Props {
 }
 
 export default function Step1(p: Props) {
+  const temCards = p.userType !== '';
   return (
-    <div className="space-y-8">
+    <div className="flex flex-1 flex-col space-y-8">
       <StepHeader
         icon="fas fa-user-tag"
         title="Quem é você?"
         subtitle="Selecione o seu perfil para continuarmos o cadastro."
       />
 
-      <div className="grid grid-cols-1 gap-4 field-container sm:grid-cols-2">
+      <div
+        className="field-container mx-auto grid w-full flex-1 auto-rows-fr grid-cols-1 gap-5"
+        style={{ maxWidth: '40rem' }}
+      >
         {(['locador', 'locatario'] as const).map((value) => {
           const isLocadorCard = value === 'locador';
           const active = p.userType === value;
+          const oculto = p.userType !== '' && !active;
           return (
             <label
               key={value}
-              className={`selection-card group relative flex cursor-pointer flex-col overflow-hidden rounded-3xl border-2 bg-white p-6 shadow-soft transition-all duration-300 hover-lift ${
+              className={`selection-card group relative flex min-h-[8rem] flex-1 cursor-pointer items-center gap-5 overflow-hidden rounded-3xl border-2 bg-white px-6 py-10 shadow-soft transition-all duration-300 hover-lift sm:px-8 sm:py-12 ${
+                oculto ? 'hidden' : ''
+              } ${
                 active ? 'border-primary-500 ring-4 ring-primary-500/10' : 'border-slate-100 hover:border-primary-300'
               }`}
             >
@@ -47,33 +54,33 @@ export default function Step1(p: Props) {
                   active ? 'scale-125 bg-primary-100/80' : 'bg-slate-50 group-hover:bg-primary-50'
                 }`}
               />
-              <div className="relative mb-4 flex items-center justify-between">
-                <div
-                  className={`flex h-12 w-12 items-center justify-center rounded-2xl transition-all duration-300 ${
-                    active
-                      ? 'bg-brand-gradient text-white shadow-glow'
-                      : 'bg-primary-100 text-primary-600 group-hover:bg-primary-200'
-                  }`}
-                >
-                  <i className={`fas ${isLocadorCard ? 'fa-key' : 'fa-user-check'} text-lg`}></i>
-                </div>
-                <span
-                  className={`flex h-6 w-6 items-center justify-center rounded-full border-2 transition-all duration-300 ${
-                    active ? 'border-primary-600 bg-primary-600' : 'border-slate-200'
-                  }`}
-                >
-                  <i
-                    className={`fas fa-check text-[10px] text-white transition-all duration-300 ${
-                      active ? 'scale-100 opacity-100' : 'scale-50 opacity-0'
-                    }`}
-                  ></i>
+              <div
+                className={`relative flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl transition-all duration-300 ${
+                  active
+                    ? 'bg-brand-gradient text-white shadow-glow'
+                    : 'bg-primary-100 text-primary-600 group-hover:bg-primary-200'
+                }`}
+              >
+                <i className={`fas ${isLocadorCard ? 'fa-key' : 'fa-user-check'} text-2xl`}></i>
+              </div>
+              <div className="relative min-w-0 flex-1">
+                <span className="block text-xl font-bold text-slate-900">
+                  {isLocadorCard ? 'Sou Locador' : 'Sou Hóspede'}
+                </span>
+                <span className="mt-1 block text-sm text-slate-500">
+                  {isLocadorCard ? 'Proprietário ou responsável pelo imóvel.' : 'Inquilino temporário'}
                 </span>
               </div>
-              <span className="relative text-lg font-bold text-slate-900">
-                {isLocadorCard ? 'Sou Locador' : 'Sou Hóspede'}
-              </span>
-              <span className="relative mt-1 text-sm text-slate-500">
-                {isLocadorCard ? 'Proprietário ou responsável pelo imóvel.' : 'Inquilino temporário'}
+              <span
+                className={`relative flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 transition-all duration-300 ${
+                  active ? 'border-primary-600 bg-primary-600' : 'border-slate-200'
+                }`}
+              >
+                <i
+                  className={`fas fa-check text-xs text-white transition-all duration-300 ${
+                    active ? 'scale-100 opacity-100' : 'scale-50 opacity-0'
+                  }`}
+                ></i>
               </span>
             </label>
           );
@@ -81,6 +88,19 @@ export default function Step1(p: Props) {
       </div>
 
       <FieldError>{p.errors.user_type}</FieldError>
+
+      {p.userType !== '' && (
+        <div className="flex justify-center">
+          <button
+            type="button"
+            onClick={() => p.setUserType('')}
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 shadow-soft transition-all hover:border-primary-300 hover:text-primary-600"
+          >
+            <i className="fas fa-rotate-left text-xs"></i>
+            Trocar perfil
+          </button>
+        </div>
+      )}
 
       {p.userType === 'locatario' && (
         <div className="animate-slide-up space-y-6 rounded-3xl border border-slate-100 bg-gradient-to-br from-slate-50 to-white p-5 shadow-soft sm:p-6">
