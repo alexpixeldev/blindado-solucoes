@@ -6,7 +6,6 @@ import { appHref, asset } from '@/lib/api';
 export default function SucessoPage() {
   const [duplicado, setDuplicado] = useState(false);
   const [whatsappUrl, setWhatsappUrl] = useState('');
-  const [avisoPopup, setAvisoPopup] = useState(false);
   const [showBaloon, setShowBaloon] = useState(false);
   const [ready, setReady] = useState(false);
 
@@ -21,8 +20,9 @@ export default function SucessoPage() {
       const url = sessionStorage.getItem('whatsapp_locacao');
       if (url) {
         setWhatsappUrl(url);
-        const janela = window.open(url, '_blank');
-        if (!janela) setAvisoPopup(true);
+        sessionStorage.removeItem('whatsapp_locacao');
+        window.location.replace(url);
+        return;
       }
     }
     setReady(true);
@@ -90,11 +90,6 @@ export default function SucessoPage() {
                       >
                         <i className="fab fa-whatsapp text-xl"></i> Finalizar no WhatsApp
                       </button>
-                      {avisoPopup && (
-                        <p className="mt-3 text-sm text-slate-500">
-                          Se o WhatsApp não abriu automaticamente, clique no botão acima.
-                        </p>
-                      )}
                     </div>
                   )}
                 </div>

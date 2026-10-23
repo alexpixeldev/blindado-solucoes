@@ -135,9 +135,6 @@
                             <button type="button" id="btn-finalizar-whatsapp" class="mt-4 inline-flex items-center justify-center gap-3 px-6 py-3 text-sm font-bold text-white bg-[#25d366] rounded-xl shadow-lg shadow-[#25d366]/30 hover:bg-[#1ebe5b] transition-all duration-200 transform hover:-translate-y-0.5 active:translate-y-0">
                                 <i class="fab fa-whatsapp text-lg"></i> Finalizar no WhatsApp
                             </button>
-                            <p id="aviso-popup" class="hidden mt-3 text-sm text-slate-500">
-                                Se o WhatsApp não abriu automaticamente, clique no botão acima.
-                            </p>
                         </div>
                     </div>
 
@@ -222,7 +219,6 @@
             var url = sessionStorage.getItem('whatsapp_locacao');
             var area = document.getElementById('area-whatsapp');
             var btn = document.getElementById('btn-finalizar-whatsapp');
-            var aviso = document.getElementById('aviso-popup');
             if (!url || !area || !btn) return;
 
             area.style.display = 'block';
@@ -231,10 +227,10 @@
                 window.location.href = url;
             });
 
-            var janela = window.open(url, '_blank');
-            if (!janela) {
-                aviso.classList.remove('hidden');
-            }
+            // Abre o WhatsApp na mesma aba (sem nova guia). O replace evita
+            // que o botão "voltar" reabra esta página em loop.
+            sessionStorage.removeItem('whatsapp_locacao');
+            window.location.replace(url);
         })();
     </script>
     <?php endif; ?>

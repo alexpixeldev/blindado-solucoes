@@ -114,3 +114,9 @@ POST keys: user_type, locador_nome, locador_ddi, locador_telefone, registrador_n
 FILES summary: 
 post_max_size=40M upload_max_filesize=40M
 [17-Oct-2026 22:34:38 Europe/Berlin] salvar_locacao.php: e-mail adm não enviado – Envio de e-mail desabilitado para este edifício. (locacao_id=1834)
+[2026-10-23 14:05:25] Início de request POST
+POST keys: user_type, locador_nome, locador_ddi, locador_telefone, registrador_nome, edificio_id, numero_apartamento, inquilinos, veiculos, data_entrada, data_saida
+FILES summary: inquilinos: nested file array
+post_max_size=40M upload_max_filesize=40M
+[23-Oct-2026 14:05:25 Europe/Berlin] salvar_locacao.php: e-mail adm não enviado – Envio de e-mail desabilitado para este edifício. (locacao_id=1836)
+[23-Oct-2026 14:05:25 Europe/Berlin] salvar_locacao.php: e-mail síndico não enviado – Envio de e-mail para o síndico desabilitado para este edifício. (locacao_id=1836)
