@@ -1,10 +1,11 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence, MotionConfig } from 'framer-motion';
 import type { Edificio, Inquilino, Veiculo } from '@/lib/types';
 import { apiUrl, appHref, asset, buildFormData, fetchEdificios } from '@/lib/api';
 import { buildWhatsAppUrl } from '@/lib/whatsapp';
+import { documentFormatError, parseBrDate, phoneFormatError } from '@/lib/validation';
 import { Stepper } from '@/components/Stepper';
 import { Button, Field, TextInput } from '@/components/ui';
 import Step1 from '@/components/steps/Step1';
@@ -31,9 +32,8 @@ const stepVariants = {
   })
 };
 
-function parseDate(str: string): Date {
-  const parts = str.split('/');
-  return new Date(Number(parts[2]), Number(parts[1]) - 1, Number(parts[0]));
+function parseDate(str: string): Date | null {
+  return parseBrDate(str);
 }
 
 export default function Wizard() {
@@ -55,9 +55,11 @@ export default function Wizard() {
   const [modalEdificio, setModalEdificio] = useState<Edificio | null>(null);
   const [modalApt, setModalApt] = useState('');
   const [modalError, setModalError] = useState('');
+  const modalTriggerRef = useRef<HTMLElement | null>(null);
+  const wasModalOpenRef = useRef(false);
 
   const [inquilinos, setInquilinos] = useState<Inquilino[]>([emptyInquilino()]);
-  const [veiculos, setVeiculos] = useState<Veiculo[]>([emptyVeiculo()]);
+  const [veiculos, setVeiculos] = useState<Veiculo[]>([]);
   const [dataEntrada, setDataEntrada] = useState('');
   const [dataSaida, setDataSaida] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -72,6 +74,22 @@ export default function Wizard() {
     mq.addEventListener('change', apply);
     return () => mq.removeEventListener('change', apply);
   }, []);
+
+  useEffect(() => {
+    if (wasModalOpenRef.current && !modalOpen) {
+      modalTriggerRef.current?.focus?.();
+    }
+    wasModalOpenRef.current = modalOpen;
+  }, [modalOpen]);
+
+  useEffect(() => {
+    if (!modalOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setModalOpen(false);
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [modalOpen]);
 
   useEffect(() => {
     fetchEdificios()
@@ -103,7 +121,12 @@ export default function Wizard() {
       if (!userType) e.user_type = 'Você precisa selecionar uma opção';
       if (userType === 'locatario') {
         if (!locadorNome.trim()) e.locador_nome = 'Você precisa inserir o nome do locador';
-        if (!locadorTelefone.trim()) e.locador_telefone = 'Você precisa inserir o WhatsApp do locador';
+        if (!locadorTelefone.trim()) {
+          e.locador_telefone = 'Você precisa inserir o WhatsApp do locador';
+        } else {
+          const phoneError = phoneFormatError(locadorTelefone);
+          if (phoneError) e.locador_telefone = phoneError;
+        }
       } else if (userType === 'locador') {
         if (!registradorNome.trim()) e.registrador_nome = 'Você precisa informar o seu nome';
       }
@@ -117,17 +140,38 @@ export default function Wizard() {
     if (step === 2) {
       inquilinos.forEach((inq, idx) => {
         if (!inq.nome.trim()) e[`inq_${idx}_nome`] = 'Você precisa inserir o nome';
-        if (!inq.documento.trim()) e[`inq_${idx}_documento`] = 'Você precisa inserir o documento';
+        if (!inq.documento.trim()) {
+          e[`inq_${idx}_documento`] = 'Você precisa inserir o documento';
+        } else {
+          const docError = documentFormatError(inq.documento);
+          if (docError) e[`inq_${idx}_documento`] = docError;
+        }
+        if (inq.telefone.trim()) {
+          const phoneError = phoneFormatError(inq.telefone);
+          if (phoneError) e[`inq_${idx}_telefone`] = phoneError;
+        }
+      });
+    }
+
+    if (step === 3) {
+      veiculos.forEach((v, idx) => {
+        const hasOtherData = Boolean(v.cor.trim() || v.placa.trim() || v.acesso_garagem.trim());
+        if (!v.modelo.trim() && hasOtherData) {
+          e[`vei_${idx}_modelo`] = 'Informe o modelo ou remova este veículo';
+        }
       });
     }
 
     if (step === 4) {
       if (!dataEntrada.trim()) e.data_entrada = 'Você precisa informar a data de entrada';
-      if (!dataSaida.trim()) e.data_saida = 'Você precisa informar a data de saída';
-      else if (dataEntrada && dataSaida) {
+      if (!dataSaida.trim()) {
+        e.data_saida = 'Você precisa informar a data de saída';
+      } else if (dataEntrada && dataSaida) {
         const entrada = parseDate(dataEntrada);
         const saida = parseDate(dataSaida);
-        if (saida < entrada) e.data_saida = 'A data de saída não pode ser anterior à data de entrada';
+        if (!entrada) e.data_entrada = 'Escolha a data de entrada no calendário';
+        else if (!saida) e.data_saida = 'Escolha a data de saída no calendário';
+        else if (saida < entrada) e.data_saida = 'A data de saída não pode ser anterior à data de entrada';
       }
     }
 
@@ -157,16 +201,43 @@ export default function Wizard() {
     }
   }
 
+  function goToStep(step: number) {
+    setErrors({});
+    setDirection(step > currentStep ? 1 : -1);
+    setCurrentStep(step);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function skipVehicles() {
+    setVeiculos([]);
+    setErrors({});
+    setDirection(1);
+    setCurrentStep(4);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function removeVeiculo(index: number) {
+    setVeiculos((prev) => prev.filter((_, i) => i !== index));
+    setErrors((prev) => {
+      const next = { ...prev };
+      Object.keys(next).forEach((key) => {
+        if (key.startsWith('vei_')) delete next[key];
+      });
+      return next;
+    });
+  }
+
   function handleKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
     if (e.key !== 'Enter' || modalOpen) return;
     const tag = (e.target as HTMLElement)?.tagName;
-    if (tag === 'BUTTON' || tag === 'TEXTAREA' || tag === 'A') return;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || tag === 'BUTTON' || tag === 'A') return;
     if (currentStep >= 5) return;
     e.preventDefault();
     goNext();
   }
 
   function openModal(edificio: Edificio) {
+    modalTriggerRef.current = document.activeElement as HTMLElement | null;
     setModalEdificio(edificio);
     setModalApt(String(edificio.id) === String(edificioId) ? numeroApartamento : '');
     setModalError('');
@@ -189,13 +260,6 @@ export default function Wizard() {
       delete next.apartamento;
       return next;
     });
-    setTimeout(() => {
-      if (currentStep === 1) {
-        setDirection(1);
-        setCurrentStep(2);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }
-    }, 250);
   }
 
   function buildArgs(): Parameters<typeof buildFormData>[0] {
@@ -385,9 +449,12 @@ export default function Wizard() {
                           isLocador={userType === 'locador'}
                           setVeiculo={(index, field, value) => {
                             setVeiculos((prev) => prev.map((it, i) => (i === index ? { ...it, [field]: value } : it)));
+                            setError(`vei_${index}_modelo`, '');
                           }}
                           addVeiculo={() => setVeiculos((prev) => [...prev, emptyVeiculo()])}
-                          removeVeiculo={(index) => setVeiculos((prev) => prev.filter((_, i) => i !== index))}
+                          removeVeiculo={removeVeiculo}
+                          onSkip={skipVehicles}
+                          errors={errors}
                         />
                       )}
 
@@ -424,6 +491,7 @@ export default function Wizard() {
                           onWhatsApp={submitForm}
                           onPdf={gerarPdf}
                           onBack={goPrev}
+                          onEditStep={goToStep}
                         />
                       )}
                     </motion.div>
@@ -433,19 +501,9 @@ export default function Wizard() {
 
               {!isLast && (
                 <div className="flex items-center justify-between gap-3 border-t border-slate-100 bg-slate-50/70 px-4 py-4 sm:px-8 sm:py-5">
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    onClick={goPrev}
-                    disabled={currentStep === 0}
-                    icon="fas fa-arrow-left"
-                  >
+                  <Button type="button" variant="secondary" onClick={goPrev} disabled={currentStep === 0} icon="fas fa-arrow-left">
                     Anterior
                   </Button>
-
-                  <span className="hidden text-xs font-medium text-slate-400 sm:block">
-                    Pressione <kbd className="rounded border border-slate-200 bg-white px-1.5 py-0.5 font-sans text-[10px]">Enter</kbd> para avançar
-                  </span>
 
                   <Button type="button" variant="primary" onClick={goNext} iconRight="fas fa-arrow-right">
                     Próxima
@@ -484,10 +542,13 @@ export default function Wizard() {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 30, scale: 0.98 }}
                 transition={{ type: 'spring', stiffness: 260, damping: 26 }}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="modal-apartamento-titulo"
               >
                 <div className="relative flex items-center justify-between overflow-hidden bg-brand-gradient p-4 text-white sm:p-6">
                   <div className="pointer-events-none absolute -right-6 -top-8 h-28 w-28 rounded-full bg-white/10" />
-                  <h3 className="relative flex items-center gap-2 text-base font-bold sm:text-xl">
+                  <h3 id="modal-apartamento-titulo" className="relative flex items-center gap-2 text-base font-bold sm:text-xl">
                     <i className="fas fa-door-open"></i>
                     Número do Apartamento
                   </h3>
@@ -507,8 +568,9 @@ export default function Wizard() {
                     <p className="mt-0.5 text-base font-bold text-slate-900 sm:mt-1 sm:text-lg">{modalEdificio?.nome_edificio}</p>
                   </div>
 
-                  <Field label="Número do Apartamento" error={modalError}>
+                  <Field label="Número do Apartamento" htmlFor="modal_apt_input" error={modalError}>
                     <TextInput
+                      id="modal_apt_input"
                       icon="fas fa-hashtag"
                       type="text"
                       value={modalApt}
@@ -521,6 +583,7 @@ export default function Wizard() {
                       }}
                       placeholder="Ex: 101, 202-A"
                       error={!!modalError}
+                      aria-describedby={modalError ? 'modal_apt_input-error' : undefined}
                       autoFocus
                     />
                   </Field>

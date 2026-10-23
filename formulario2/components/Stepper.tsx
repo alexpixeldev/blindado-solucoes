@@ -3,18 +3,18 @@
 import { motion } from 'framer-motion';
 
 const steps = [
-  { title: 'Tipo de perfil', icon: 'fa-user-tag' },
-  { title: 'Localização', icon: 'fa-map-location-dot' },
+  { title: 'Perfil', icon: 'fa-user-tag' },
+  { title: 'Seleção do edifício', icon: 'fa-building' },
   { title: 'Hóspedes', icon: 'fa-users' },
   { title: 'Veículos', icon: 'fa-car-side' },
-  { title: 'Check-in', icon: 'fa-calendar-check' },
+  { title: 'Período da estadia', icon: 'fa-calendar-check' },
   { title: 'Revisão', icon: 'fa-clipboard-check' }
 ];
 
 export function Stepper({ current }: { current: number }) {
   return (
     <div className="w-full">
-      <div className="flex items-center gap-1.5 sm:gap-2">
+      <div className="flex items-center gap-1.5 sm:gap-2" aria-hidden="true">
         {steps.map((s, idx) => {
           const done = idx < current;
           const active = idx === current;
@@ -30,13 +30,13 @@ export function Stepper({ current }: { current: number }) {
           );
         })}
       </div>
-      <div className="mt-2 flex items-center gap-2 text-[11px] font-semibold sm:text-xs">
+      <p className="mt-2 flex items-center gap-2 text-[11px] font-semibold sm:text-xs" aria-live="polite">
         <span className="text-white">{steps[current].title}</span>
-        <span className="text-white/30">•</span>
+        <span className="text-white/30" aria-hidden="true">•</span>
         <span className="text-emerald-100/60">
-          Passo {current + 1} de {steps.length}
+          Etapa {current + 1} de {steps.length}
         </span>
-      </div>
+      </p>
     </div>
   );
 }

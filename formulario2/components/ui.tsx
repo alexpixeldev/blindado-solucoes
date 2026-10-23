@@ -42,10 +42,10 @@ export const inputErrorClass = `${inputBase} border-red-300 bg-red-50/40 pl-12 p
 export const iconWrap =
   'pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 transition-colors group-focus-within:text-primary-500';
 
-export function FieldError({ children }: { children?: React.ReactNode }) {
+export function FieldError({ children, id }: { children?: React.ReactNode; id?: string }) {
   if (!children) return null;
   return (
-    <p className="mt-2 flex items-start gap-1.5 text-xs font-medium text-red-500 animate-fade-in">
+    <p id={id} role="alert" className="mt-2 flex items-start gap-1.5 text-xs font-medium text-red-500 animate-fade-in">
       <i className="fas fa-circle-exclamation mt-0.5" aria-hidden="true"></i>
       <span>{children}</span>
     </p>
@@ -67,6 +67,7 @@ export function Field({
   className?: string;
   children: React.ReactNode;
 }) {
+  const errorId = htmlFor ? `${htmlFor}-error` : undefined;
   return (
     <div className={['field-container', className].filter(Boolean).join(' ')}>
       {label && (
@@ -76,7 +77,7 @@ export function Field({
       )}
       {children}
       {hint && !error && <p className="mt-2 text-xs text-slate-400">{hint}</p>}
-      <FieldError>{error}</FieldError>
+      <FieldError id={errorId}>{error}</FieldError>
     </div>
   );
 }
@@ -100,7 +101,12 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(function T
           <i className={icon} aria-hidden="true"></i>
         </span>
       )}
-      <input ref={ref} className={[base, icon ? 'pl-12 pr-4' : 'px-4', className].filter(Boolean).join(' ')} {...props} />
+      <input
+        ref={ref}
+        className={[base, icon ? 'pl-12 pr-4' : 'px-4', className].filter(Boolean).join(' ')}
+        aria-invalid={error || undefined}
+        {...props}
+      />
     </div>
   );
 });
@@ -232,11 +238,13 @@ export function StepHeader({
 export function SectionCard({
   icon,
   title,
+  action,
   className,
   children
 }: {
   icon?: string;
   title?: string;
+  action?: React.ReactNode;
   className?: string;
   children: React.ReactNode;
 }) {
@@ -247,10 +255,13 @@ export function SectionCard({
         .join(' ')}
     >
       {title && (
-        <h4 className="mb-4 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">
-          {icon && <i className={`${icon} text-primary-500`} aria-hidden="true"></i>}
-          {title}
-        </h4>
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <h4 className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">
+            {icon && <i className={`${icon} text-primary-500`} aria-hidden="true"></i>}
+            {title}
+          </h4>
+          {action}
+        </div>
       )}
       {children}
     </div>
