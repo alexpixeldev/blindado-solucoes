@@ -1,10 +1,7 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
-import flatpickr from 'flatpickr';
-import { Portuguese } from 'flatpickr/dist/l10n/pt.js';
-import { Field, StepHeader, TextInput, IconBadge } from '@/components/ui';
-import { parseBrDate } from '@/lib/validation';
+import { Field, IconBadge, StepHeader, TextInput } from '@/components/ui';
+import RangeCalendar from '@/components/RangeCalendar';
 
 interface Props {
   dataEntrada: string;
@@ -15,58 +12,15 @@ interface Props {
 }
 
 export default function Step5(p: Props) {
-  const entradaRef = useRef<HTMLInputElement>(null);
-  const saidaRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    const instances: flatpickr.Instance[] = [];
-    let saidaInstance: flatpickr.Instance | null = null;
-    const opts = {
-      dateFormat: 'd/m/Y',
-      minDate: 'today' as const,
-      locale: Portuguese,
-      disableMobile: true,
-      animate: true,
-      allowInput: false
-    };
-
-    if (entradaRef.current) {
-      instances.push(
-        flatpickr(entradaRef.current, {
-          ...opts,
-          defaultDate: p.dataEntrada || undefined,
-          onChange: (_d, str) => {
-            p.setDataEntrada(str);
-            const entrada = parseBrDate(str);
-            if (entrada && saidaInstance) saidaInstance.set('minDate', entrada);
-          }
-        })
-      );
-    }
-    if (saidaRef.current) {
-      saidaInstance = flatpickr(saidaRef.current, {
-        ...opts,
-        defaultDate: p.dataSaida || undefined,
-        onChange: (_d, str) => p.setDataSaida(str)
-      });
-      instances.push(saidaInstance);
-      const entrada = p.dataEntrada ? parseBrDate(p.dataEntrada) : null;
-      if (entrada) saidaInstance.set('minDate', entrada);
-    }
-
-    return () => instances.forEach((i) => i.destroy());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <StepHeader
         icon="fas fa-calendar-check"
         title="Período da estadia"
-        subtitle="Escolha as datas de entrada e saída no calendário."
+        subtitle="Selecione a data de entrada e a data de saída no calendário."
       />
 
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field
           label="Data de entrada"
           htmlFor="data_entrada"
@@ -75,12 +29,13 @@ export default function Step5(p: Props) {
         >
           <TextInput
             id="data_entrada"
-            ref={entradaRef}
             icon="fas fa-plane-arrival"
             type="text"
-            defaultValue={p.dataEntrada}
+            value={p.dataEntrada}
+            readOnly
             placeholder="Selecione a data"
             error={!!p.errors.data_entrada}
+            className="cursor-default"
             aria-required="true"
             aria-describedby={`periodo-ajuda${p.errors.data_entrada ? ' data_entrada-error' : ''}`}
           />
@@ -94,17 +49,28 @@ export default function Step5(p: Props) {
         >
           <TextInput
             id="data_saida"
-            ref={saidaRef}
             icon="fas fa-plane-departure"
             type="text"
-            defaultValue={p.dataSaida}
+            value={p.dataSaida}
+            readOnly
             placeholder="Selecione a data"
             error={!!p.errors.data_saida}
+            className="cursor-default"
             aria-required="true"
             aria-describedby={`periodo-ajuda${p.errors.data_saida ? ' data_saida-error' : ''}`}
           />
         </Field>
       </div>
+
+      <RangeCalendar
+        entrada={p.dataEntrada}
+        saida={p.dataSaida}
+        onChange={(entrada, saida) => {
+          p.setDataEntrada(entrada);
+          p.setDataSaida(saida);
+        }}
+        describedBy="periodo-ajuda"
+      />
 
       <div
         id="periodo-ajuda"
@@ -112,8 +78,9 @@ export default function Step5(p: Props) {
       >
         <IconBadge icon="fas fa-circle-info" tone="soft" className="h-9 w-9 rounded-xl text-sm" />
         <p className="text-xs leading-relaxed text-primary-800 sm:text-sm">
-          Toque no campo para abrir o calendário e escolher a data. A data de saída deve ser igual ou
-          posterior à data de entrada.
+          Selecione primeiro a data de entrada e depois a data de saída no calendário. A data de
+          saída deve ser igual ou posterior à data de entrada. Você também pode navegar pelas datas
+          com as setas do teclado.
         </p>
       </div>
     </div>
