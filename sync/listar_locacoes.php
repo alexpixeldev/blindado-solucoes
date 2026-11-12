@@ -8,6 +8,9 @@ function btnCopiar($texto) {
     return '<button type="button" class="icon-btn" onclick=\'copiarTexto(' . $js . ', this)\' onmouseover="this.style.background=\'#64748b\'" onmouseout="this.style.background=\'#94a3b8\'" title="Copiar"><i class="fas fa-copy"></i></button>';
 }
 
+require_once 'components/locacao_whatsapp.php';
+
+
 // Auto-migracao idempotente das colunas de status de confirmacao
 $colunas_locacao_status = [
     'status' => "VARCHAR(20) NOT NULL DEFAULT 'pendente'",
@@ -166,9 +169,12 @@ if (intval($usuario_base_id) > 0) {
 }
 
 // Main Query Construction
+    $chk_selfie_col = $conn->query("SHOW COLUMNS FROM edificios LIKE 'requer_selfie'");
+    $selfie_select_sql = ($chk_selfie_col && $chk_selfie_col->num_rows > 0) ? ", e.requer_selfie" : ", 0 AS requer_selfie";
     $sql = "SELECT 
                 l.*, 
-                e.nome as nome_edificio
+                e.nome as nome_edificio,
+                e.localizacao" . $selfie_select_sql . "
             FROM locacoes l
         LEFT JOIN edificios e ON l.edificio_id = e.id
         WHERE 1=1" . ($tem_status ? " AND (l.status IS NULL OR l.status = 'pendente')" : "");
@@ -552,6 +558,7 @@ if (!empty($locacaoIds)) {
                         </div>
                         <?php endif; ?>
                         <?php foreach ($locacoes as $loc): ?>
+                        <?php $mensagem_ficha = gerarMensagemLocacao($loc, $locacaoInquilinos[$loc['id']] ?? [], $locacaoVeiculos[$loc['id']] ?? []); ?>
                         <div class="loc-card">
                             <div class="loc-card-header">
                                 <?php if ($usuario_categoria === 'gerente'): ?>
@@ -578,6 +585,7 @@ if (!empty($locacaoIds)) {
                                     <?php endif; ?>
                                 </div>
                                 <span class="loc-card-date"><?= date('d/m/Y', strtotime($loc['data_registro'] ?? $loc['data_locacao'] ?? 'now')) ?> <?= date('H:i', strtotime($loc['data_registro'] ?? $loc['data_locacao'] ?? 'now')) ?></span>
+                                <?= btnCopiarFicha($mensagem_ficha) ?>
                                 <?php if ($pode_confirmar): ?>
                                     <form method="POST" class="loc-card-delete" onsubmit="return confirm('Confirmar que esta locação foi feita? Ela sairá da lista de pendentes e irá para Locações Confirmadas.');">
                                         <input type="hidden" name="id_confirmar" value="<?= $loc['id'] ?>">
@@ -788,18 +796,47 @@ if (!empty($locacaoIds)) {
         }
 
         function copiarTexto(texto, btn) {
-            const origHTML = btn.innerHTML;
-            navigator.clipboard.writeText(texto).then(() => {
-                btn.innerHTML = '<i class="fas fa-check" style="font-size:10px"></i>';
+            const icon = btn.querySelector('i');
+            const label = btn.querySelector('span');
+            const origIconClass = icon ? icon.className : null;
+            const origLabel = label ? label.textContent : null;
+
+            const mostrarResultado = (ok) => {
+                if (icon) icon.className = ok ? 'fas fa-check' : 'fas fa-times';
+                if (label) label.textContent = ok ? 'Copiado!' : 'Falhou';
                 setTimeout(() => {
-                    btn.innerHTML = origHTML;
+                    if (icon && origIconClass) icon.className = origIconClass;
+                    if (label && origLabel !== null) label.textContent = origLabel;
                 }, 1500);
-            }).catch(() => {
-                btn.innerHTML = '<i class="fas fa-times" style="font-size:10px"></i>';
-                setTimeout(() => {
-                    btn.innerHTML = origHTML;
-                }, 1500);
-            });
+            };
+
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(texto)
+                    .then(() => mostrarResultado(true))
+                    .catch(() => mostrarResultado(copiarTextoFallback(texto)));
+            } else {
+                mostrarResultado(copiarTextoFallback(texto));
+            }
+        }
+
+        function copiarTextoFallback(texto) {
+            const ta = document.createElement('textarea');
+            ta.value = texto;
+            ta.setAttribute('readonly', '');
+            ta.style.position = 'fixed';
+            ta.style.top = '-9999px';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.select();
+            ta.setSelectionRange(0, ta.value.length);
+            let ok = false;
+            try {
+                ok = document.execCommand('copy');
+            } catch (e) {
+                ok = false;
+            }
+            document.body.removeChild(ta);
+            return ok;
         }
     </script>
 </body>

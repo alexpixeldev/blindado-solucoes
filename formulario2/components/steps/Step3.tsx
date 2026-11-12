@@ -1,6 +1,8 @@
 import type { Inquilino } from '@/lib/types';
 import { StepHeader, TextInput, Field, IconBadge } from '@/components/ui';
+import { HintCard } from '@/components/HintCard';
 import { formatPhone } from '@/lib/masks';
+import { documentFormatError } from '@/lib/validation';
 import { SelfieField } from '@/components/SelfieField';
 
 interface Props {
@@ -10,10 +12,17 @@ interface Props {
   setSelfie: (index: number, file: File | null) => void;
   addInquilino: () => void;
   removeInquilino: (index: number) => void;
+  validateField: (index: number, field: 'nome' | 'documento' | 'telefone', value: string) => void;
   errors: Record<string, string>;
 }
 
 export default function Step3(p: Props) {
+  const completedCount = p.inquilinos.filter(
+    (inq) => inq.nome.trim() && inq.documento.trim() && !documentFormatError(inq.documento)
+  ).length;
+  const total = p.inquilinos.length;
+  const allComplete = total > 0 && completedCount === total;
+
   return (
     <div className="space-y-8">
       <StepHeader
@@ -22,15 +31,40 @@ export default function Step3(p: Props) {
         subtitle="Informe quem ficará no imóvel. Nome e documento são obrigatórios; o telefone é opcional."
       />
 
+      <HintCard tone={allComplete ? 'success' : 'info'} title="Preenchimento dos hóspedes">
+        {allComplete ? (
+          <>
+            Todos os hóspedes estão com nome e documento. Clique em <strong>Próxima</strong> para
+            seguir.
+          </>
+        ) : (
+          <>
+            {completedCount} de {total} {total === 1 ? 'hóspede completo' : 'hóspedes completos'}.
+            Preencha nome e documento de cada pessoa que ficará no imóvel.
+          </>
+        )}
+      </HintCard>
+
       <div className="space-y-5">
         {p.inquilinos.map((inq, index) => {
           const isPrincipal = index === 0;
           const nomeError = p.errors[`inq_${index}_nome`];
           const documentoError = p.errors[`inq_${index}_documento`];
           const telefoneError = p.errors[`inq_${index}_telefone`];
+          const nomeOk = inq.nome.trim().length > 0;
+          const documentoOk = inq.documento.trim().length > 0 && !documentFormatError(inq.documento);
+          const complete = nomeOk && documentoOk;
+          const missing = !nomeOk && !documentoOk
+            ? 'Faltam nome e documento'
+            : !nomeOk
+              ? 'Falta o nome'
+              : !documentoOk
+                ? 'Falta o documento'
+                : '';
           return (
             <div
               key={index}
+              id={index === 0 ? 'guide-hospedes' : undefined}
               className="inquilino-item relative rounded-3xl border border-slate-100 bg-white p-4 shadow-soft transition-all duration-300 animate-fade-in sm:p-6"
             >
               <div className="mb-5 flex items-start justify-between gap-3 sm:mb-6">
@@ -47,6 +81,19 @@ export default function Step3(p: Props) {
                     <p className="text-xs text-slate-500">
                       {isPrincipal ? 'Responsável pelas informações da estadia' : 'Ocupante adicional'}
                     </p>
+                    <span
+                      className={`mt-1.5 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
+                        complete
+                          ? 'bg-emerald-50 text-emerald-700'
+                          : 'bg-amber-50 text-amber-700'
+                      }`}
+                    >
+                      <i
+                        className={`fas ${complete ? 'fa-circle-check' : 'fa-circle-exclamation'} text-[9px]`}
+                        aria-hidden="true"
+                      />
+                      {complete ? 'Completo' : missing}
+                    </span>
                   </div>
                 </div>
                 {!isPrincipal && (
@@ -70,7 +117,11 @@ export default function Step3(p: Props) {
                     type="text"
                     value={inq.nome}
                     onChange={(e) => p.setField(index, 'nome', e.target.value)}
-                    onBlur={(e) => p.setField(index, 'nome', e.target.value.trim())}
+                    onBlur={(e) => {
+                      const value = e.target.value.trim();
+                      p.setField(index, 'nome', value);
+                      p.validateField(index, 'nome', value);
+                    }}
                     placeholder="Nome do hóspede"
                     error={!!nomeError}
                     aria-describedby={nomeError ? `inq_${index}_nome-error` : undefined}
@@ -89,6 +140,11 @@ export default function Step3(p: Props) {
                     type="text"
                     value={inq.documento}
                     onChange={(e) => p.setField(index, 'documento', e.target.value)}
+                    onBlur={(e) => {
+                      const value = e.target.value.trim();
+                      p.setField(index, 'documento', value);
+                      p.validateField(index, 'documento', value);
+                    }}
                     placeholder="Número do documento"
                     error={!!documentoError}
                     aria-describedby={documentoError ? `inq_${index}_documento-error` : undefined}
@@ -104,6 +160,7 @@ export default function Step3(p: Props) {
                     autoComplete="tel"
                     value={inq.telefone}
                     onChange={(e) => p.setField(index, 'telefone', formatPhone(e.target.value))}
+                    onBlur={(e) => p.validateField(index, 'telefone', e.target.value)}
                     placeholder="(00) 00000-0000"
                     error={!!telefoneError}
                     aria-describedby={telefoneError ? `inq_${index}_telefone-error` : undefined}

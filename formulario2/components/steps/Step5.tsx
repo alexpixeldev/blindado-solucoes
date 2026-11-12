@@ -1,6 +1,7 @@
 'use client';
 
 import { Field, IconBadge, StepHeader, TextInput } from '@/components/ui';
+import { HintCard } from '@/components/HintCard';
 import RangeCalendar from '@/components/RangeCalendar';
 
 interface Props {
@@ -12,6 +13,9 @@ interface Props {
 }
 
 export default function Step5(p: Props) {
+  const hasEntrada = Boolean(p.dataEntrada);
+  const hasSaida = Boolean(p.dataSaida);
+
   return (
     <div className="space-y-6">
       <StepHeader
@@ -19,6 +23,26 @@ export default function Step5(p: Props) {
         title="Período da estadia"
         subtitle="Selecione a data de entrada e a data de saída no calendário."
       />
+
+      {!hasEntrada && (
+        <HintCard tone="info" title="Comece pela entrada">
+          Clique na data de entrada no calendário abaixo. Depois de escolher, o calendário pede a
+          data de saída.
+        </HintCard>
+      )}
+
+      {hasEntrada && !hasSaida && (
+        <HintCard tone="info" title="Entrada selecionada">
+          Agora clique na data de saída. Ela precisa ser igual ou posterior à entrada.
+        </HintCard>
+      )}
+
+      {hasEntrada && hasSaida && (
+        <HintCard tone="success" title="Período selecionado">
+          Entrada e saída marcadas. Você pode ajustar clicando novamente ou clicar em{' '}
+          <strong>Próxima</strong>.
+        </HintCard>
+      )}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field
@@ -62,15 +86,17 @@ export default function Step5(p: Props) {
         </Field>
       </div>
 
-      <RangeCalendar
-        entrada={p.dataEntrada}
-        saida={p.dataSaida}
-        onChange={(entrada, saida) => {
-          p.setDataEntrada(entrada);
-          p.setDataSaida(saida);
-        }}
-        describedBy="periodo-ajuda"
-      />
+      <div id="guide-calendario">
+        <RangeCalendar
+          entrada={p.dataEntrada}
+          saida={p.dataSaida}
+          onChange={(entrada, saida) => {
+            p.setDataEntrada(entrada);
+            p.setDataSaida(saida);
+          }}
+          describedBy="periodo-ajuda"
+        />
+      </div>
 
       <div
         id="periodo-ajuda"

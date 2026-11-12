@@ -56,6 +56,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             goto skip_update;
         }
 
+        // Mesma checagem para a situação do recebimento. A lista é dinâmica
+        // (tabela situacoes_entrega), então não pode ser validada por um ENUM
+        // fixo no banco.
+        $chk_sit = $conn->prepare("SELECT id FROM situacoes_entrega WHERE nome = ? LIMIT 1");
+        $chk_sit->bind_param("s", $situacao_recebimento);
+        $chk_sit->execute();
+        $sit_existe = (bool) $chk_sit->get_result()->fetch_assoc();
+        $chk_sit->close();
+
+        if (!$sit_existe) {
+            $mensagem = "Situação \"$situacao_recebimento\" não está cadastrada. Cadastre-a em Configurações de Entrega.";
+            $mensagem_tipo = "error";
+            goto skip_update;
+        }
+
         // try/catch: o mysqli do PHP 8.1+ lança exceção em vez de retornar
         // false. Sem isto, qualquer erro de banco vira HTTP 500 em branco.
         try {

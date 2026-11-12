@@ -1,5 +1,6 @@
 import type { Veiculo } from '@/lib/types';
 import { Button, Field, IconBadge, StepHeader, TextInput } from '@/components/ui';
+import { HintCard } from '@/components/HintCard';
 
 interface Props {
   veiculos: Veiculo[];
@@ -12,6 +13,9 @@ interface Props {
 }
 
 export default function Step4(p: Props) {
+  const readyCount = p.veiculos.filter((v) => v.modelo.trim()).length;
+  const incomplete = p.veiculos.length - readyCount;
+
   return (
     <div className="space-y-8">
       <StepHeader
@@ -19,6 +23,25 @@ export default function Step4(p: Props) {
         title="Veículos"
         subtitle="Informe os veículos que ficarão na garagem."
       />
+
+      {p.veiculos.length > 0 && (
+        <HintCard
+          tone={incomplete > 0 ? 'warn' : 'success'}
+          title={incomplete > 0 ? 'Falta o modelo do veículo' : 'Veículos cadastrados'}
+        >
+          {incomplete > 0 ? (
+            <>
+              Preencha o modelo do veículo ou remova o cartão para continuar. Esta etapa é
+              opcional.
+            </>
+          ) : (
+            <>
+              {readyCount} {readyCount === 1 ? 'veículo pronto' : 'veículos prontos'}. Você pode
+              adicionar outro ou clicar em <strong>Próxima</strong>.
+            </>
+          )}
+        </HintCard>
+      )}
 
       {p.veiculos.length === 0 && (
         <div className="rounded-3xl border-2 border-dashed border-slate-200 bg-white/60 p-6 text-center sm:p-8">
@@ -118,6 +141,7 @@ export default function Step4(p: Props) {
 
       <button
         type="button"
+        id="guide-veiculos"
         onClick={p.addVeiculo}
         className="group flex w-full items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-slate-200 bg-white/60 py-4 font-semibold text-slate-500 transition-all duration-300 hover:border-primary-500 hover:bg-primary-50/50 hover:text-primary-600"
       >

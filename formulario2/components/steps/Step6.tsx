@@ -25,6 +25,28 @@ export default function Step6(p: Props) {
   const inquilinos = p.inquilinos.filter((i) => i.nome.trim());
   const veiculos = p.veiculos.filter((v) => v.modelo.trim());
 
+  const hasPerfil = Boolean(p.userType);
+  const hasResponsavel = isLocatario
+    ? Boolean(p.locadorNome.trim() && p.locadorTelefone.trim())
+    : Boolean(p.registradorNome.trim());
+  const hasEdificio = Boolean(
+    p.edificioNome && p.edificioNome !== 'Não informado' && p.numeroApartamento.trim()
+  );
+  const hasHospedes =
+    p.inquilinos.length > 0 &&
+    p.inquilinos.every((i) => i.nome.trim() && i.documento.trim());
+  const hasPeriodo = Boolean(p.dataEntrada && p.dataSaida);
+
+  const checklist = [
+    { key: 'perfil', label: 'Perfil e responsável', ok: hasPerfil && hasResponsavel, step: 0, required: true },
+    { key: 'edificio', label: 'Edifício e apartamento', ok: hasEdificio, step: 1, required: true },
+    { key: 'hospedes', label: 'Hóspedes com nome e documento', ok: hasHospedes, step: 2, required: true },
+    { key: 'periodo', label: 'Datas de entrada e saída', ok: hasPeriodo, step: 4, required: true },
+    { key: 'veiculos', label: 'Veículos', ok: veiculos.length > 0, step: 3, required: false }
+  ];
+  const pending = checklist.filter((item) => item.required && !item.ok);
+  const allReady = pending.length === 0;
+
   const EditButton = ({ step, label }: { step: number; label: string }) => (
     <button
       type="button"
@@ -44,6 +66,71 @@ export default function Step6(p: Props) {
         title="Revisão dos dados"
         subtitle="Confira tudo antes de enviar. Use Editar para corrigir qualquer etapa."
       />
+
+      <div
+        id="guide-revisao"
+        className="rounded-3xl border border-slate-100 bg-white p-5 shadow-soft sm:p-6"
+      >
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h3 className="flex items-center gap-2 text-sm font-bold text-slate-900">
+            <i className="fas fa-list-check text-primary-500" aria-hidden="true" />
+            Checklist antes de enviar
+          </h3>
+          <span
+            className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold ${
+              allReady ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'
+            }`}
+          >
+            <i
+              className={`fas ${allReady ? 'fa-circle-check' : 'fa-triangle-exclamation'} text-[10px]`}
+              aria-hidden="true"
+            />
+            {allReady
+              ? 'Tudo pronto'
+              : `${pending.length} ${pending.length === 1 ? 'pendência' : 'pendências'}`}
+          </span>
+        </div>
+
+        <ul className="mt-4 space-y-2.5">
+          {checklist.map((item) => (
+            <li key={item.key} className="flex items-start justify-between gap-3">
+              <span className="flex min-w-0 items-start gap-2.5 text-sm">
+                <i
+                  className={`fas mt-0.5 ${
+                    item.ok
+                      ? 'fa-circle-check text-emerald-500'
+                      : item.required
+                        ? 'fa-circle-xmark text-amber-500'
+                        : 'fa-circle-info text-slate-400'
+                  }`}
+                  aria-hidden="true"
+                />
+                <span className={item.ok ? 'text-slate-600' : 'font-medium text-slate-800'}>
+                  {item.label}
+                  {!item.required && (
+                    <span className="text-xs font-normal text-slate-400"> (opcional)</span>
+                  )}
+                </span>
+              </span>
+              {!item.ok && item.required && (
+                <button
+                  type="button"
+                  onClick={() => p.onEditStep(item.step)}
+                  className="shrink-0 rounded-lg border border-amber-200 bg-amber-50 px-2 py-1 text-[11px] font-semibold text-amber-700 transition-colors hover:bg-amber-100"
+                >
+                  Corrigir
+                </button>
+              )}
+            </li>
+          ))}
+        </ul>
+
+        <p className="mt-4 text-xs leading-relaxed text-slate-500">
+          {allReady
+            ? 'Tudo pronto. Você pode enviar via WhatsApp ou gerar o PDF para conferência.'
+            : 'Resolva os itens pendentes para liberar o envio. O checklist confere os dados de todas as etapas.'}
+        </p>
+      </div>
 
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
         <div className="relative overflow-hidden rounded-3xl bg-brand-gradient p-5 text-white shadow-glow sm:p-6">

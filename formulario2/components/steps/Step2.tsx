@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import type { Edificio } from '@/lib/types';
 import { StepHeader, TextInput, Field, FieldError, IconBadge } from '@/components/ui';
+import { HintCard } from '@/components/HintCard';
 import { filterEdificios } from '@/lib/search';
 
 interface Props {
@@ -56,7 +57,8 @@ export default function Step2(p: Props) {
             </button>
           </div>
           <p className="mt-2 text-xs text-slate-600">
-            Para trocar de edifício, selecione outro na lista abaixo.
+            Para trocar de edifício, selecione outro na lista abaixo. Quando estiver tudo certo,
+            clique em <strong>Próxima</strong>.
           </p>
         </div>
       )}
@@ -84,6 +86,19 @@ export default function Step2(p: Props) {
             ? `${filtered.length} ${filtered.length === 1 ? 'edifício encontrado' : 'edifícios encontrados'}`
             : `${p.edificios.length} edifícios disponíveis`}
         </p>
+
+        {term.length > 0 && filtered.length > 0 && !selected && (
+          <HintCard tone="info" title="Escolha um edifício">
+            Clique no edifício desejado para informar o número do apartamento. A lista filtra
+            enquanto você digita, sem precisar apertar Enter.
+          </HintCard>
+        )}
+
+        {term.length > 0 && filtered.length === 0 && (
+          <HintCard tone="warn" title="Nenhum resultado">
+            Tente apenas parte do nome do edifício ou limpe a busca para ver todas as opções.
+          </HintCard>
+        )}
 
         {!listVisible && (
           <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 px-4 py-10 text-center">

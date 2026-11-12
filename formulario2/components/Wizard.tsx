@@ -6,7 +6,10 @@ import type { Edificio, Inquilino, Veiculo } from '@/lib/types';
 import { apiUrl, appHref, asset, buildFormData, fetchEdificios } from '@/lib/api';
 import { buildWhatsAppUrl } from '@/lib/whatsapp';
 import { documentFormatError, parseBrDate, phoneFormatError } from '@/lib/validation';
+import { clearDraft, loadDraft, saveDraft, type DraftState } from '@/lib/draft';
+import { readGuideState, STEP_GUIDES, writeGuideState } from '@/lib/guide';
 import { Stepper } from '@/components/Stepper';
+import { GuideTour } from '@/components/GuideTour';
 import { Button, Field, TextInput } from '@/components/ui';
 import Step1 from '@/components/steps/Step1';
 import Step2 from '@/components/steps/Step2';
@@ -64,6 +67,12 @@ export default function Wizard() {
   const [dataSaida, setDataSaida] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
+  const [guideOpen, setGuideOpen] = useState(false);
+  const [guideOff, setGuideOff] = useState(false);
+  const guideShownRef = useRef<Set<string>>(new Set());
+  const [draftRestored, setDraftRestored] = useState(false);
+  const draftReadyRef = useRef(false);
+
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isMobile, setIsMobile] = useState(false);
 
@@ -96,6 +105,123 @@ export default function Wizard() {
       .then(setEdificios)
       .catch((e: Error) => setLoadError(e.message));
   }, []);
+
+  useEffect(() => {
+    const guide = readGuideState();
+    setGuideOff(guide.off);
+
+    const draft = loadDraft();
+    if (draft) {
+      const hasData = Boolean(
+        draft.userType ||
+          draft.edificioId ||
+          draft.locadorNome.trim() ||
+          draft.registradorNome.trim() ||
+          draft.dataEntrada ||
+          draft.dataSaida ||
+          draft.inquilinos.some((i) => i.nome.trim() || i.documento.trim() || i.telefone.trim()) ||
+          draft.veiculos.some((v) => v.modelo.trim() || v.cor.trim() || v.placa.trim() || v.acesso_garagem.trim())
+      );
+
+      if (hasData) {
+        setUserType(draft.userType);
+        setLocadorNome(draft.locadorNome);
+        setLocadorDdi(draft.locadorDdi || '+55');
+        setLocadorTelefone(draft.locadorTelefone);
+        setRegistradorNome(draft.registradorNome);
+        setEdificioId(draft.edificioId);
+        setNumeroApartamento(draft.numeroApartamento);
+        setDataEntrada(draft.dataEntrada);
+        setDataSaida(draft.dataSaida);
+        setInquilinos(
+          draft.inquilinos.length
+            ? draft.inquilinos.map((i) => ({
+                nome: i.nome,
+                documento: i.documento,
+                telefone: i.telefone,
+                selfie: null
+              }))
+            : [emptyInquilino()]
+        );
+        setVeiculos(draft.veiculos);
+        setCurrentStep(Math.min(Math.max(draft.step, 0), 5));
+        setDraftRestored(true);
+      }
+    }
+
+    draftReadyRef.current = true;
+  }, []);
+
+  useEffect(() => {
+    if (!draftReadyRef.current) return;
+
+    const draft: DraftState = {
+      step: currentStep,
+      userType,
+      locadorNome,
+      locadorDdi,
+      locadorTelefone,
+      registradorNome,
+      edificioId,
+      numeroApartamento,
+      dataEntrada,
+      dataSaida,
+      inquilinos: inquilinos.map(({ nome, documento, telefone }) => ({ nome, documento, telefone })),
+      veiculos
+    };
+
+    const hasData = Boolean(
+      draft.userType ||
+        draft.edificioId ||
+        draft.locadorNome.trim() ||
+        draft.registradorNome.trim() ||
+        draft.dataEntrada ||
+        draft.dataSaida ||
+        draft.inquilinos.some((i) => i.nome.trim() || i.documento.trim() || i.telefone.trim()) ||
+        draft.veiculos.some((v) => v.modelo.trim() || v.cor.trim() || v.placa.trim() || v.acesso_garagem.trim())
+    );
+
+    if (hasData) saveDraft(draft);
+  }, [
+    currentStep,
+    userType,
+    locadorNome,
+    locadorDdi,
+    locadorTelefone,
+    registradorNome,
+    edificioId,
+    numeroApartamento,
+    dataEntrada,
+    dataSaida,
+    inquilinos,
+    veiculos
+  ]);
+
+  const guide = STEP_GUIDES[currentStep];
+
+  useEffect(() => {
+    if (!guide || guideOff || modalOpen) return;
+    if (guideShownRef.current.has(guide.key)) return;
+
+    const timer = window.setTimeout(() => {
+      guideShownRef.current.add(guide.key);
+      setGuideOpen(true);
+    }, 650);
+    return () => window.clearTimeout(timer);
+  }, [guide, guideOff, modalOpen]);
+
+  const closeGuide = useCallback(() => setGuideOpen(false), []);
+
+  const dismissGuide = useCallback(() => {
+    setGuideOpen(false);
+    setGuideOff(true);
+    writeGuideState({ off: true });
+  }, []);
+
+  const openGuide = useCallback(() => {
+    if (guide) guideShownRef.current.add(guide.key);
+    setGuideOpen(true);
+  }, [guide]);
 
   const selectedEdificio = useMemo(
     () => edificios.find((e) => String(e.id) === String(edificioId)),
@@ -178,6 +304,83 @@ export default function Wizard() {
     return e;
   }
 
+  function validateAll(): { errors: Record<string, string>; step: number } | null {
+    for (let step = 0; step < 5; step += 1) {
+      const stepErrors = validateStep(step);
+      if (Object.keys(stepErrors).length) return { errors: stepErrors, step };
+    }
+    return null;
+  }
+
+  function focusFirstError(nextErrors: Record<string, string>) {
+    const key = Object.keys(nextErrors)[0];
+    if (!key) return;
+
+    const targetId =
+      key === 'user_type'
+        ? 'guide-perfil'
+        : key === 'edificio' || key === 'apartamento'
+          ? 'edificio_search'
+          : key;
+
+    window.setTimeout(() => {
+      const el =
+        key === 'user_type'
+          ? document.querySelector<HTMLInputElement>('input[name="user_type"]')
+          : document.getElementById(targetId);
+      if (!el) return;
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.focus({ preventScroll: true });
+    }, 420);
+  }
+
+  function guardAllSteps(): boolean {
+    const invalid = validateAll();
+    if (!invalid) return true;
+
+    setErrors(invalid.errors);
+    setDirection(-1);
+    setCurrentStep(invalid.step);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    focusFirstError(invalid.errors);
+    return false;
+  }
+
+  function validateInquilinoField(index: number, field: 'nome' | 'documento' | 'telefone', value: string) {
+    let message = '';
+    if (field === 'nome' && !value.trim()) {
+      message = 'Você precisa inserir o nome';
+    } else if (field === 'documento') {
+      if (!value.trim()) message = 'Você precisa inserir o documento';
+      else message = documentFormatError(value) || '';
+    } else if (field === 'telefone' && value.trim()) {
+      message = phoneFormatError(value) || '';
+    }
+    setError(`inq_${index}_${field}`, message);
+  }
+
+  function startOver() {
+    clearDraft();
+    guideShownRef.current.clear();
+    setDraftRestored(false);
+    setErrors({});
+    setDirection(-1);
+    setCurrentStep(0);
+    setUserType('');
+    setLocadorNome('');
+    setLocadorDdi('+55');
+    setLocadorTelefone('');
+    setRegistradorNome('');
+    setSearch('');
+    setEdificioId('');
+    setNumeroApartamento('');
+    setInquilinos([emptyInquilino()]);
+    setVeiculos([]);
+    setDataEntrada('');
+    setDataSaida('');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
   function goNext() {
     const e = validateStep(currentStep);
     if (Object.keys(e).length) {
@@ -237,6 +440,8 @@ export default function Wizard() {
   }
 
   function openModal(edificio: Edificio) {
+    if (guide) guideShownRef.current.add(guide.key);
+    setGuideOpen(false);
     modalTriggerRef.current = document.activeElement as HTMLElement | null;
     setModalEdificio(edificio);
     setModalApt(String(edificio.id) === String(edificioId) ? numeroApartamento : '');
@@ -280,6 +485,8 @@ export default function Wizard() {
   }
 
   async function submitForm() {
+    if (!guardAllSteps()) return;
+
     setSubmitting(true);
     try {
       const fd = buildFormData(buildArgs());
@@ -294,10 +501,12 @@ export default function Wizard() {
 
       if (result.status === 'success') {
         const url = buildWhatsAppUrl(fd, edificios);
+        clearDraft();
         sessionStorage.setItem('whatsapp_locacao', url);
         window.location.href = appHref('/sucesso/');
       } else if (result.status === 'duplicate') {
         const url = buildWhatsAppUrl(fd, edificios);
+        clearDraft();
         sessionStorage.setItem('reativacao_locacao', url);
         window.location.href = appHref('/sucesso/') + '?duplicado=1';
       } else {
@@ -310,6 +519,8 @@ export default function Wizard() {
   }
 
   function gerarPdf() {
+    if (!guardAllSteps()) return;
+
     const fd = buildFormData(buildArgs());
     const form = document.createElement('form');
     form.method = 'POST';
@@ -336,23 +547,46 @@ export default function Wizard() {
     <MotionConfig reducedMotion="user">
       <div className="flex min-h-screen flex-col" onKeyDown={handleKeyDown}>
         <header className="fixed inset-x-0 top-0 z-40 border-b border-white/10 bg-[#03211a]/70 backdrop-blur-xl">
-          <div className="mx-auto flex max-w-3xl items-center gap-4 px-4 py-3 sm:px-6">
-            <span className="inline-flex shrink-0 items-center rounded-2xl bg-white/95 px-3 py-1.5 shadow-soft">
-              <img
-                src={asset('/img/logo_horizontal.png')}
-                alt="Blindado Soluções"
-                width={180}
-                height={40}
-                className="h-7 w-auto max-w-[130px] object-contain sm:h-8 sm:max-w-[160px]"
-              />
-            </span>
-            <div className="min-w-0 flex-1">
-              <Stepper current={currentStep} />
+          <div className="mx-auto max-w-3xl px-4 py-3 sm:px-6">
+            <div className="flex items-center justify-between gap-3">
+              <span className="inline-flex shrink-0 items-center rounded-2xl bg-white/95 px-3 py-1.5 shadow-soft">
+                <img
+                  src={asset('/img/logo_horizontal.png')}
+                  alt="Blindado Soluções"
+                  width={180}
+                  height={40}
+                  className="h-7 w-auto max-w-[130px] object-contain sm:h-8 sm:max-w-[160px]"
+                />
+              </span>
+              <div className="flex shrink-0 items-center gap-2">
+                <button
+                  type="button"
+                  onClick={openGuide}
+                  aria-label="Abrir guia desta etapa"
+                  title="Guia desta etapa"
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/15 bg-white/[0.08] text-emerald-50/90 transition-colors hover:bg-white/20 hover:text-white"
+                >
+                  <i className="fas fa-circle-question text-sm" aria-hidden="true" />
+                </button>
+                <span
+                  className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.06] px-2.5 py-1 text-[10px] font-semibold text-emerald-50/85 sm:px-3 sm:text-[11px]"
+                  aria-live="polite"
+                >
+                  <span className="h-1.5 w-1.5 rounded-full bg-accent-400" aria-hidden="true" />
+                  <span className="sm:hidden">
+                    {currentStep + 1}/6
+                  </span>
+                  <span className="hidden sm:inline">Etapa {currentStep + 1} de 6</span>
+                </span>
+              </div>
+            </div>
+            <div className="mt-2.5">
+              <Stepper current={currentStep} onStepClick={goToStep} />
             </div>
           </div>
         </header>
 
-        <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-4 pb-12 pt-24 sm:px-6 sm:pt-28">
+        <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-4 pb-12 pt-36 sm:px-6 sm:pt-36">
           <h1 className="sr-only">Formulário de Locação</h1>
 
           <div className="gradient-border flex flex-1 flex-col overflow-hidden rounded-[2rem] shadow-card">
@@ -361,6 +595,40 @@ export default function Wizard() {
                 <div className="m-5 flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 animate-fade-in sm:m-6">
                   <i className="fas fa-triangle-exclamation mt-0.5 text-red-500"></i>
                   <div className="text-sm font-medium text-red-700">Erro ao carregar edifícios: {loadError}</div>
+                </div>
+              )}
+
+              {draftRestored && (
+                <div className="mx-5 mt-5 flex flex-col gap-3 rounded-2xl border border-primary-100 bg-primary-50/70 p-4 animate-fade-in sm:mx-6 sm:mt-6 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-start gap-3">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/80 text-sm text-primary-600 shadow-soft">
+                      <i className="fas fa-clock-rotate-left" aria-hidden="true" />
+                    </span>
+                    <div>
+                      <p className="text-sm font-bold text-primary-900">Rascunho restaurado</p>
+                      <p className="text-xs leading-relaxed text-primary-800 sm:text-sm">
+                        Continuamos de onde você parou neste navegador.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex shrink-0 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setDraftRestored(false)}
+                      className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-primary-200 bg-white px-3 py-2 text-xs font-semibold text-primary-700 shadow-soft transition-colors hover:border-primary-400 hover:bg-primary-50 sm:flex-none"
+                    >
+                      <i className="fas fa-play text-[10px]" aria-hidden="true" />
+                      Continuar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={startOver}
+                      className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold text-slate-500 transition-colors hover:bg-white/70 hover:text-slate-800 sm:flex-none"
+                    >
+                      <i className="fas fa-eraser text-[10px]" aria-hidden="true" />
+                      Começar do zero
+                    </button>
+                  </div>
                 </div>
               )}
 
@@ -439,6 +707,7 @@ export default function Wizard() {
                           }}
                           addInquilino={() => setInquilinos((prev) => [...prev, emptyInquilino()])}
                           removeInquilino={(index) => setInquilinos((prev) => prev.filter((_, i) => i !== index))}
+                          validateField={validateInquilinoField}
                           errors={errors}
                         />
                       )}
@@ -603,6 +872,17 @@ export default function Wizard() {
             </div>
           )}
         </AnimatePresence>
+
+        {guide && (
+          <GuideTour
+            open={guideOpen && !modalOpen}
+            guide={guide}
+            stepIndex={currentStep}
+            total={STEP_GUIDES.length}
+            onClose={closeGuide}
+            onDismissAll={dismissGuide}
+          />
+        )}
       </div>
     </MotionConfig>
   );

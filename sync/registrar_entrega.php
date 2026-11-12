@@ -48,6 +48,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $mensagem = "Transportadora \"$transportadora\" não está cadastrada. Cadastre-a em Configurações de Entrega.";
             $mensagem_tipo = 'error';
         } else {
+            // Situações válidas (lista dinâmica). Evita erro de banco quando
+            // uma situação é removida/renomeada enquanto o formulário está aberto.
+            $situacoes_validas = [];
+            $rs_sit = $conn->query("SELECT nome FROM situacoes_entrega");
+            while ($rs_sit && ($row_sit = $rs_sit->fetch_assoc())) {
+                $situacoes_validas[$row_sit['nome']] = true;
+            }
+
             $stmt = $conn->prepare("INSERT INTO entregas (edificio_id, numero_apartamento, data_entrega, hora_entrega, situacao_recebimento, transportadora, usuario_id, observacao) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
             if (!$stmt) {
                 $mensagem = "Erro ao preparar insert: " . $conn->error;
@@ -60,6 +68,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if ($numero_apartamento === '') continue;
                     $situacao_recebimento = trim($situacoes_arr[$i] ?? '');
                     $observacao = trim($observacoes_arr[$i] ?? '');
+
+                    if (!isset($situacoes_validas[$situacao_recebimento])) {
+                        $erros[] = "Apartamento $numero_apartamento: situação \"$situacao_recebimento\" não está cadastrada.";
+                        continue;
+                    }
 
                     // try/catch: o mysqli do PHP 8.1+ lança exceção em vez de
                     // retornar false. Sem isto, qualquer erro de banco vira 500.

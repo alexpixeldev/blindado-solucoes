@@ -143,7 +143,7 @@ export function SelfieField({ index, nome, onChange, withExample }: Props) {
       {withExample && (
         <div className="grid grid-cols-1 items-stretch gap-4 sm:grid-cols-[220px_1fr]">
           <img
-            src={asset('/img/facial.png')}
+            src={asset('/img/selfie-gif.gif')}
             alt="Exemplo de selfie"
             loading="lazy"
             decoding="async"

@@ -1,5 +1,7 @@
 import { TextInput, Field, FieldError, StepHeader, IconBadge, inputPlainClass } from '@/components/ui';
+import { HintCard } from '@/components/HintCard';
 import { formatPhone } from '@/lib/masks';
+import { phoneFormatError } from '@/lib/validation';
 
 interface Props {
   userType: string;
@@ -16,6 +18,12 @@ interface Props {
 }
 
 export default function Step1(p: Props) {
+  const locadorReady =
+    p.locadorNome.trim().length > 0 &&
+    p.locadorTelefone.trim().length > 0 &&
+    !phoneFormatError(p.locadorTelefone);
+  const registradorReady = p.registradorNome.trim().length > 0;
+
   return (
     <div className="flex flex-1 flex-col space-y-8">
       <StepHeader
@@ -24,7 +32,11 @@ export default function Step1(p: Props) {
         subtitle="Selecione uma opção para continuar com o cadastro."
       />
 
-      <div className="mx-auto grid w-full auto-rows-fr grid-cols-1 gap-4 sm:gap-5" style={{ maxWidth: '40rem' }}>
+      <div
+        id="guide-perfil"
+        className="mx-auto grid w-full auto-rows-fr grid-cols-1 gap-4 sm:gap-5"
+        style={{ maxWidth: '40rem' }}
+      >
         {(['locador', 'locatario'] as const).map((value) => {
           const isLocadorCard = value === 'locador';
           const active = p.userType === value;
@@ -90,6 +102,36 @@ export default function Step1(p: Props) {
       </div>
 
       <FieldError>{p.errors.user_type}</FieldError>
+
+      {p.userType === '' && (
+        <HintCard tone="info" title="Primeiro passo">
+          Toque em uma das opções para liberar os próximos campos. Você poderá trocar de perfil
+          depois, se precisar.
+        </HintCard>
+      )}
+
+      {p.userType === 'locatario' &&
+        (locadorReady ? (
+          <HintCard tone="success" title="Dados do locador completos">
+            Tudo certo por aqui. Clique em <strong>Próxima</strong> para escolher o edifício.
+          </HintCard>
+        ) : (
+          <HintCard tone="info" title="Preencha os dados do locador">
+            Informe o nome e o WhatsApp de quem está alugando o apartamento. O telefone precisa ter
+            DDD, por exemplo (27) 99999-0000.
+          </HintCard>
+        ))}
+
+      {p.userType === 'locador' &&
+        (registradorReady ? (
+          <HintCard tone="success" title="Perfil pronto">
+            Tudo certo por aqui. Clique em <strong>Próxima</strong> para escolher o edifício.
+          </HintCard>
+        ) : (
+          <HintCard tone="info" title="Informe seu nome">
+            Digite o nome do responsável pelo cadastro para continuar.
+          </HintCard>
+        ))}
 
       {p.userType !== '' && (
         <div className="flex justify-center">
