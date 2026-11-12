@@ -85,6 +85,6 @@ if (!function_exists('gerarMensagemLocacao')) {
 if (!function_exists('btnCopiarFicha')) {
     function btnCopiarFicha($texto) {
         $js = json_encode($texto, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
-        return '<button type="button" class="btn btn-sm" style="background:#25d366;color:#fff;border-color:#25d366;flex-shrink:0" onmouseover="this.style.background=\'#1ebe5b\';this.style.borderColor=\'#1ebe5b\'" onmouseout="this.style.background=\'#25d366\';this.style.borderColor=\'#25d366\'" onclick=\'copiarTexto(' . $js . ', this)\' title="Copiar todos os dados desta locação formatados para o WhatsApp"><i class="fas fa-copy"></i><span>Copiar para enviar no WhatsApp</span></button>';
+        return '<button type="button" class="btn" style="background:#25d366;color:#fff;border-color:#25d366;flex-shrink:0" onmouseover="this.style.background=\'#1ebe5b\';this.style.borderColor=\'#1ebe5b\'" onmouseout="this.style.background=\'#25d366\';this.style.borderColor=\'#25d366\'" onclick=\'copiarTexto(' . $js . ', this)\' title="Copiar todos os dados desta locação formatados para o WhatsApp"><i class="fas fa-copy"></i><span>Copiar para enviar no WhatsApp</span></button>';
     }
 }

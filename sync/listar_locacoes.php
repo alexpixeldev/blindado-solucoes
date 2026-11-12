@@ -321,92 +321,176 @@ if (!empty($locacaoIds)) {
             font-weight: 600;
         }
         .locacoes-list {
-            display: flex;
-            flex-direction: column;
-            gap: 2rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(520px, 1fr));
+            gap: 1.5rem;
+        }
+        /* Linhas que devem ocupar a largura toda do grid */
+        .loc-list-full {
+            grid-column: 1 / -1;
         }
         .loc-card {
             background: var(--bg-card);
             border: 1px solid var(--border);
             border-radius: 1rem;
             box-shadow: 0 8px 24px var(--shadow);
+            display: flex;
+            flex-direction: column;
         }
         .loc-card-header {
-            display: flex;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            grid-template-areas:
+                "heading date"
+                "meta meta"
+                "actions actions";
             align-items: center;
-            gap: 0.75rem;
-            padding: 0.75rem 1rem;
+            gap: 0.6rem 0.85rem;
+            padding: 0.9rem 1.1rem;
             background: var(--bg-secondary);
             border-bottom: 1px solid var(--border);
             border-radius: 1rem 1rem 0 0;
         }
+        .loc-card-heading {
+            grid-area: heading;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            min-width: 0;
+        }
         .loc-card-title {
             font-weight: 800;
-            font-size: 1.15rem;
+            font-size: 1.35rem;
+            line-height: 1.15;
             color: #25A937;
         }
         .loc-card-apt {
-            font-size: 0.85rem;
+            font-size: 0.95rem;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.05em;
             color: var(--text-primary);
-            background: rgba(37, 169, 55, 0.1);
+            background: rgba(37, 169, 55, 0.16);
             border-radius: 0.375rem;
-            padding: 0.15rem 0.5rem;
+            padding: 0.2rem 0.6rem;
             white-space: nowrap;
         }
         .loc-card-date {
-            margin-left: auto;
-            font-size: 0.7rem;
+            grid-area: date;
+            justify-self: end;
+            font-size: 0.85rem;
             color: var(--text-secondary);
             white-space: nowrap;
         }
+        .loc-card-meta {
+            grid-area: meta;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .loc-card-actions {
+            grid-area: actions;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .loc-card-actions-icons {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-left: auto;
+        }
         .loc-card-registro {
-            font-size: 0.7rem;
+            font-size: 0.85rem;
             font-weight: 600;
             color: var(--text-primary);
-            background: rgba(15, 23, 42, 0.08);
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--border);
             border-radius: 0.375rem;
-            padding: 0.2rem 0.5rem;
-            line-height: 1.1;
+            padding: 0.3rem 0.6rem;
+            line-height: 1.25;
         }
         .loc-card-delete {
             flex-shrink: 0;
         }
         .loc-card-body {
-            padding: 0.75rem 1rem 1rem 1rem;
+            flex: 1;
+            padding: 1rem 1.1rem 1.1rem 1.1rem;
+        }
+        .loc-inq-name {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        .loc-meta {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+        .loc-period {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-secondary);
         }
         .loc-section + .loc-section {
             border-top: 1px solid var(--border);
-            margin-top: 6px;
-            padding-top: 6px;
+            margin-top: 10px;
+            padding-top: 10px;
         }
         .loc-inq-row > div {
             transition: background 0.15s ease;
             border-radius: 0.25rem;
-            margin: 0 -0.25rem;
-            padding: 0.125rem 0.25rem;
+            margin: 0 -0.3rem;
+            padding: 0.2rem 0.3rem;
         }
         .loc-inq-row > div:hover {
             background: rgba(255, 255, 255, 0.06);
         }
         .loc-inq-row + .loc-inq-row {
             border-top: 1px dashed rgba(255, 255, 255, 0.12);
-            margin-top: 3px;
-            padding-top: 3px;
+            margin-top: 8px;
+            padding-top: 8px;
+        }
+        @media (max-width: 1100px) {
+            .locacoes-list {
+                grid-template-columns: 1fr;
+            }
         }
         @media (max-width: 640px) {
             .locacoes-list {
                 gap: 1.25rem;
             }
             .loc-card-header {
-                padding: 0.5rem 0.75rem;
-                gap: 0.5rem;
-                flex-wrap: wrap;
+                grid-template-columns: 1fr;
+                grid-template-areas:
+                    "heading"
+                    "date"
+                    "meta"
+                    "actions";
+                padding: 0.65rem 0.85rem;
+                gap: 0.45rem;
+            }
+            .loc-card-date {
+                justify-self: start;
+            }
+            .loc-card-actions {
+                justify-content: flex-start;
+            }
+            .loc-card-actions-icons {
+                margin-left: 0;
             }
             .loc-card-body {
-                padding: 0.5rem 0.75rem 0.75rem 0.75rem;
+                padding: 0.7rem 0.85rem 0.85rem 0.85rem;
+            }
+            .loc-card-title {
+                font-size: 1.15rem;
+            }
+            .loc-card-apt,
+            .loc-card-registro {
+                font-size: 0.8rem;
             }
         }
     </style>
@@ -542,7 +626,7 @@ if (!empty($locacaoIds)) {
                 <div class="locacoes-list animate-slide-up" style="animation-delay: 0.1s;" data-copy-only>
 
                     <?php if (empty($locacoes)): ?>
-                        <div class="loc-card">
+                        <div class="loc-card loc-list-full">
                             <div class="loc-card-body text-center py-12 text-slate-500">
                                 <div class="flex flex-col items-center gap-2">
                                     <i class="fas fa-key text-4xl text-slate-200"></i>
@@ -552,7 +636,7 @@ if (!empty($locacaoIds)) {
                         </div>
                     <?php else: ?>
                         <?php if ($usuario_categoria === 'gerente'): ?>
-                        <div class="mb-4 flex items-center gap-3 px-1">
+                        <div class="loc-list-full flex items-center gap-3 px-1">
                             <input type="checkbox" id="selectAll" class="rounded border-slate-300 text-primary-600 focus:ring-primary-500">
                             <label for="selectAll" class="text-sm text-slate-600 font-medium">Selecionar todas</label>
                         </div>
@@ -561,12 +645,15 @@ if (!empty($locacaoIds)) {
                         <?php $mensagem_ficha = gerarMensagemLocacao($loc, $locacaoInquilinos[$loc['id']] ?? [], $locacaoVeiculos[$loc['id']] ?? []); ?>
                         <div class="loc-card">
                             <div class="loc-card-header">
-                                <?php if ($usuario_categoria === 'gerente'): ?>
-                                    <input type="checkbox" name="locacao_select[]" value="<?= $loc['id'] ?>" class="locacao-checkbox rounded border-slate-300 text-primary-600 focus:ring-primary-500 shrink-0">
-                                <?php endif; ?>
-                                <div class="flex items-center gap-2 min-w-0 flex-wrap">
+                                <div class="loc-card-heading">
+                                    <?php if ($usuario_categoria === 'gerente'): ?>
+                                        <input type="checkbox" name="locacao_select[]" value="<?= $loc['id'] ?>" class="locacao-checkbox rounded border-slate-300 text-primary-600 focus:ring-primary-500 shrink-0">
+                                    <?php endif; ?>
                                     <span class="loc-card-title"><?= htmlspecialchars($loc['nome_edificio']) ?></span>
                                     <span class="loc-card-apt">Apartamento <?= htmlspecialchars($loc['numero_apartamento']) ?></span>
+                                </div>
+                                <span class="loc-card-date"><?= date('d/m/Y', strtotime($loc['data_registro'] ?? $loc['data_locacao'] ?? 'now')) ?> <?= date('H:i', strtotime($loc['data_registro'] ?? $loc['data_locacao'] ?? 'now')) ?></span>
+                                <div class="loc-card-meta">
                                     <?php
                                         $responsavel = trim((string)($loc['registrador_nome'] ?? ''));
                                         if ($responsavel === '') {
@@ -584,20 +671,23 @@ if (!empty($locacaoIds)) {
                                     <?= btnCopiar($loc['locador_telefone']) ?>
                                     <?php endif; ?>
                                 </div>
-                                <span class="loc-card-date"><?= date('d/m/Y', strtotime($loc['data_registro'] ?? $loc['data_locacao'] ?? 'now')) ?> <?= date('H:i', strtotime($loc['data_registro'] ?? $loc['data_locacao'] ?? 'now')) ?></span>
-                                <?= btnCopiarFicha($mensagem_ficha) ?>
-                                <?php if ($pode_confirmar): ?>
-                                    <form method="POST" class="loc-card-delete" onsubmit="return confirm('Confirmar que esta locação foi feita? Ela sairá da lista de pendentes e irá para Locações Confirmadas.');">
-                                        <input type="hidden" name="id_confirmar" value="<?= $loc['id'] ?>">
-                                        <button type="submit" name="confirmar_locacao" class="icon-btn-green" title="Confirmar locação"><i class="fas fa-check" style="font-size:10px"></i></button>
-                                    </form>
-                                <?php endif; ?>
-                                <?php if ($usuario_categoria === 'gerente'): ?>
-                                    <form method="POST" class="loc-card-delete" onsubmit="return confirm('Tem certeza que deseja excluir esta locação?');">
-                                        <input type="hidden" name="id_delete" value="<?= $loc['id'] ?>">
-                                        <button type="submit" name="delete_locacao" class="icon-btn-red" title="Excluir"><i class="fas fa-trash" style="font-size:10px"></i></button>
-                                    </form>
-                                <?php endif; ?>
+                                <div class="loc-card-actions">
+                                    <?= btnCopiarFicha($mensagem_ficha) ?>
+                                    <div class="loc-card-actions-icons">
+                                    <?php if ($pode_confirmar): ?>
+                                        <form method="POST" class="loc-card-delete" onsubmit="return confirm('Confirmar que esta locação foi feita? Ela sairá da lista de pendentes e irá para Locações Confirmadas.');">
+                                            <input type="hidden" name="id_confirmar" value="<?= $loc['id'] ?>">
+                                            <button type="submit" name="confirmar_locacao" class="icon-btn-green" title="Confirmar locação"><i class="fas fa-check" style="font-size:10px"></i></button>
+                                        </form>
+                                    <?php endif; ?>
+                                    <?php if ($usuario_categoria === 'gerente'): ?>
+                                        <form method="POST" class="loc-card-delete" onsubmit="return confirm('Tem certeza que deseja excluir esta locação?');">
+                                            <input type="hidden" name="id_delete" value="<?= $loc['id'] ?>">
+                                            <button type="submit" name="delete_locacao" class="icon-btn-red" title="Excluir"><i class="fas fa-trash" style="font-size:10px"></i></button>
+                                        </form>
+                                    <?php endif; ?>
+                                    </div>
+                                </div>
                             </div>
 
                             <div class="loc-card-body">
@@ -606,10 +696,10 @@ if (!empty($locacaoIds)) {
                                          <?php foreach ($locacaoInquilinos[$loc['id']] as $inquilino): ?>
                                              <div class="loc-inq-row">
                                               <div style="display:grid;grid-template-columns:<?= !empty($inquilino['selfie']) ? '1fr auto auto' : '1fr auto' ?>;align-items:center;gap:4px">
-                                                      <div class="font-semibold text-slate-900" style="font-size:0.75rem">
+                                                      <div class="loc-inq-name">
                                                           <?= htmlspecialchars($inquilino['nome']) ?>
                                                           <?php if (!empty($inquilino['selfie'])): ?>
-                                                          <img class="selfie-thumb inline-block ml-2 rounded-full cursor-pointer align-middle" style="width:24px;height:24px;object-fit:cover" data-image-src="<?= htmlspecialchars($inquilino['selfie']) ?>" data-image-name="<?= htmlspecialchars($inquilino['nome']) ?>" src="<?= htmlspecialchars($inquilino['selfie']) ?>" alt="Selfie">
+                                                          <img class="selfie-thumb inline-block ml-2 rounded-full cursor-pointer align-middle" style="width:30px;height:30px;object-fit:cover" data-image-src="<?= htmlspecialchars($inquilino['selfie']) ?>" data-image-name="<?= htmlspecialchars($inquilino['nome']) ?>" src="<?= htmlspecialchars($inquilino['selfie']) ?>" alt="Selfie">
                                                           <?php endif; ?>
                                                       </div>
                                                       <?php if (!empty($inquilino['selfie'])): ?>
@@ -620,17 +710,17 @@ if (!empty($locacaoIds)) {
                                                       <?= btnCopiar($inquilino['nome']) ?>
                                                   </div>
                                                   <div style="display:grid;grid-template-columns:<?= !empty($inquilino['documento']) ? '1fr auto' : '1fr' ?>;align-items:center;gap:4px">
-                                                      <span style="font-size:0.65rem;color:#64748b">Doc: <?= htmlspecialchars($inquilino['documento'] ?: '---') ?></span>
+                                                      <span class="loc-meta">Doc: <?= htmlspecialchars($inquilino['documento'] ?: '---') ?></span>
                                                       <?php if (!empty($inquilino['documento'])): ?><?= btnCopiar($inquilino['documento']) ?><?php endif; ?>
                                                   </div>
                                                   <div style="display:grid;grid-template-columns:<?= !empty($inquilino['telefone']) ? '1fr auto' : '1fr' ?>;align-items:center;gap:4px">
-                                                      <span style="font-size:0.65rem;color:#64748b">Tel: <?= htmlspecialchars($inquilino['telefone'] ?: '---') ?></span>
+                                                      <span class="loc-meta">Tel: <?= htmlspecialchars($inquilino['telefone'] ?: '---') ?></span>
                                                       <?php if (!empty($inquilino['telefone'])): ?><?= btnCopiar($inquilino['telefone']) ?><?php endif; ?>
                                                   </div>
                                              </div>
                                          <?php endforeach; ?>
                                      <?php else: ?>
-                                         <span class="text-slate-400" style="font-size:0.7rem">Nenhum ocupante</span>
+                                         <span class="loc-meta">Nenhum ocupante</span>
                                      <?php endif; ?>
                                 </div>
 
@@ -639,31 +729,31 @@ if (!empty($locacaoIds)) {
                                          <?php foreach ($locacaoVeiculos[$loc['id']] as $veiculo): ?>
                                               <div class="loc-inq-row">
                                                   <div style="display:grid;grid-template-columns:<?= !empty($veiculo['modelo']) ? '1fr auto' : '1fr' ?>;align-items:center;gap:4px">
-                                                      <div class="font-semibold text-slate-900" style="font-size:0.75rem"><?= htmlspecialchars($veiculo['modelo'] ?: 'N/I') ?></div>
+                                                      <div class="loc-inq-name"><?= htmlspecialchars($veiculo['modelo'] ?: 'N/I') ?></div>
                                                       <?php if (!empty($veiculo['modelo'])): ?><?= btnCopiar($veiculo['modelo']) ?><?php endif; ?>
                                                   </div>
                                                   <div style="display:grid;grid-template-columns:<?= !empty($veiculo['cor']) ? '1fr auto' : '1fr' ?>;align-items:center;gap:4px">
-                                                      <span style="font-size:0.65rem;color:#64748b">Cor: <?= htmlspecialchars($veiculo['cor'] ?: '---') ?></span>
+                                                      <span class="loc-meta">Cor: <?= htmlspecialchars($veiculo['cor'] ?: '---') ?></span>
                                                       <?php if (!empty($veiculo['cor'])): ?><?= btnCopiar($veiculo['cor']) ?><?php endif; ?>
                                                   </div>
                                                   <div style="display:grid;grid-template-columns:<?= !empty($veiculo['placa']) ? '1fr auto' : '1fr' ?>;align-items:center;gap:4px">
-                                                      <span style="font-size:0.65rem;color:#64748b">Placa: <?= htmlspecialchars($veiculo['placa'] ?: '---') ?></span>
+                                                      <span class="loc-meta">Placa: <?= htmlspecialchars($veiculo['placa'] ?: '---') ?></span>
                                                       <?php if (!empty($veiculo['placa'])): ?><?= btnCopiar($veiculo['placa']) ?><?php endif; ?>
                                                   </div>
                                               </div>
                                          <?php endforeach; ?>
                                      <?php else: ?>
-                                         <span class="text-slate-400" style="font-size:0.7rem">Nenhum veículo</span>
+                                         <span class="loc-meta">Nenhum veículo</span>
                                      <?php endif; ?>
                                 </div>
 
-                                <div class="loc-section" style="font-size:0.7rem">
+                                <div class="loc-section">
                                     <div style="display:grid;grid-template-columns:<?= !empty($loc['data_entrada']) ? '1fr auto' : '1fr' ?>;align-items:center;gap:4px">
-                                        <span class="font-semibold text-slate-600">Entrada: <?= $loc['data_entrada'] ? date('d/m/Y', strtotime($loc['data_entrada'])) : '---' ?></span>
+                                        <span class="loc-period">Entrada: <?= $loc['data_entrada'] ? date('d/m/Y', strtotime($loc['data_entrada'])) : '---' ?></span>
                                         <?php if (!empty($loc['data_entrada'])): ?><?= btnCopiar(date('d/m/Y', strtotime($loc['data_entrada']))) ?><?php endif; ?>
                                     </div>
                                     <div style="display:grid;grid-template-columns:<?= !empty($loc['data_saida']) ? '1fr auto' : '1fr' ?>;align-items:center;gap:4px;margin-top:2px">
-                                        <span class="font-semibold text-slate-600">Saída: <?= $loc['data_saida'] ? date('d/m/Y', strtotime($loc['data_saida'])) : '---' ?></span>
+                                        <span class="loc-period">Saída: <?= $loc['data_saida'] ? date('d/m/Y', strtotime($loc['data_saida'])) : '---' ?></span>
                                         <?php if (!empty($loc['data_saida'])): ?><?= btnCopiar(date('d/m/Y', strtotime($loc['data_saida']))) ?><?php endif; ?>
                                     </div>
                                 </div>
