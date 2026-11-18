@@ -32,6 +32,7 @@ $page_titles = [
     'listar_edificios' => 'Listar Edifícios',
     'listar_locacoes' => 'Registros de Locações',
     'minhas_ferias' => 'Minhas Férias',
+    'moni' => 'Moni',
     'perfil' => 'Meu Perfil',
     'registrar_entrega' => 'Registrar Entrega',
     'registrar_ocorrencia' => 'Registrar Relatório',

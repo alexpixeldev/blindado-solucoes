@@ -1,0 +1,705 @@
+<?php
+/**
+ * Cliente da API do Moni Software.
+ *
+ * Serviço principal: POST /api/auth/login e endpoints /api/... (X-Refresh-Token).
+ * Moni Integração: endpoints de foto/credencial facial (Basic Auth, porta própria).
+ */
+class MoniApi
+{
+    public const TIPOS = [
+        'morador' => [
+            'resource' => 'customer-dwellers',
+            'label' => 'Morador',
+            'plural' => 'Moradores',
+            'icone' => 'fa-user',
+            'foto_consultar' => 'ConsultarFotoMorador',
+            'foto_incluir' => 'IncluirFotoMorador',
+            'foto_alterar' => 'AlterarFotoMorador',
+            'foto_excluir' => 'ExcluirFotoMorador',
+        ],
+        'visitante' => [
+            'resource' => 'customer-visitors',
+            'label' => 'Visitante',
+            'plural' => 'Visitantes',
+            'icone' => 'fa-user-clock',
+            'foto_consultar' => 'ConsultarFotoVisitanteLiberado',
+            'foto_incluir' => 'IncluirFotoVisitanteLiberado',
+            'foto_alterar' => 'AlterarFotoVisitanteLiberado',
+            'foto_excluir' => 'ExcluirFotoVisitanteLiberado',
+        ],
+        'prestador' => [
+            'resource' => 'customer-service-providers',
+            'label' => 'Prestador',
+            'plural' => 'Prestadores',
+            'icone' => 'fa-screwdriver-wrench',
+            'foto_consultar' => 'ConsultarFotoPrestadorServico',
+            'foto_incluir' => 'IncluirFotoPrestadorServico',
+            'foto_alterar' => 'AlterarFotoPrestadorServico',
+            'foto_excluir' => 'ExcluirFotoPrestadorServico',
+        ],
+    ];
+
+    private const CAMPOS_PESSOA = [
+        'morador' => ['Id', 'PersonId', 'Name', 'RealtyId', 'Responsible', 'MobilePhonePrefix', 'MobilePhone', 'PhonePrefix', 'Phone', 'Email', 'Rg', 'Cpf', 'HasPhoto'],
+        'visitante' => ['Id', 'PersonId', 'Name', 'RealtyId', 'Start', 'End', 'MobilePhonePrefix', 'MobilePhone', 'PhonePrefix', 'Phone', 'Rg', 'Cpf', 'HasPhoto'],
+        'prestador' => ['Id', 'PersonId', 'Name', 'RealtyId', 'ServiceType', 'MobilePhonePrefix', 'MobilePhone', 'PhonePrefix', 'Phone', 'Rg', 'Cpf', 'HasPhoto'],
+    ];
+
+    private $config;
+    private $token = null;
+
+    public function __construct(?array $config = null)
+    {
+        $this->config = $config ?? require __DIR__ . '/moni_config.php';
+    }
+
+    public function baseUrl(): string
+    {
+        return rtrim($this->config['base_url'], '/');
+    }
+
+    public function integrationUrl(): string
+    {
+        return rtrim($this->config['integration_url'], '/');
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* HTTP / autenticação                                                 */
+    /* ------------------------------------------------------------------ */
+
+    private function http(string $url, string $method = 'GET', $body = null, array $headers = [], ?string $basic = null): array
+    {
+        if (!function_exists('curl_init')) {
+            return ['code' => 0, 'body' => '', 'error' => 'A extensão cURL do PHP não está habilitada.'];
+        }
+
+        $ch = curl_init($url);
+        $h = array_merge(['Accept: application/json'], $headers);
+        if ($body !== null && !$this->hasHeader($h, 'Content-Type')) {
+            $h[] = 'Content-Type: application/json';
+        }
+
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_CUSTOMREQUEST => $method,
+            CURLOPT_HTTPHEADER => $h,
+            CURLOPT_CONNECTTIMEOUT => 8,
+            CURLOPT_TIMEOUT => 25,
+            CURLOPT_FOLLOWLOCATION => false,
+        ]);
+        if ($basic !== null) {
+            curl_setopt($ch, CURLOPT_USERPWD, $basic);
+        }
+        if ($body !== null) {
+            curl_setopt($ch, CURLOPT_POSTFIELDS, is_string($body) ? $body : json_encode($body, JSON_UNESCAPED_UNICODE));
+        }
+
+        $resp = curl_exec($ch);
+        $code = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error = curl_error($ch);
+        curl_close($ch);
+
+        return ['code' => $code, 'body' => $resp === false ? '' : $resp, 'error' => $error];
+    }
+
+    private function hasHeader(array $headers, string $name): bool
+    {
+        foreach ($headers as $header) {
+            if (stripos($header, $name . ':') === 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private function tokenCacheFile(): string
+    {
+        return sys_get_temp_dir() . '/blindado_moni_token.json';
+    }
+
+    private function readCachedToken(): ?string
+    {
+        $file = $this->tokenCacheFile();
+        if (!is_file($file)) {
+            return null;
+        }
+        $data = json_decode((string) @file_get_contents($file), true);
+        if (!is_array($data) || empty($data['token'])) {
+            return null;
+        }
+        if (!empty($data['exp']) && (int) $data['exp'] < time()) {
+            return null;
+        }
+        return (string) $data['token'];
+    }
+
+    private function storeToken(string $token): void
+    {
+        $file = $this->tokenCacheFile();
+        @file_put_contents($file, json_encode([
+            'token' => $token,
+            'exp' => time() + (30 * 86400),
+        ]), LOCK_EX);
+    }
+
+    private function clearToken(): void
+    {
+        $this->token = null;
+        @unlink($this->tokenCacheFile());
+    }
+
+    private function getToken(bool $force = false): string
+    {
+        if (!$force && $this->token) {
+            return $this->token;
+        }
+        if (!$force) {
+            $cached = $this->readCachedToken();
+            if ($cached) {
+                $this->token = $cached;
+                return $this->token;
+            }
+        }
+
+        $r = $this->http($this->baseUrl() . '/api/auth/login', 'POST', [
+            'username' => $this->config['username'],
+            'password' => $this->config['password'],
+        ], ['Content-Type: application/json']);
+
+        if ($r['code'] !== 200) {
+            throw new RuntimeException('Não foi possível autenticar no Moni (HTTP ' . $r['code'] . '). ' . $this->describeError($r));
+        }
+        $j = json_decode((string) $r['body'], true);
+        $token = $j['RefreshToken'] ?? ($j['refreshToken'] ?? null);
+        if (!$token) {
+            throw new RuntimeException('O Moni respondeu ao login sem o token de acesso.');
+        }
+
+        $this->token = (string) $token;
+        $this->storeToken($this->token);
+        return $this->token;
+    }
+
+    private function api(string $path, string $method = 'GET', $body = null, array $headers = []): array
+    {
+        $token = $this->getToken();
+        $h = array_merge($headers, ['X-Refresh-Token: ' . $token]);
+        $r = $this->http($this->baseUrl() . $path, $method, $body, $h);
+
+        if ($r['code'] === 401) {
+            $this->clearToken();
+            $token = $this->getToken(true);
+            $h = array_merge($headers, ['X-Refresh-Token: ' . $token]);
+            $r = $this->http($this->baseUrl() . $path, $method, $body, $h);
+        }
+
+        return $r;
+    }
+
+    private function httpMultipart(string $path, string $field, string $tmpPath, string $mime, string $filename = 'binaryFile'): array
+    {
+        $send = function (string $token) use ($path, $field, $tmpPath, $mime, $filename) {
+            $ch = curl_init($this->baseUrl() . $path);
+            curl_setopt_array($ch, [
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_POST => true,
+                CURLOPT_POSTFIELDS => [$field => new CURLFile($tmpPath, $mime, $filename)],
+                CURLOPT_HTTPHEADER => ['Accept: application/json', 'X-Refresh-Token: ' . $token],
+                CURLOPT_CONNECTTIMEOUT => 8,
+                CURLOPT_TIMEOUT => 60,
+                CURLOPT_FOLLOWLOCATION => false,
+            ]);
+            $resp = curl_exec($ch);
+            $code = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $error = curl_error($ch);
+            curl_close($ch);
+            return ['code' => $code, 'body' => $resp === false ? '' : $resp, 'error' => $error];
+        };
+
+        $r = $send($this->getToken());
+        if ($r['code'] === 401) {
+            $this->clearToken();
+            $r = $send($this->getToken(true));
+        }
+        return $r;
+    }
+
+    private function integration(string $endpoint, array $body): array
+    {
+        return $this->http(
+            $this->integrationUrl() . '/' . ltrim($endpoint, '/'),
+            'POST',
+            $body,
+            ['Content-Type: application/json; charset=UTF-8'],
+            $this->config['integration_username'] . ':' . $this->config['integration_password']
+        );
+    }
+
+    public function describeError(array $r): string
+    {
+        if (!empty($r['error'])) {
+            return $r['error'];
+        }
+        $body = trim((string) ($r['body'] ?? ''));
+        if ($body === '') {
+            return 'Sem detalhes na resposta.';
+        }
+        $j = json_decode($body, true);
+        if (is_array($j)) {
+            if (isset($j['Erro'])) {
+                return (string) $j['Erro'];
+            }
+            if (isset($j['Message'])) {
+                return (string) $j['Message'];
+            }
+            if (isset($j['title']) || isset($j['detail'])) {
+                return trim((string) ($j['title'] ?? '') . ' ' . (string) ($j['detail'] ?? ''));
+            }
+            if (isset($j[0]) && is_array($j[0])) {
+                if (isset($j[0]['Erro'])) {
+                    return (string) $j[0]['Erro'];
+                }
+                if (isset($j[0]['Message'])) {
+                    return (string) $j[0]['Message'];
+                }
+            }
+        }
+        return mb_substr(strip_tags($body), 0, 300);
+    }
+
+    private function integrationMessage(array $r): string
+    {
+        $j = json_decode((string) ($r['body'] ?? ''), true);
+        if (is_array($j)) {
+            if (isset($j[0]['Mensagem'])) {
+                return (string) $j[0]['Mensagem'];
+            }
+            if (isset($j[0]['Erro'])) {
+                return (string) $j[0]['Erro'];
+            }
+            if (isset($j['Erro'])) {
+                return (string) $j['Erro'];
+            }
+        }
+        return $this->describeError($r);
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Consultas                                                           */
+    /* ------------------------------------------------------------------ */
+
+    private function query(array $fields, array $conditions = [], array $joins = []): array
+    {
+        return [
+            'fields' => ['return' => $fields],
+            'conditions' => $conditions,
+            'joins' => $joins,
+        ];
+    }
+
+    public function select(string $resource, array $query, int $page = 1, int $limit = 100, string $order = '', string $sort = ''): array
+    {
+        $payload = [
+            'q' => [base64_encode(json_encode($query, JSON_UNESCAPED_UNICODE))],
+            'page' => max(1, $page),
+            'limit' => max(1, $limit),
+        ];
+        if ($order !== '') {
+            $payload['order'] = $order;
+            $payload['sort'] = $sort;
+        }
+
+        $r = $this->api('/api/' . $resource . '/select', 'POST', $payload, ['Content-Type: application/json']);
+        if ($r['code'] === 200) {
+            $j = json_decode((string) $r['body'], true);
+            return [
+                'ok' => true,
+                'data' => is_array($j['Data'] ?? null) ? $j['Data'] : [],
+                'total' => (int) ($j['Total'] ?? 0),
+            ];
+        }
+
+        return ['ok' => false, 'data' => [], 'total' => 0, 'code' => $r['code'], 'error' => $this->describeError($r)];
+    }
+
+    public function customers(string $busca = '', bool $todos = false, int $page = 1, int $limit = 60): array
+    {
+        $fields = ['Id', 'Name', 'Type', 'SecondCode', 'IdRealty1', 'IdRealty2', 'Address', 'AddressNumber', 'District', 'Contact', 'Email', 'City.Description'];
+        $conditions = [];
+        if ($busca !== '') {
+            $conditions[] = ['name' => 'Name', 'operator' => 'like', 'values' => ['%' . $busca . '%']];
+        }
+        if (!$todos) {
+            $conditions[] = ['name' => 'Type', 'operator' => '=', 'values' => ['6']];
+        }
+        $joins = [[
+            'property' => 'City',
+            'conditions' => [[
+                'propertyType' => 'Property',
+                'name' => 'City.Id',
+                'values' => ['CityId'],
+                'operator' => '=',
+            ]],
+        ]];
+
+        return $this->select('customers', $this->query($fields, $conditions, $joins), $page, $limit, 'Name', 'asc');
+    }
+
+    public function customer(int $id): ?array
+    {
+        $res = $this->select('customers', $this->query(
+            ['Id', 'Name', 'Type', 'SecondCode', 'IdRealty1', 'IdRealty2', 'Address', 'AddressNumber', 'District', 'Contact', 'Email', 'City.Description'],
+            [['name' => 'Id', 'operator' => '=', 'values' => [(string) $id]]],
+            [[
+                'property' => 'City',
+                'conditions' => [[
+                    'propertyType' => 'Property',
+                    'name' => 'City.Id',
+                    'values' => ['CityId'],
+                    'operator' => '=',
+                ]],
+            ]]
+        ), 1, 1);
+
+        return $res['ok'] && !empty($res['data'][0]) ? $res['data'][0] : null;
+    }
+
+    public function realties(int $customerId): array
+    {
+        $fields = ['Id1', 'Id2', 'Code', 'Telephone', 'Extension', 'Ddd', 'CustomerId'];
+        $conditions = [['name' => 'CustomerId', 'operator' => '=', 'values' => [(string) $customerId]]];
+        $query = $this->query($fields, $conditions);
+
+        $all = [];
+        $page = 1;
+        do {
+            $res = $this->select('customer-realties', $query, $page, 200, 'Id1;Id2', 'asc;asc');
+            if (!$res['ok']) {
+                return $res;
+            }
+            $all = array_merge($all, $res['data']);
+            $page++;
+        } while (count($all) < $res['total'] && $page <= 20);
+
+        return ['ok' => true, 'data' => $all, 'total' => count($all)];
+    }
+
+    public function realty(int $customerId, int $code): ?array
+    {
+        $res = $this->select('customer-realties', $this->query(
+            ['Id1', 'Id2', 'Code', 'Telephone', 'Extension', 'Ddd', 'CustomerId'],
+            [
+                ['name' => 'CustomerId', 'operator' => '=', 'values' => [(string) $customerId]],
+                ['name' => 'Code', 'operator' => '=', 'values' => [(string) $code]],
+            ]
+        ), 1, 1);
+
+        return $res['ok'] && !empty($res['data'][0]) ? $res['data'][0] : null;
+    }
+
+    public function people(string $tipo, int $customerId, int $realtyId, int $page = 1, int $limit = 100): array
+    {
+        if (!isset(self::TIPOS[$tipo])) {
+            return ['ok' => false, 'data' => [], 'total' => 0, 'error' => 'Tipo de pessoa inválido.'];
+        }
+        $conditions = [
+            ['name' => 'CustomerId', 'operator' => '=', 'values' => [(string) $customerId]],
+            ['name' => 'RealtyId', 'operator' => '=', 'values' => [(string) $realtyId]],
+        ];
+
+        return $this->select(self::TIPOS[$tipo]['resource'], $this->query(self::CAMPOS_PESSOA[$tipo], $conditions), $page, $limit, 'Name', 'asc');
+    }
+
+    /**
+     * Conta moradores, visitantes e prestadores por imóvel.
+     * Retorna [realtyId => ['morador' => n, 'visitante' => n, 'prestador' => n]].
+     */
+    public function countsByRealty(int $customerId): array
+    {
+        $counts = [];
+        foreach (self::TIPOS as $tipo => $info) {
+            $query = $this->query(['Id', 'RealtyId'], [['name' => 'CustomerId', 'operator' => '=', 'values' => [(string) $customerId]]]);
+            $page = 1;
+            $lidos = 0;
+            do {
+                $res = $this->select($info['resource'], $query, $page, 500);
+                if (!$res['ok']) {
+                    break;
+                }
+                foreach ($res['data'] as $row) {
+                    $rid = (int) ($row['realtyid'] ?? 0);
+                    if (!isset($counts[$rid])) {
+                        $counts[$rid] = ['morador' => 0, 'visitante' => 0, 'prestador' => 0];
+                    }
+                    $counts[$rid][$tipo]++;
+                }
+                $lidos += count($res['data']);
+                $page++;
+            } while ($lidos < $res['total'] && $page <= 20);
+        }
+        return $counts;
+    }
+
+    public function get(string $tipo, int $customerId, int $id): ?array
+    {
+        if (!isset(self::TIPOS[$tipo])) {
+            return null;
+        }
+        $r = $this->api('/api/' . self::TIPOS[$tipo]['resource'] . '/' . $customerId . '/' . $id, 'GET');
+        if ($r['code'] !== 200) {
+            return null;
+        }
+        $j = json_decode((string) $r['body'], true);
+        return is_array($j) ? $j : null;
+    }
+
+    /**
+     * Dados da pessoa (registro compartilhado). Nome, RG, CPF e telefones
+     * ficam aqui, não no vínculo com o imóvel.
+     */
+    public function person(int $personId): ?array
+    {
+        if ($personId <= 0) {
+            return null;
+        }
+        $r = $this->api('/api/persons/' . $personId, 'GET');
+        if ($r['code'] !== 200) {
+            return null;
+        }
+        $j = json_decode((string) $r['body'], true);
+        return is_array($j) ? $j : null;
+    }
+
+    /**
+     * Atualiza a pessoa em si. É o caminho correto para nome/RG/CPF: enviar
+     * esses campos no vínculo (customer-dwellers/visitors/...) faz o Moni
+     * criar uma pessoa nova, o que desliga a credencial facial.
+     */
+    public function patchPerson(int $personId, array $operations): array
+    {
+        if ($personId <= 0) {
+            return ['ok' => false, 'error' => 'Pessoa sem PersonId no Moni.'];
+        }
+        if (!$operations) {
+            return ['ok' => true, 'message' => 'Nenhuma alteração.'];
+        }
+        $r = $this->api(
+            '/api/persons/' . $personId,
+            'PATCH',
+            $operations,
+            ['Content-Type: application/json-patch+json']
+        );
+        if (in_array($r['code'], [200, 204], true)) {
+            return ['ok' => true, 'message' => 'Dados atualizados com sucesso.'];
+        }
+        return ['ok' => false, 'code' => $r['code'], 'error' => $this->describeError($r)];
+    }
+
+    public function patch(string $tipo, int $customerId, int $id, array $operations): array
+    {
+        if (!isset(self::TIPOS[$tipo])) {
+            return ['ok' => false, 'error' => 'Tipo de pessoa inválido.'];
+        }
+        if (!$operations) {
+            return ['ok' => true, 'message' => 'Nenhuma alteração.'];
+        }
+        $r = $this->api(
+            '/api/' . self::TIPOS[$tipo]['resource'] . '/' . $customerId . '/' . $id,
+            'PATCH',
+            $operations,
+            ['Content-Type: application/json-patch+json']
+        );
+        if (in_array($r['code'], [200, 204], true)) {
+            return ['ok' => true, 'message' => 'Dados atualizados com sucesso.'];
+        }
+        return ['ok' => false, 'code' => $r['code'], 'error' => $this->describeError($r)];
+    }
+
+    public function delete(string $tipo, int $customerId, int $id): array
+    {
+        if (!isset(self::TIPOS[$tipo])) {
+            return ['ok' => false, 'error' => 'Tipo de pessoa inválido.'];
+        }
+        $r = $this->api('/api/' . self::TIPOS[$tipo]['resource'] . '/' . $customerId . '/' . $id, 'DELETE');
+        if (in_array($r['code'], [200, 204], true)) {
+            return ['ok' => true, 'message' => self::TIPOS[$tipo]['label'] . ' excluído com sucesso.'];
+        }
+        return ['ok' => false, 'code' => $r['code'], 'error' => $this->describeError($r)];
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Credencial facial (person-biometric-facial)                         */
+    /* ------------------------------------------------------------------ */
+
+    /**
+     * Metadados da credencial facial. A chave é o PersonId da pessoa.
+     * Retorna exists=false quando o Moni responde 404 (sem credencial).
+     */
+    public function facialInfo(int $personId): array
+    {
+        if ($personId <= 0) {
+            return ['ok' => true, 'exists' => false, 'info' => null];
+        }
+        $r = $this->api('/api/person-biometric-facial/' . $personId, 'GET');
+        if ($r['code'] === 200) {
+            $j = json_decode((string) $r['body'], true);
+            return ['ok' => true, 'exists' => true, 'info' => is_array($j) ? $j : []];
+        }
+        if ($r['code'] === 404) {
+            return ['ok' => true, 'exists' => false, 'info' => null];
+        }
+        return ['ok' => false, 'exists' => false, 'info' => null, 'code' => $r['code'], 'error' => $this->describeError($r)];
+    }
+
+    /**
+     * Imagem da credencial facial. Retorna image=null quando não há credencial.
+     */
+    public function facialImage(int $personId): array
+    {
+        if ($personId <= 0) {
+            return ['ok' => true, 'image' => null, 'mime' => 'image/jpeg', 'info' => null, 'message' => 'Pessoa sem PersonId no Moni.'];
+        }
+        $r = $this->api('/api/person-biometric-facial/' . $personId . '/image', 'GET');
+        if ($r['code'] === 200) {
+            $j = json_decode((string) $r['body'], true);
+            $data = is_array($j) ? ($j['Data'] ?? null) : null;
+            if (!$data) {
+                return ['ok' => true, 'image' => null, 'mime' => 'image/jpeg', 'info' => is_array($j) ? $j : null, 'message' => 'Imagem vazia.'];
+            }
+            $mime = (string) ($j['MimeType'] ?? '');
+            if ($mime === '') {
+                $ext = strtolower((string) ($j['Extension'] ?? ''));
+                $mime = $ext === 'png' ? 'image/png' : ($ext === 'bmp' ? 'image/bmp' : 'image/jpeg');
+            }
+            return ['ok' => true, 'image' => (string) $data, 'mime' => $mime, 'info' => $j];
+        }
+        if ($r['code'] === 404) {
+            return ['ok' => true, 'image' => null, 'mime' => 'image/jpeg', 'info' => null, 'message' => 'Sem credencial facial cadastrada.'];
+        }
+        return ['ok' => false, 'image' => null, 'mime' => 'image/jpeg', 'info' => null, 'code' => $r['code'], 'message' => $this->describeError($r)];
+    }
+
+    /**
+     * Envia a credencial facial. O deviceType 0 corresponde a um upload manual
+     * (mesmo comportamento do frontend do Moni).
+     */
+    public function facialSave(int $personId, string $tmpPath, string $mime, int $deviceType = 0): array
+    {
+        if ($personId <= 0) {
+            return ['ok' => false, 'message' => 'Pessoa sem PersonId no Moni.'];
+        }
+        if (!in_array($mime, ['image/jpeg', 'image/png', 'image/bmp'], true)) {
+            $mime = 'image/jpeg';
+        }
+        $r = $this->httpMultipart(
+            '/api/person-biometric-facial/' . $personId . '?deviceType=' . max(0, $deviceType),
+            'formFile',
+            $tmpPath,
+            $mime
+        );
+        if (in_array($r['code'], [200, 201, 204], true)) {
+            return ['ok' => true, 'code' => $r['code'], 'message' => 'Credencial facial salva com sucesso.'];
+        }
+        return ['ok' => false, 'code' => $r['code'], 'message' => $this->describeError($r)];
+    }
+
+    public function facialDelete(int $personId): array
+    {
+        if ($personId <= 0) {
+            return ['ok' => false, 'message' => 'Pessoa sem PersonId no Moni.'];
+        }
+        $r = $this->api('/api/person-biometric-facial/' . $personId, 'DELETE');
+        if (in_array($r['code'], [200, 204], true)) {
+            return ['ok' => true, 'code' => $r['code'], 'message' => 'Credencial facial removida com sucesso.'];
+        }
+        if ($r['code'] === 404) {
+            return ['ok' => true, 'code' => 404, 'message' => 'Não havia credencial facial cadastrada.'];
+        }
+        return ['ok' => false, 'code' => $r['code'], 'message' => $this->describeError($r)];
+    }
+
+    /**
+     * Conjunto de PersonIds que possuem credencial facial, para indicadores de lista.
+     * Retorna [PersonId => true].
+     */
+    public function facialPersonIds(): array
+    {
+        $res = $this->select('person-biometric-facial', $this->query(['PersonId']), 1, 5000);
+        if (!$res['ok']) {
+            return [];
+        }
+        $ids = [];
+        foreach ($res['data'] as $row) {
+            $pid = (int) ($row['personid'] ?? 0);
+            if ($pid > 0) {
+                $ids[$pid] = true;
+            }
+        }
+        return $ids;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Foto do cadastro (Moni Integração - API antiga)                     */
+    /* ------------------------------------------------------------------ */
+
+    public function photo(string $tipo, int $customerId, int $id): array
+    {
+        if (!isset(self::TIPOS[$tipo])) {
+            return ['ok' => false, 'image' => null, 'message' => 'Tipo de pessoa inválido.'];
+        }
+        $r = $this->integration(self::TIPOS[$tipo]['foto_consultar'], [
+            'Cliente' => $customerId,
+            'Codigo' => $id,
+        ]);
+
+        if ($r['code'] === 200) {
+            $j = json_decode((string) $r['body'], true);
+            $img = is_array($j) ? ($j[0]['imagem'] ?? null) : null;
+            return ['ok' => true, 'image' => $img ?: null, 'message' => $img ? '' : 'Sem foto.'];
+        }
+        if ($r['code'] === 404) {
+            return ['ok' => true, 'image' => null, 'message' => $this->integrationMessage($r)];
+        }
+        return ['ok' => false, 'image' => null, 'message' => $this->integrationMessage($r)];
+    }
+
+    public function photoSave(string $tipo, int $customerId, int $id, string $base64, bool $alterar): array
+    {
+        if (!isset(self::TIPOS[$tipo])) {
+            return ['ok' => false, 'message' => 'Tipo de pessoa inválido.'];
+        }
+        $endpoint = $alterar ? self::TIPOS[$tipo]['foto_alterar'] : self::TIPOS[$tipo]['foto_incluir'];
+        $body = ['Cliente' => $customerId, 'Codigo' => $id, 'Imagem' => $base64];
+
+        $r = $this->integration($endpoint, $body);
+        if ($r['code'] === 200) {
+            return ['ok' => true, 'message' => $this->integrationMessage($r) ?: 'Credencial salva com sucesso.'];
+        }
+
+        // Já existe foto: tenta alterar.
+        if ($r['code'] === 409 && !$alterar) {
+            $r = $this->integration(self::TIPOS[$tipo]['foto_alterar'], $body);
+            if ($r['code'] === 200) {
+                return ['ok' => true, 'message' => $this->integrationMessage($r) ?: 'Credencial atualizada com sucesso.'];
+            }
+        }
+
+        return ['ok' => false, 'code' => $r['code'], 'message' => $this->integrationMessage($r)];
+    }
+
+    public function photoDelete(string $tipo, int $customerId, int $id): array
+    {
+        if (!isset(self::TIPOS[$tipo])) {
+            return ['ok' => false, 'message' => 'Tipo de pessoa inválido.'];
+        }
+        $r = $this->integration(self::TIPOS[$tipo]['foto_excluir'], [
+            'Cliente' => $customerId,
+            'Codigo' => $id,
+        ]);
+        if ($r['code'] === 200) {
+            return ['ok' => true, 'message' => $this->integrationMessage($r) ?: 'Credencial removida com sucesso.'];
+        }
+        return ['ok' => false, 'code' => $r['code'], 'message' => $this->integrationMessage($r)];
+    }
+}
