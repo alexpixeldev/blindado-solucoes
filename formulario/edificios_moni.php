@@ -8,6 +8,53 @@
  */
 header('Content-Type: application/json; charset=utf-8');
 require_once '../sync/moni_api.php';
+require_once 'edificio_local.php';
+
+/**
+ * Flags de selfie configuradas em /sync/edificios.php?tab=faciais_locacao.
+ *
+ * A lista de edifícios vem do Moni, mas o toggle fica no banco local. Fazemos
+ * apenas a leitura e casamos pelo nome normalizado, sem criar edifícios.
+ */
+function edif_moni_flags_selfie(): array
+{
+    static $flags = null;
+    if ($flags !== null) {
+        return $flags;
+    }
+
+    $flags = [];
+    try {
+        require_once '../sync/conexao.php';
+
+        $check = @$conn->query("SHOW COLUMNS FROM edificios LIKE 'requer_selfie'");
+        if ($check && $check->num_rows > 0) {
+            $res = @$conn->query("SELECT nome FROM edificios WHERE requer_selfie = 1");
+            if ($res) {
+                while ($row = $res->fetch_assoc()) {
+                    $chave = f2_edif_norm((string) ($row['nome'] ?? ''));
+                    if ($chave !== '') {
+                        $flags[$chave] = 1;
+                    }
+                }
+            }
+        }
+    } catch (Throwable $ex) {
+        error_log('[edificios_moni] falha ao ler toggles de selfie: ' . $ex->getMessage());
+    }
+
+    return $flags;
+}
+
+function edif_moni_aplicar_flags_selfie(array &$edificios): void
+{
+    $flags = edif_moni_flags_selfie();
+    foreach ($edificios as &$edificio) {
+        $chave = f2_edif_norm((string) ($edificio['nome_edificio'] ?? ''));
+        $edificio['requer_selfie'] = isset($flags[$chave]) ? 1 : 0;
+    }
+    unset($edificio);
+}
 
 function edif_moni_titulo(string $s): string
 {
@@ -41,8 +88,10 @@ function edif_moni_localizacao(array $cliente): string
 $cacheArquivo = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'blindado_edificios_moni_v2.json';
 if (is_file($cacheArquivo) && time() - filemtime($cacheArquivo) < 900) {
     $cache = json_decode((string) file_get_contents($cacheArquivo), true);
-    if (is_array($cache) && isset($cache['edificios'])) {
-        echo json_encode($cache['edificios'], JSON_UNESCAPED_UNICODE);
+    if (is_array($cache) && isset($cache['edificios']) && is_array($cache['edificios'])) {
+        $edificios = $cache['edificios'];
+        edif_moni_aplicar_flags_selfie($edificios);
+        echo json_encode($edificios, JSON_UNESCAPED_UNICODE);
         exit;
     }
 }
@@ -104,6 +153,7 @@ try {
         return strnatcasecmp($a['nome_edificio'], $b['nome_edificio']);
     });
 
+    edif_moni_aplicar_flags_selfie($edificios);
     @file_put_contents($cacheArquivo, json_encode(['edificios' => $edificios], JSON_UNESCAPED_UNICODE));
 } catch (Throwable $ex) {
     error_log('[edificios_moni] ' . $ex->getMessage());

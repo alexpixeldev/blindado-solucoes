@@ -475,6 +475,227 @@ class MoniApi
         return ['ok' => false, 'code' => $r['code'], 'error' => $this->describeError($r)];
     }
 
+    /**
+     * Cria a credencial do visitante. É este passo que permite o posterior
+     * facialSave(): sem credencial, a API recusa o PersonId (erro 0_84).
+     */
+    public function credentialCreate(int $customerId, int $visitorId, string $description): array
+    {
+        if ($customerId <= 0 || $visitorId <= 0) {
+            return ['ok' => false, 'error' => 'Visitante sem identificador no Moni.'];
+        }
+        $r = $this->api('/api/customer-credentials', 'POST', [
+            'CustomerId' => $customerId,
+            'VisitorId' => $visitorId,
+            'Description' => mb_substr(trim($description), 0, 255),
+        ], ['Content-Type: application/json']);
+        if (in_array($r['code'], [200, 201, 204], true)) {
+            $j = json_decode((string) $r['body'], true);
+            return [
+                'ok' => true,
+                'id' => (int) ($j['Id'] ?? 0),
+                'data' => is_array($j) ? $j : [],
+            ];
+        }
+        return ['ok' => false, 'code' => $r['code'], 'error' => $this->describeError($r)];
+    }
+
+    /**
+     * Habilita o uso da biometria facial na credencial (passo 4 do wizard).
+     */
+    public function credentialAllowFacial(int $customerId, int $credentialId): array
+    {
+        if ($customerId <= 0 || $credentialId <= 0) {
+            return ['ok' => false, 'error' => 'Credencial sem identificador no Moni.'];
+        }
+        $r = $this->api(
+            '/api/customer-credentials/' . $customerId . '/' . $credentialId,
+            'PATCH',
+            [['op' => 'replace', 'path' => '/AllowUseFacialBiometric', 'value' => true]],
+            ['Content-Type: application/json-patch+json']
+        );
+        if (in_array($r['code'], [200, 204], true)) {
+            return ['ok' => true, 'message' => 'Biometria facial habilitada na credencial.'];
+        }
+        return ['ok' => false, 'code' => $r['code'], 'error' => $this->describeError($r)];
+    }
+
+    /**
+     * Localiza o perfil de acesso de visitantes do cliente. O nome varia entre
+     * clientes (VISITANTES, VISITANTE, Visitantes...), então a comparação é
+     * feita sem acentos e sem caixa. O Id é consultado na API, nunca fixo.
+     */
+    public function visitorAccessProfileId(int $customerId): array
+    {
+        if ($customerId <= 0) {
+            return ['ok' => false, 'id' => 0, 'error' => 'Cliente inválido no Moni.'];
+        }
+        static $cache = [];
+        if (isset($cache[$customerId])) {
+            return $cache[$customerId];
+        }
+
+        $res = $this->select('customer-access-profiles', $this->query(
+            ['Id', 'Description'],
+            [['name' => 'CustomerId', 'operator' => '=', 'values' => [(string) $customerId]]]
+        ), 1, 100);
+        if (!$res['ok']) {
+            return ['ok' => false, 'id' => 0, 'error' => $res['error'] ?? 'Falha ao consultar perfis de acesso.'];
+        }
+
+        $norm = static function (string $s): string {
+            $s = mb_strtoupper($s, 'UTF-8');
+            $s = strtr($s, [
+                'Á' => 'A', 'À' => 'A', 'Â' => 'A', 'Ã' => 'A', 'É' => 'E', 'Ê' => 'E',
+                'Í' => 'I', 'Ó' => 'O', 'Ô' => 'O', 'Õ' => 'O', 'Ú' => 'U', 'Ç' => 'C',
+            ]);
+            return preg_replace('/[^A-Z]/', '', $s) ?? '';
+        };
+
+        $achados = [];
+        foreach ($res['data'] as $row) {
+            $id = (int) ($row['id'] ?? $row['Id'] ?? 0);
+            if ($id <= 0) {
+                continue;
+            }
+            $nomeOriginal = (string) ($row['description'] ?? $row['Description'] ?? '');
+            $nome = $norm($nomeOriginal);
+            if ($nome === 'VISITANTES') {
+                $achados[3] = [$id, $nomeOriginal];
+            } elseif ($nome === 'VISITANTE' && !isset($achados[2])) {
+                $achados[2] = [$id, $nomeOriginal];
+            } elseif (strpos($nome, 'VISITANT') !== false && !isset($achados[1])) {
+                $achados[1] = [$id, $nomeOriginal];
+            }
+        }
+        krsort($achados);
+        if (!$achados) {
+            $out = ['ok' => false, 'id' => 0, 'error' => 'Cliente sem perfil de acesso VISITANTES no Moni.'];
+        } else {
+            $primeiro = reset($achados);
+            $out = ['ok' => true, 'id' => (int) $primeiro[0], 'nome' => (string) $primeiro[1]];
+        }
+        $cache[$customerId] = $out;
+        return $out;
+    }
+
+    /**
+     * Vincula o perfil de acesso à credencial (passo 2 do wizard). O campo é
+     * ignorado no POST /api/customer-credentials, por isso vai por PATCH.
+     */
+    public function credentialSetAccessProfile(int $customerId, int $credentialId, int $profileId): array
+    {
+        if ($customerId <= 0 || $credentialId <= 0 || $profileId <= 0) {
+            return ['ok' => false, 'error' => 'Dados insuficientes para vincular o perfil.'];
+        }
+        $r = $this->api(
+            '/api/customer-credentials/' . $customerId . '/' . $credentialId,
+            'PATCH',
+            [['op' => 'replace', 'path' => '/AccessProfileId', 'value' => $profileId]],
+            ['Content-Type: application/json-patch+json']
+        );
+        if (in_array($r['code'], [200, 204], true)) {
+            return ['ok' => true, 'message' => 'Perfil de acesso vinculado à credencial.'];
+        }
+        return ['ok' => false, 'code' => $r['code'], 'error' => $this->describeError($r)];
+    }
+
+    /**
+     * Cria a credencial do visitante já com perfil e biometria facial.
+     * Chamada sempre que um visitante é enviado ao Moni, com ou sem selfie.
+     */
+    public function credentialEnsure(int $customerId, int $visitorId, string $description): array
+    {
+        $criada = $this->credentialCreate($customerId, $visitorId, $description);
+        if (!$criada['ok']) {
+            return $criada;
+        }
+        $id = (int) ($criada['id'] ?? 0);
+        $avisos = [];
+
+        // Passo 2 do wizard: perfil VISITANTES. Sem ele a facial não sincroniza.
+        $perfil = $this->visitorAccessProfileId($customerId);
+        $perfilId = (int) ($perfil['id'] ?? 0);
+        $perfilOk = false;
+        if ($perfilId > 0) {
+            $vinculo = $this->credentialSetAccessProfile($customerId, $id, $perfilId);
+            $perfilOk = (bool) $vinculo['ok'];
+            if (!$perfilOk) {
+                $avisos[] = 'Perfil ' . ($perfil['nome'] ?? 'VISITANTES') . ' não vinculado: '
+                    . ($vinculo['error'] ?? 'falha');
+            }
+        } else {
+            $avisos[] = $perfil['error'] ?? 'Perfil VISITANTES não encontrado no Moni.';
+        }
+
+        // Passo 4 do wizard: biometria facial habilitada.
+        $facial = $this->credentialAllowFacial($customerId, $id);
+        if (!$facial['ok']) {
+            $avisos[] = 'Biometria facial não habilitada: ' . ($facial['error'] ?? 'falha');
+        }
+
+        return [
+            'ok' => true,
+            'id' => $id,
+            'perfil_id' => $perfilId,
+            'perfil' => $perfilOk,
+            'facial' => (bool) $facial['ok'],
+            'aviso' => implode('; ', $avisos),
+        ];
+    }
+
+    /**
+     * Remove uma credencial pelo Id.
+     */
+    public function credentialDelete(int $customerId, int $credentialId): array
+    {
+        if ($customerId <= 0 || $credentialId <= 0) {
+            return ['ok' => false, 'error' => 'Credencial sem identificador no Moni.'];
+        }
+        $r = $this->api('/api/customer-credentials/' . $customerId . '/' . $credentialId, 'DELETE');
+        if (in_array($r['code'], [200, 204], true) || $r['code'] === 404) {
+            return ['ok' => true, 'code' => $r['code']];
+        }
+        return ['ok' => false, 'code' => $r['code'], 'error' => $this->describeError($r)];
+    }
+
+    /**
+     * Remove as credenciais vinculadas a um visitante. O Moni recusa excluir
+     * o visitante enquanto houver credencial (HTTP 409), então a limpeza vem
+     * antes da exclusão.
+     */
+    public function credentialDeleteByVisitor(int $customerId, int $visitorId): array
+    {
+        if ($customerId <= 0 || $visitorId <= 0) {
+            return ['ok' => true, 'removidas' => 0, 'erros' => []];
+        }
+        $res = $this->select('customer-credentials', $this->query(
+            ['Id'],
+            [
+                ['name' => 'CustomerId', 'operator' => '=', 'values' => [(string) $customerId]],
+                ['name' => 'VisitorId', 'operator' => '=', 'values' => [(string) $visitorId]],
+            ]
+        ), 1, 50);
+        if (!$res['ok']) {
+            return ['ok' => false, 'removidas' => 0, 'erros' => [$res['error'] ?? 'Falha ao consultar credenciais.']];
+        }
+        $removidas = 0;
+        $erros = [];
+        foreach ($res['data'] as $row) {
+            $id = (int) ($row['id'] ?? 0);
+            if ($id <= 0) {
+                continue;
+            }
+            $del = $this->credentialDelete($customerId, $id);
+            if ($del['ok']) {
+                $removidas++;
+            } else {
+                $erros[] = 'Credencial ' . $id . ': ' . ($del['error'] ?? 'falha');
+            }
+        }
+        return ['ok' => true, 'removidas' => $removidas, 'erros' => $erros];
+    }
+
     public function realty(int $customerId, int $code): ?array
     {
         $res = $this->select('customer-realties', $this->query(
@@ -614,6 +835,15 @@ class MoniApi
         $r = $this->api('/api/' . self::TIPOS[$tipo]['resource'] . '/' . $customerId . '/' . $id, 'DELETE');
         if (in_array($r['code'], [200, 204], true)) {
             return ['ok' => true, 'message' => self::TIPOS[$tipo]['label'] . ' excluído com sucesso.'];
+        }
+        if ($r['code'] === 409) {
+            // O Moni devolve 409 com corpo vazio quando ainda existe credencial
+            // vinculada. A limpeza normal acontece antes, em moni.php; esta mensagem
+            // cobre credenciais criadas fora do nosso fluxo.
+            $msg = $tipo === 'visitante'
+                ? 'Não foi possível excluir o visitante: ele ainda possui credencial vinculada no Moni.'
+                : 'Não foi possível excluir: o registro possui vínculos no Moni.';
+            return ['ok' => false, 'code' => 409, 'error' => $msg];
         }
         return ['ok' => false, 'code' => $r['code'], 'error' => $this->describeError($r)];
     }

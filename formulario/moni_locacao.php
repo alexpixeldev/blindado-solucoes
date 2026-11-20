@@ -58,6 +58,90 @@ function f2moni_mime_imagem(string $path): string
     return 'image/jpeg';
 }
 
+/**
+ * Limite de resolução da credencial facial no Moni: no máximo 1280x960
+ * (ou 960x1280 na vertical). Fonte: validação na API e em sync/moni.php.
+ */
+function f2moni_imagem_cabe(int $largura, int $altura): bool
+{
+    return $largura > 0
+        && $altura > 0
+        && max($largura, $altura) <= 1280
+        && min($largura, $altura) <= 960;
+}
+
+/**
+ * Reduz a selfie para caber no limite do Moni, mantendo a proporção.
+ * Reaproveita o mesmo critério de sync/moni.php, com prefixo próprio para
+ * não colidir com as funções daquela página. Retorna null sem GD.
+ */
+function f2moni_imagem_reduzir(string $origem, int $largura, int $altura): ?string
+{
+    if (!function_exists('imagecreatefromstring') || !function_exists('imagejpeg')) {
+        return null;
+    }
+    $bin = @file_get_contents($origem);
+    if ($bin === false || $bin === '') {
+        return null;
+    }
+    $img = @imagecreatefromstring($bin);
+    if (!$img) {
+        return null;
+    }
+
+    $escala = min(1280 / max($largura, $altura), 960 / min($largura, $altura), 1);
+    $novaLargura = max(1, (int) floor($largura * $escala));
+    $novaAltura = max(1, (int) floor($altura * $escala));
+
+    $destino = @imagecreatetruecolor($novaLargura, $novaAltura);
+    if (!$destino) {
+        imagedestroy($img);
+        return null;
+    }
+    $branco = imagecolorallocate($destino, 255, 255, 255);
+    imagefilledrectangle($destino, 0, 0, $novaLargura, $novaAltura, $branco);
+    imagecopyresampled($destino, $img, 0, 0, 0, 0, $novaLargura, $novaAltura, $largura, $altura);
+
+    $arquivo = @tempnam(sys_get_temp_dir(), 'f2monicred');
+    $ok = $arquivo !== false && @imagejpeg($destino, $arquivo, 92);
+    imagedestroy($destino);
+    imagedestroy($img);
+
+    return $ok ? $arquivo : null;
+}
+
+/**
+ * Prepara a selfie para envio. Devolve [path, mime, temporario, aviso].
+ */
+function f2moni_preparar_selfie(string $origem): array
+{
+    $info = @getimagesize($origem);
+    if (!$info || !in_array($info[2], [IMAGETYPE_JPEG, IMAGETYPE_PNG, IMAGETYPE_BMP], true)) {
+        return ['erro' => 'A selfie não é uma imagem JPG, PNG ou BMP válida.'];
+    }
+    $largura = (int) $info[0];
+    $altura = (int) $info[1];
+    $mime = image_type_to_mime_type($info[2]);
+
+    if (f2moni_imagem_cabe($largura, $altura)) {
+        return ['path' => $origem, 'mime' => $mime, 'temporario' => false, 'aviso' => ''];
+    }
+
+    $reduzida = f2moni_imagem_reduzir($origem, $largura, $altura);
+    if ($reduzida !== null) {
+        return ['path' => $reduzida, 'mime' => 'image/jpeg', 'temporario' => true, 'aviso' => ''];
+    }
+
+    // Sem GD no servidor: tenta o original. Se o Moni recusar, o erro é
+    // registrado no resultado, mas a credencial já foi criada.
+    return [
+        'path' => $origem,
+        'mime' => $mime,
+        'temporario' => false,
+        'aviso' => 'Selfie de ' . $largura . '×' . $altura . ' px não pôde ser redimensionada neste servidor.',
+    ];
+}
+
 function f2moni_nota(array $args): string
 {
     $linhas = [];
@@ -177,18 +261,50 @@ function f2moni_adicionar_locacao(array $args): array
             }
 
             $dados = $r['data'];
+            $visitanteId = (int) ($dados['Id'] ?? 0);
+            $personId = (int) ($dados['PersonId'] ?? 0);
             $item = [
-                'id' => (int) ($dados['Id'] ?? 0),
-                'person_id' => (int) ($dados['PersonId'] ?? 0),
+                'id' => $visitanteId,
+                'person_id' => $personId,
                 'nome' => $nome,
+                'credencial_id' => 0,
+                'credencial' => false,
+                'perfil_id' => 0,
+                'perfil' => false,
+                'foto' => false,
             ];
+
+            // Cria a credencial junto com a pessoa, com ou sem selfie.
+            $cred = $api->credentialEnsure($cliente, $visitanteId, $nome);
+            $item['credencial'] = (bool) $cred['ok'];
+            if ($cred['ok']) {
+                $item['credencial_id'] = (int) ($cred['id'] ?? 0);
+                $item['perfil_id'] = (int) ($cred['perfil_id'] ?? 0);
+                $item['perfil'] = (bool) ($cred['perfil'] ?? false);
+                if (!empty($cred['aviso'])) {
+                    $erros[] = $nome . ': ' . $cred['aviso'];
+                }
+            } else {
+                $erros[] = $nome . ': credencial não criada (' . ($cred['error'] ?? 'falha') . ')';
+            }
 
             $selfie = (string) ($inq['selfie'] ?? '');
             if ($selfie !== '' && is_file($selfie)) {
-                $foto = $api->facialSave($item['person_id'], $selfie, f2moni_mime_imagem($selfie), 0);
-                $item['foto'] = $foto['ok'] ? true : false;
-                if (!$foto['ok']) {
-                    $erros[] = $nome . ': foto não enviada (' . ($foto['message'] ?? 'falha') . ')';
+                $prep = f2moni_preparar_selfie($selfie);
+                if (!empty($prep['erro'])) {
+                    $erros[] = $nome . ': ' . $prep['erro'];
+                } else {
+                    if (!empty($prep['aviso'])) {
+                        $erros[] = $nome . ': ' . $prep['aviso'];
+                    }
+                    $foto = $api->facialSave($personId, $prep['path'], $prep['mime'], 0);
+                    if (!empty($prep['temporario']) && is_file($prep['path'])) {
+                        @unlink($prep['path']);
+                    }
+                    $item['foto'] = (bool) $foto['ok'];
+                    if (!$foto['ok']) {
+                        $erros[] = $nome . ': foto não enviada (' . ($foto['message'] ?? 'falha') . ')';
+                    }
                 }
             }
 

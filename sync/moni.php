@@ -752,14 +752,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (!$atual) {
                     throw new RuntimeException('Pessoa não encontrada no Moni.');
                 }
-                // Exclui a pessoa primeiro: se a exclusão falhar, a credencial facial
-                // permanece intacta. A limpeza da credencial é feita depois, sem
-                // impedir a exclusão caso o Moni já a tenha removido em cascata.
+                $personIdExcluir = (int) ($atual['PersonId'] ?? 0);
+
+                // O Moni recusa excluir o visitante enquanto houver credencial
+                // vinculada (HTTP 409). Remove a credencial primeiro e só então
+                // exclui o visitante. Se a limpeza falhar, aborta para não deixar
+                // a pessoa em estado inconsistente.
+                if ($postTipo === 'visitante') {
+                    $limpeza = $api->credentialDeleteByVisitor($postCliente, $postPessoa);
+                    if (!$limpeza['ok']) {
+                        throw new RuntimeException('Não foi possível remover a credencial do visitante: '
+                            . implode('; ', $limpeza['erros'] ?? ['falha']));
+                    }
+                }
+
                 $r = $api->delete($postTipo, $postCliente, $postPessoa);
                 if (!$r['ok']) {
                     throw new RuntimeException($r['error'] ?? 'Falha ao excluir.');
                 }
-                $personIdExcluir = (int) ($atual['PersonId'] ?? 0);
                 if ($personIdExcluir > 0) {
                     $api->facialDelete($personIdExcluir);
                 }
