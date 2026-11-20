@@ -64,6 +64,21 @@ class MoniApi
         return rtrim($this->config['integration_url'], '/');
     }
 
+    /**
+     * Conta usada somente pela integração. Se `api_username` estiver definido
+     * em moni_config.php, os logins da integração usam essa conta e não
+     * derrubam a sessão de quem estiver no painel web do Moni.
+     */
+    private function apiUsername(): string
+    {
+        return (string) ($this->config['api_username'] ?? $this->config['username']);
+    }
+
+    private function apiPassword(): string
+    {
+        return (string) ($this->config['api_password'] ?? $this->config['password']);
+    }
+
     /* ------------------------------------------------------------------ */
     /* HTTP / autenticação                                                 */
     /* ------------------------------------------------------------------ */
@@ -113,9 +128,58 @@ class MoniApi
         return false;
     }
 
+    /**
+     * O token precisa ficar em local estável. Antes ficava no /tmp do sistema;
+     * em hospedagem compartilhada ele pode ser limpo, e cada perda do cache
+     * forçava um login novo — o que derruba a sessão do painel web do Moni
+     * quando a conta usada é a mesma.
+     */
     private function tokenCacheFile(): string
     {
-        return sys_get_temp_dir() . '/blindado_moni_token.json';
+        static $file = null;
+        if ($file !== null) {
+            return $file;
+        }
+        $nome = 'blindado_moni_token.json';
+        $candidatos = [
+            dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . $nome,
+            __DIR__ . DIRECTORY_SEPARATOR . '.cache' . DIRECTORY_SEPARATOR . $nome,
+            sys_get_temp_dir() . DIRECTORY_SEPARATOR . $nome,
+        ];
+        foreach ($candidatos as $c) {
+            $dir = dirname($c);
+            if (!is_dir($dir)) {
+                @mkdir($dir, 0700, true);
+            }
+            if (is_dir($dir) && is_writable($dir)) {
+                if (basename($dir) === '.cache') {
+                    $htaccess = $dir . DIRECTORY_SEPARATOR . '.htaccess';
+                    if (!is_file($htaccess)) {
+                        @file_put_contents($htaccess, "Require all denied\nDeny from all\n");
+                    }
+                }
+                $file = $c;
+                return $file;
+            }
+        }
+        $file = end($candidatos);
+        return $file;
+    }
+
+    /**
+     * Registro local de cada login da integração. Serve para medir se ainda
+     * estão acontecendo logins repetidos, sem precisar mexer no painel web.
+     */
+    private function authLog(string $motivo): void
+    {
+        $linha = date('Y-m-d H:i:s') . ' login (' . $motivo . ')'
+            . ' ip=' . ($_SERVER['REMOTE_ADDR'] ?? '-')
+            . ' uri=' . ($_SERVER['REQUEST_URI'] ?? '-') . "\n";
+        @file_put_contents(
+            dirname($this->tokenCacheFile()) . DIRECTORY_SEPARATOR . 'blindado_moni_auth.log',
+            $linha,
+            FILE_APPEND | LOCK_EX
+        );
     }
 
     private function readCachedToken(): ?string
@@ -128,6 +192,10 @@ class MoniApi
         if (!is_array($data) || empty($data['token'])) {
             return null;
         }
+        // Troca de credencial invalida o token antigo.
+        if (!empty($data['user']) && $data['user'] !== $this->apiUsername()) {
+            return null;
+        }
         if (!empty($data['exp']) && (int) $data['exp'] < time()) {
             return null;
         }
@@ -136,9 +204,9 @@ class MoniApi
 
     private function storeToken(string $token): void
     {
-        $file = $this->tokenCacheFile();
-        @file_put_contents($file, json_encode([
+        @file_put_contents($this->tokenCacheFile(), json_encode([
             'token' => $token,
+            'user' => $this->apiUsername(),
             'exp' => time() + (30 * 86400),
         ]), LOCK_EX);
     }
@@ -162,9 +230,22 @@ class MoniApi
             }
         }
 
+        // Cada login com a mesma conta derruba a sessão web do Moni. Se houve
+        // login há poucos segundos e ainda assim veio 401, insistir só piora:
+        // aborta e avisa em vez de deslogar o usuário de novo.
+        if ($force) {
+            $marca = dirname($this->tokenCacheFile()) . DIRECTORY_SEPARATOR . 'blindado_moni_lastlogin.txt';
+            $ultimo = is_file($marca) ? (int) @file_get_contents($marca) : 0;
+            if ($ultimo > 0 && (time() - $ultimo) < 60) {
+                throw new RuntimeException('O Moni recusou o token logo após a autenticação. '
+                    . 'Para não deslogar o painel web novamente, a tentativa foi interrompida. '
+                    . 'Aguarde um minuto e repita a operação.');
+            }
+        }
+
         $r = $this->http($this->baseUrl() . '/api/auth/login', 'POST', [
-            'username' => $this->config['username'],
-            'password' => $this->config['password'],
+            'username' => $this->apiUsername(),
+            'password' => $this->apiPassword(),
         ], ['Content-Type: application/json']);
 
         if ($r['code'] !== 200) {
@@ -178,6 +259,12 @@ class MoniApi
 
         $this->token = (string) $token;
         $this->storeToken($this->token);
+        @file_put_contents(
+            dirname($this->tokenCacheFile()) . DIRECTORY_SEPARATOR . 'blindado_moni_lastlogin.txt',
+            (string) time(),
+            LOCK_EX
+        );
+        $this->authLog($force ? '401' : 'cache vazio');
         return $this->token;
     }
 
