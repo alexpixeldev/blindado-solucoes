@@ -239,7 +239,17 @@ class MoniApi
     public function describeError(array $r): string
     {
         if (!empty($r['error'])) {
-            return $r['error'];
+            $erro = (string) $r['error'];
+            if (stripos($erro, 'Connection refused') !== false || stripos($erro, 'Failed to connect') !== false) {
+                return 'Não foi possível conectar ao servidor do Moni. A conexão foi recusada — '
+                    . 'verifique o firewall entre a hospedagem e o servidor do Moni. '
+                    . 'Detalhe técnico: ' . $erro;
+            }
+            if (stripos($erro, 'timed out') !== false || stripos($erro, 'Network is unreachable') !== false) {
+                return 'Não foi possível conectar ao servidor do Moni (tempo esgotado ou rede indisponível). '
+                    . 'Detalhe técnico: ' . $erro;
+            }
+            return $erro;
         }
         $body = trim((string) ($r['body'] ?? ''));
         if ($body === '') {
@@ -383,6 +393,86 @@ class MoniApi
         } while (count($all) < $res['total'] && $page <= 20);
 
         return ['ok' => true, 'data' => $all, 'total' => count($all)];
+    }
+
+    /**
+     * Todos os imóveis de todos os clientes, em poucas chamadas paginadas.
+     * Usado pelo formulário de locação para montar a lista de apartamentos.
+     */
+    public function allRealties(): array
+    {
+        $fields = ['Id1', 'Id2', 'Code', 'CustomerId'];
+        $query = $this->query($fields);
+        $all = [];
+        $page = 1;
+        do {
+            $res = $this->select('customer-realties', $query, $page, 500, 'Id1;Id2', 'asc;asc');
+            if (!$res['ok']) {
+                return $res;
+            }
+            $all = array_merge($all, $res['data']);
+            $page++;
+        } while (count($all) < $res['total'] && $page <= 20);
+
+        return ['ok' => true, 'data' => $all, 'total' => count($all)];
+    }
+
+    /**
+     * Normaliza o rótulo do imóvel para comparar o que veio do formulário
+     * (ex.: "202") com o que está no Moni (Id1 + Id2).
+     */
+    private function normalizarRotuloImovel(string $s): string
+    {
+        $s = mb_strtoupper(trim($s), 'UTF-8');
+        $mapa = [
+            'Á' => 'A', 'À' => 'A', 'Â' => 'A', 'Ã' => 'A', 'Ä' => 'A',
+            'É' => 'E', 'Ê' => 'E', 'È' => 'E', 'Ë' => 'E',
+            'Í' => 'I', 'Î' => 'I', 'Ì' => 'I', 'Ï' => 'I',
+            'Ó' => 'O', 'Ô' => 'O', 'Õ' => 'O', 'Ò' => 'O', 'Ö' => 'O',
+            'Ú' => 'U', 'Û' => 'U', 'Ù' => 'U', 'Ü' => 'U',
+            'Ç' => 'C', 'Ñ' => 'N', 'Ý' => 'Y',
+        ];
+        return preg_replace('/[^A-Z0-9]/', '', strtr($s, $mapa));
+    }
+
+    /**
+     * Localiza o código do imóvel no Moni a partir do número exibido no
+     * formulário. É esse código que a API usa como RealtyId.
+     */
+    public function realtyByLabel(int $customerId, string $label): ?array
+    {
+        $alvo = $this->normalizarRotuloImovel($label);
+        if ($alvo === '') {
+            return null;
+        }
+        $res = $this->realties($customerId);
+        if (!$res['ok']) {
+            // Uma falha transitória de rede/token não deve impedir a locação.
+            $res = $this->realties($customerId);
+        }
+        if (!$res['ok']) {
+            return null;
+        }
+        foreach ($res['data'] as $im) {
+            $rotulo = trim((string) ($im['id1'] ?? '') . ' ' . (string) ($im['id2'] ?? ''));
+            if ($this->normalizarRotuloImovel($rotulo) === $alvo) {
+                return $im;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Cria um visitante (locação) no imóvel informado.
+     */
+    public function createVisitor(array $data): array
+    {
+        $r = $this->api('/api/customer-visitors', 'POST', $data, ['Content-Type: application/json']);
+        if (in_array($r['code'], [200, 201, 204], true)) {
+            $j = json_decode((string) $r['body'], true);
+            return ['ok' => true, 'data' => is_array($j) ? $j : []];
+        }
+        return ['ok' => false, 'code' => $r['code'], 'error' => $this->describeError($r)];
     }
 
     public function realty(int $customerId, int $code): ?array

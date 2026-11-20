@@ -5,6 +5,8 @@ export interface Edificio {
   requer_selfie: number | string;
   nome_base: string;
   telefone: string;
+  cliente_moni_id?: number;
+  apartamentos: string[];
 }
 
 export interface Inquilino {

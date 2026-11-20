@@ -75,12 +75,6 @@ $categoria_label = $categoria_labels[$usuario_categoria] ?? 'Usuário';
             <span>Dashboard</span>
         </a>
 
-        <!-- Moni -->
-        <a href="moni.php" class="group flex items-center gap-3 rounded-xl px-4 py-2 text-sm font-semibold transition-all <?php echo isActive('moni.php', $current_page); ?>">
-            <i class="fas fa-satellite-dish text-lg"></i>
-            <span>Moni</span>
-        </a>
-
         <!-- Operacional Section -->
         <?php if (!in_array($usuario_categoria, ['colaborador', 'administrativo'])): ?>
         <div class="pt-3">

@@ -1,5 +1,7 @@
 <?php
 require_once '../sync/conexao.php';
+require_once __DIR__ . '/edificio_local.php';
+require_once __DIR__ . '/../sync/moni_locacao_confirmacao.php';
 
 // Definir cabeçalho para resposta JSON se for AJAX
 $is_ajax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
@@ -178,6 +180,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     file_put_contents($debugLogPath, $logEntry, FILE_APPEND | LOCK_EX);
     // Coletar dados básicos
     $edificio_id = $_POST['edificio_id'] ?? null;
+    $edificio_nome = $_POST['edificio_nome'] ?? '';
     $tipo_usuario = $_POST['user_type'] ?? '';
     $numero_apartamento = $_POST['numero_apartamento'] ?? '';
     $locador_nome = $_POST['locador_nome'] ?? null;
@@ -223,6 +226,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         die("Erro: Edifício e Apartamento são obrigatórios.");
     }
 
+    /* O formulário envia o ID do cliente do Moni. A tabela locacoes exige um
+       ID de edificios local por causa da foreign key. */
+    $idMoni = $edificio_id;
+    locmoni_garantir_colunas($conn);
+    $edificio_id = f2_resolver_edificio_local($conn, $edificio_id, $edificio_nome);
+    if (!$edificio_id) {
+        sendJsonError('Não foi possível resolver o edifício selecionado. Tente novamente.');
+    }
+    if ((string) $idMoni !== (string) $edificio_id) {
+        error_log("salvar_locacao.php: edifício Moni {$idMoni} ({$edificio_nome}) -> local {$edificio_id}");
+    }
+
     // Nome de quem registra e obrigatorio quando o perfil e Locador
     if ($tipo_usuario === 'locador' && empty($registrador_nome)) {
         $msg = 'Informe o nome de quem registra a locação.';
@@ -244,9 +259,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // 1. Inserir na tabela principal (locacoes)
     $data_locacao = date('Y-m-d');
-    $stmt = $conn->prepare("INSERT INTO locacoes (edificio_id, tipo_usuario, numero_apartamento, locador_nome, locador_telefone, registrador_nome, data_entrada, data_saida, observacoes, data_locacao) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt = $conn->prepare("INSERT INTO locacoes (edificio_id, cliente_moni_id, tipo_usuario, numero_apartamento, locador_nome, locador_telefone, registrador_nome, data_entrada, data_saida, observacoes, data_locacao) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
     assert_prepare($stmt, $conn, 'locacoes insert');
-    $stmt->bind_param("isssssssss", $edificio_id, $tipo_usuario, $numero_apartamento, $locador_nome, $locador_telefone, $registrador_nome, $data_entrada, $data_saida, $observacoes, $data_locacao);
+    $stmt->bind_param("iisssssssss", $edificio_id, $idMoni, $tipo_usuario, $numero_apartamento, $locador_nome, $locador_telefone, $registrador_nome, $data_entrada, $data_saida, $observacoes, $data_locacao);
     
     if ($stmt->execute()) {
         $locacao_id = $stmt->insert_id;
@@ -372,7 +387,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($is_ajax) {
             $buffer = ob_get_clean();
-            $resp = ['status' => 'success', 'locacao_id' => $locacao_id];
+            $resp = [
+                'status' => 'success',
+                'locacao_id' => $locacao_id,
+            ];
             if (!empty($buffer)) {
                 $resp['debug'] = substr($buffer, 0, 2000);
             }

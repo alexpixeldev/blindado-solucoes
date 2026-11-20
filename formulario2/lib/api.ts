@@ -18,7 +18,7 @@ export function asset(path: string): string {
 }
 
 export async function fetchEdificios(): Promise<Edificio[]> {
-  const res = await fetch(apiUrl('edificios_data.php'), { cache: 'no-store' });
+  const res = await fetch(apiUrl('edificios_moni.php'), { cache: 'no-store' });
   if (!res.ok) {
     throw new Error(`Falha ao carregar edifícios (HTTP ${res.status})`);
   }
@@ -34,6 +34,7 @@ export interface BuildFormArgs {
   locadorTelefone: string;
   registradorNome: string;
   edificioId: string;
+  edificioNome: string;
   numeroApartamento: string;
   dataEntrada: string;
   dataSaida: string;
@@ -50,6 +51,7 @@ export function buildFormData(args: BuildFormArgs): FormData {
   fd.append('locador_telefone', args.locadorTelefone);
   fd.append('registrador_nome', args.registradorNome);
   fd.append('edificio_id', String(args.edificioId));
+  fd.append('edificio_nome', args.edificioNome);
   fd.append('numero_apartamento', args.numeroApartamento);
   fd.append('data_entrada', args.dataEntrada);
   fd.append('data_saida', args.dataSaida);

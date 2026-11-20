@@ -2,6 +2,7 @@
 require_once 'verifica_login.php';
 require_once 'conexao.php';
 require_once 'components/modern_calendar.php';
+require_once __DIR__ . '/moni_locacao_confirmacao.php';
 
 function btnCopiar($texto) {
     $js = json_encode($texto, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
@@ -116,6 +117,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_confirm_locacoes
         if ($stmt->execute()) {
             $mensagem = count($ids) . " locação(ões) confirmada(s) com sucesso!";
             $mensagem_tipo = "success";
+
+            $enviadas = 0;
+            $falhas = [];
+            foreach ($ids as $id_confirmado) {
+                $envio = locmoni_enviar_locacao($conn, (int) $id_confirmado);
+                if (!empty($envio['ok'])) {
+                    $enviadas++;
+                } else {
+                    $falhas[] = (int) $id_confirmado;
+                }
+            }
+            if ($enviadas > 0) {
+                $mensagem .= " {$enviadas} enviada(s) ao Moni.";
+            }
+            if ($falhas) {
+                $mensagem .= " Falha no Moni: locação(ões) " . implode(', ', $falhas) . ".";
+                $mensagem_tipo = 'warning';
+            }
         } else {
             $mensagem = "Erro ao confirmar locações: " . $conn->error;
             $mensagem_tipo = "error";
@@ -136,6 +155,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirmar_locacao']) 
         if ($stmt->execute()) {
             $mensagem = "Locação confirmada com sucesso!";
             $mensagem_tipo = "success";
+
+            $envio = locmoni_enviar_locacao($conn, $id_confirmar);
+            if (!empty($envio['ok'])) {
+                $mensagem .= " Enviada ao Moni no edifício/apartamento informados.";
+            } else {
+                $mensagem .= " Porém falhou o envio ao Moni: " . ($envio['erro'] ?? implode(' | ', $envio['erros'] ?? []));
+                $mensagem_tipo = "warning";
+            }
         } else {
             $mensagem = "Erro ao confirmar locação: " . $conn->error;
             $mensagem_tipo = "error";

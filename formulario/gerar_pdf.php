@@ -3,6 +3,7 @@ ini_set('display_errors', 0);
 error_reporting(E_ALL);
 
 require_once '../sync/conexao.php';
+require_once __DIR__ . '/edificio_local.php';
 
 $fpdf_path = '../sync/fpdf/fpdf.php';
 if (!file_exists($fpdf_path)) {
@@ -96,6 +97,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // --- SALVAR DADOS NO BANCO DE DADOS ---
     // Coletar dados básicos
     $edificio_id = $data['edificio_id'] ?? null;
+    $edificio_nome = $data['edificio_nome'] ?? '';
     $tipo_usuario = $data['user_type'] ?? '';
     $numero_apartamento = $data['numero_apartamento'] ?? '';
     $locador_nome = $data['locador_nome'] ?? null;
@@ -151,6 +153,13 @@ function cpf_valido($cpf) {
 
 // Validacao de documento removida: o campo aceita qualquer texto.
 
+/* O formulário envia o ID do cliente do Moni; locacoes exige ID local. */
+$idMoni = $edificio_id;
+$edificio_id = f2_resolver_edificio_local($conn, $edificio_id, $edificio_nome);
+if (!$edificio_id) {
+    die('Erro: não foi possível resolver o edifício selecionado.');
+}
+
 // Validação básica
 if ($edificio_id && $numero_apartamento) {
         // 1. Inserir na tabela principal (locacoes)
@@ -187,7 +196,7 @@ if ($edificio_id && $numero_apartamento) {
     }
     // --- FIM DA LÓGICA DE SALVAMENTO ---
     
-    $edificio_id = isset($data['edificio_id']) ? (int)$data['edificio_id'] : 0;
+    /* $edificio_id já foi resolvido para o ID local no início deste bloco. */
     $nome_ed = "Não informado";
     $end_ed = "Não informado";
     $obs_ficha = "";
@@ -202,6 +211,10 @@ if ($edificio_id && $numero_apartamento) {
                 $nome_ed = $row['nome'];
                 $end_ed = $row['endereco'];
                 $obs_ficha = $row['observacao_ficha_locacao'] ?? '';
+            } elseif (!empty($data['edificio_nome'])) {
+                /* Edifício vindo do Moni: o ID é o do cliente, que não existe
+                   na tabela local de edifícios. */
+                $nome_ed = $data['edificio_nome'];
             }
             $stmt->close();
         }

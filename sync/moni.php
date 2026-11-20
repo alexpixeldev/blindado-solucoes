@@ -940,21 +940,21 @@ $contagemImovel = ($imovel !== null && isset($counts[$imovel])) ? $counts[$imove
         .moni-tab { display: inline-flex; align-items: center; gap: 8px; padding: 9px 14px; border-radius: 999px; border: 1px solid var(--border); background: var(--bg-secondary); color: var(--text-secondary); text-decoration: none; font-size: 13px; font-weight: 600; transition: all .15s; }
         .moni-tab:hover { color: var(--text-primary); border-color: rgba(37, 169, 55, 0.35); }
         .moni-tab.active { background: rgba(37, 169, 55, 0.16); border-color: rgba(37, 169, 55, 0.45); color: #a9efb1; }
-        .moni-table-wrap { overflow: auto; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-card); }
-        .moni-table { width: 100%; border-collapse: collapse; min-width: 780px; }
-        .moni-table th { text-align: left; padding: 12px 16px; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--text-secondary); border-bottom: 1px solid var(--border); background: var(--bg-secondary); white-space: nowrap; }
-        .moni-table td { padding: 13px 16px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: middle; }
-        .moni-table tr:last-child td { border-bottom: none; }
-        .moni-table tbody tr:hover td { background: rgba(255, 255, 255, 0.02); }
-        .moni-table a { color: var(--text-primary); text-decoration: none; font-weight: 600; }
-        .moni-table a:hover { color: var(--primary-light); }
-        .moni-person { display: flex; align-items: center; gap: 11px; min-width: 0; }
         .moni-avatar { width: 40px; height: 40px; flex: 0 0 auto; border-radius: 50%; object-fit: cover; background: var(--bg-secondary); border: 1px solid var(--border); }
         .moni-avatar-empty { display: inline-flex; align-items: center; justify-content: center; color: var(--text-secondary); font-size: 15px; }
-        .moni-person-info { min-width: 0; }
-        .moni-th-foto, .moni-td-foto { width: 72px; }
-        .moni-td-foto .moni-avatar { max-width: none; }
         .moni-actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+        .moni-pessoa-card { display: flex; flex-direction: column; gap: 14px; padding: 18px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--bg-card); transition: border-color .15s, box-shadow .15s; }
+        .moni-pessoa-card:hover { border-color: rgba(37, 169, 55, 0.45); box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22); }
+        .moni-pessoa-head { display: flex; align-items: center; gap: 12px; min-width: 0; }
+        .moni-pessoa-head .moni-avatar { width: 48px; height: 48px; }
+        .moni-pessoa-nome { min-width: 0; }
+        .moni-pessoa-nome a { color: var(--text-primary); text-decoration: none; font-weight: 700; font-size: 15px; }
+        .moni-pessoa-nome a:hover { color: var(--primary-light); }
+        .moni-pessoa-info { display: grid; gap: 7px; }
+        .moni-pessoa-linha { display: flex; gap: 10px; align-items: baseline; font-size: 12px; line-height: 1.45; }
+        .moni-pessoa-linha > span { color: var(--text-secondary); min-width: 112px; }
+        .moni-pessoa-linha > strong { color: var(--text-primary); font-weight: 600; min-width: 0; word-break: break-word; }
+        .moni-pessoa-card > .moni-actions { margin-top: auto; padding-top: 12px; border-top: 1px solid var(--border); }
         .moni-detail-grid { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(300px, 1fr); gap: 16px; align-items: start; margin-bottom: 16px; }
         .moni-detail-grid > .moni-panel-edit { order: 1; }
         .moni-detail-grid > .moni-panel-cred { order: 2; }
@@ -994,8 +994,9 @@ $contagemImovel = ($imovel !== null && isset($counts[$imovel])) ? $counts[$imove
         @media (max-width: 640px) {
             .moni-panel { padding: 16px; }
             .moni-actions { justify-content: flex-start; }
-            .moni-table th, .moni-table td { padding: 10px 12px; }
             .moni-avatar { width: 34px; height: 34px; }
+            .moni-pessoa-linha { flex-direction: column; gap: 2px; }
+            .moni-pessoa-linha > span { min-width: 0; }
         }
     </style>
 </head>
@@ -1193,7 +1194,7 @@ $contagemImovel = ($imovel !== null && isset($counts[$imovel])) ? $counts[$imove
                             <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
                                 <div>
                                     <h2 style="margin:0 0 4px;"><?= moni_e($imovelLabel) ?></h2>
-                                    <p class="moni-muted" style="margin:0;"><?= moni_e($clienteInfo['name'] ?? '') ?> · Código do imóvel <?= (int) $imovel ?></p>
+                                    <p class="moni-muted" style="margin:0;"><?= moni_e($clienteInfo['name'] ?? '') ?></p>
                                 </div>
                                 <a class="btn btn-secondary btn-sm" href="<?= moni_e($voltarCliente) ?>"><i class="fas fa-arrow-left"></i> Voltar para imóveis</a>
                             </div>
@@ -1224,97 +1225,61 @@ $contagemImovel = ($imovel !== null && isset($counts[$imovel])) ? $counts[$imove
                                 Nenhum <?= moni_e(mb_strtolower(MoniApi::TIPOS[$tipo]['label'])) ?> cadastrado neste imóvel.
                             </div>
                         <?php else: ?>
-                            <div class="moni-table-wrap">
-                                <table class="moni-table" id="moni-tabela-pessoas">
-                                    <thead>
-                                        <tr>
-                                            <?php if ($tipo === 'visitante'): ?>
-                                                <th class="moni-th-foto" aria-label="Foto"></th>
-                                                <th>Nome</th>
-                                                <th>Contato</th>
-                                                <th>Período da estadia</th>
-                                                <th></th>
-                                            <?php else: ?>
-                                                <th>Nome</th>
-                                                <th>Contato</th>
-                                                <th>Detalhes</th>
-                                                <th></th>
-                                            <?php endif; ?>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <?php foreach ($pessoas as $p): ?>
-                                            <?php
-                                            $linkPessoa = moni_link(['cliente' => $cliente, 'imovel' => $imovel, 'tipo' => $tipo, 'pessoa' => (int) $p['id']]);
-                                            $contato = moni_phone_input($p['mobilephoneprefix'] ?? '', $p['mobilephone'] ?? '');
-                                            if ($contato === '') {
-                                                $contato = moni_phone_input($p['phoneprefix'] ?? '', $p['phone'] ?? '');
-                                            }
-                                            if ($contato === '' && !empty($p['email'])) {
-                                                $contato = (string) $p['email'];
-                                            }
-                                            $documentos = [];
-                                            if (!empty($p['rg'])) {
-                                                $documentos[] = 'RG ' . $p['rg'];
-                                            }
-                                            $cpfDoc = moni_cpf_display($p['cpf'] ?? '');
-                                            if ($cpfDoc !== '') {
-                                                $documentos[] = 'CPF ' . $cpfDoc;
-                                            }
-                                            if ($tipo === 'morador') {
-                                                $detalhe = !empty($p['responsible']) ? 'Responsável' : 'Morador';
-                                                if (!empty($p['email'])) {
-                                                    $detalhe .= ' · ' . $p['email'];
-                                                }
-                                            } elseif ($tipo === 'visitante') {
-                                                $ini = moni_display_date($p['start'] ?? '');
-                                                $fim = moni_display_date($p['end'] ?? '');
-                                                $detalhe = $ini !== '' ? $ini . ($fim !== '' ? ' até ' . $fim : '') : 'Sem período definido';
-                                            } else {
-                                                $detalhe = (string) ($p['servicetype'] ?? 'Prestador');
-                                            }
-                                            ?>
-                                            <tr data-filtro="<?= moni_e(mb_strtolower(($p['name'] ?? '') . ' ' . ($p['rg'] ?? '') . ' ' . ($p['cpf'] ?? '') . ' ' . $contato . ' ' . $detalhe)) ?>">
-                                                <?php $personId = (int) ($p['personid'] ?? 0); ?>
-                                                <?php if ($tipo === 'visitante'): ?>
-                                                    <td class="moni-td-foto"><?= moni_avatar_html($personId, $credenciais, (string) ($p['name'] ?? '')) ?></td>
-                                                    <td>
-                                                        <a href="<?= moni_e($linkPessoa) ?>"><?= moni_e($p['name'] ?? 'Sem nome') ?></a>
-                                                        <?php if ($documentos): ?>
-                                                            <div class="moni-muted"><?= moni_e(implode(' · ', $documentos)) ?></div>
-                                                        <?php endif; ?>
-                                                    </td>
-                                                    <td><?= moni_e($contato !== '' ? $contato : '—') ?></td>
-                                                    <td class="moni-muted"><?= moni_e($detalhe) ?></td>
-                                                    <td>
-                                                        <div class="moni-actions">
-                                                            <a class="btn btn-secondary btn-sm" href="<?= moni_e($linkPessoa) ?>"><i class="fas fa-pen-to-square"></i> Editar</a>
-                                                        </div>
-                                                    </td>
-                                                <?php else: ?>
-                                                    <td>
-                                                        <div class="moni-person">
-                                                            <?= moni_avatar_html($personId, $credenciais, (string) ($p['name'] ?? '')) ?>
-                                                            <div class="moni-person-info">
-                                                                <a href="<?= moni_e($linkPessoa) ?>"><?= moni_e($p['name'] ?? 'Sem nome') ?></a>
-                                                                <?php if ($documentos): ?>
-                                                                    <div class="moni-muted"><?= moni_e(implode(' · ', $documentos)) ?></div>
-                                                                <?php endif; ?>
-                                                            </div>
-                                                        </div>
-                                                    </td>
-                                                    <td><?= moni_e($contato !== '' ? $contato : '—') ?></td>
-                                                    <td class="moni-muted"><?= moni_e($detalhe) ?></td>
-                                                    <td>
-                                                        <div class="moni-actions">
-                                                            <a class="btn btn-secondary btn-sm" href="<?= moni_e($linkPessoa) ?>"><i class="fas fa-up-right-from-square"></i> Abrir</a>
-                                                        </div>
-                                                    </td>
+                            <div class="moni-grid" id="moni-lista-pessoas">
+                                <?php foreach ($pessoas as $p): ?>
+                                    <?php
+                                    $linkPessoa = moni_link(['cliente' => $cliente, 'imovel' => $imovel, 'tipo' => $tipo, 'pessoa' => (int) $p['id']]);
+                                    $contato = moni_phone_input($p['mobilephoneprefix'] ?? '', $p['mobilephone'] ?? '');
+                                    if ($contato === '') {
+                                        $contato = moni_phone_input($p['phoneprefix'] ?? '', $p['phone'] ?? '');
+                                    }
+                                    if ($contato === '' && !empty($p['email'])) {
+                                        $contato = (string) $p['email'];
+                                    }
+                                    $documentos = [];
+                                    if (!empty($p['rg'])) {
+                                        $documentos[] = 'RG ' . $p['rg'];
+                                    }
+                                    $cpfDoc = moni_cpf_display($p['cpf'] ?? '');
+                                    if ($cpfDoc !== '') {
+                                        $documentos[] = 'CPF ' . $cpfDoc;
+                                    }
+                                    if ($tipo === 'morador') {
+                                        $detalhe = !empty($p['responsible']) ? 'Responsável' : 'Morador';
+                                        if (!empty($p['email'])) {
+                                            $detalhe .= ' · ' . $p['email'];
+                                        }
+                                    } elseif ($tipo === 'visitante') {
+                                        $ini = moni_display_date($p['start'] ?? '');
+                                        $fim = moni_display_date($p['end'] ?? '');
+                                        $detalhe = $ini !== '' ? $ini . ($fim !== '' ? ' até ' . $fim : '') : 'Sem período definido';
+                                    } else {
+                                        $detalhe = (string) ($p['servicetype'] ?? 'Prestador');
+                                    }
+                                    $personId = (int) ($p['personid'] ?? 0);
+                                    $filtro = mb_strtolower(($p['name'] ?? '') . ' ' . ($p['rg'] ?? '') . ' ' . ($p['cpf'] ?? '') . ' ' . $contato . ' ' . $detalhe);
+                                    ?>
+                                    <article class="moni-pessoa-card" data-filtro="<?= moni_e($filtro) ?>">
+                                        <div class="moni-pessoa-head">
+                                            <?= moni_avatar_html($personId, $credenciais, (string) ($p['name'] ?? '')) ?>
+                                            <div class="moni-pessoa-nome">
+                                                <a href="<?= moni_e($linkPessoa) ?>"><?= moni_e($p['name'] ?? 'Sem nome') ?></a>
+                                                <?php if ($documentos): ?>
+                                                    <div class="moni-muted"><?= moni_e(implode(' · ', $documentos)) ?></div>
                                                 <?php endif; ?>
-                                            </tr>
-                                        <?php endforeach; ?>
-                                    </tbody>
-                                </table>
+                                            </div>
+                                        </div>
+                                        <div class="moni-pessoa-info">
+                                            <div class="moni-pessoa-linha"><span>Contato</span><strong><?= moni_e($contato !== '' ? $contato : '—') ?></strong></div>
+                                            <?php if ($tipo !== 'morador'): ?>
+                                                <div class="moni-pessoa-linha"><span>Período da estadia</span><strong><?= moni_e($detalhe) ?></strong></div>
+                                            <?php endif; ?>
+                                        </div>
+                                        <div class="moni-actions">
+                                            <a class="btn btn-secondary btn-sm" href="<?= moni_e($linkPessoa) ?>"><i class="fas fa-pen-to-square"></i> Editar</a>
+                                        </div>
+                                    </article>
+                                <?php endforeach; ?>
                             </div>
                             <?= moni_pagination($pagina, $totalPessoas, 100, ['cliente' => $cliente, 'imovel' => $imovel, 'tipo' => $tipo]) ?>
                         <?php endif; ?>
@@ -1367,7 +1332,6 @@ $contagemImovel = ($imovel !== null && isset($counts[$imovel])) ? $counts[$imove
                                     <a class="moni-card moni-unit" href="<?= moni_e(moni_link(['cliente' => $cliente, 'imovel' => $code])) ?>" data-filtro="<?= moni_e($textoFiltro) ?>">
                                         <div class="moni-unit-head">
                                             <span class="moni-unit-id"><?= moni_e($label) ?></span>
-                                            <span class="moni-badge">Cód. <?= $code ?></span>
                                         </div>
                                         <div class="moni-unit-stats">
                                             <span><i class="fas fa-user"></i> <?= (int) $c['morador'] ?> morador(es)</span>
@@ -1445,7 +1409,7 @@ $contagemImovel = ($imovel !== null && isset($counts[$imovel])) ? $counts[$imove
         }
 
         moniFiltrar('moni-filtro-imoveis', '#moni-lista-imoveis', '[data-filtro]');
-        moniFiltrar('moni-filtro-pessoas', '#moni-tabela-pessoas tbody', 'tr[data-filtro]');
+        moniFiltrar('moni-filtro-pessoas', '#moni-lista-pessoas', '.moni-pessoa-card[data-filtro]');
 
         document.querySelectorAll('input.moni-phone').forEach(function (input) {
             input.addEventListener('input', function () {

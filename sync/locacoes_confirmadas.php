@@ -2,6 +2,7 @@
 require_once 'verifica_login.php';
 require_once 'conexao.php';
 require_once 'components/modern_calendar.php';
+require_once __DIR__ . '/moni_locacao_confirmacao.php';
 
 function btnCopiar($texto) {
     $js = json_encode($texto, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
@@ -131,6 +132,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_reabrir_locacoes
             $mensagem_tipo = "error";
         }
         $stmt->close();
+    }
+}
+
+// Reenviar ao Moni uma locação já confirmada
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['enviar_moni']) && $pode_confirmar) {
+    $id_enviar = filter_input(INPUT_POST, 'id_enviar_moni', FILTER_VALIDATE_INT);
+    if ($id_enviar) {
+        $envio = locmoni_enviar_locacao($conn, $id_enviar, true);
+        if (!empty($envio['ok'])) {
+            $mensagem = 'Locação enviada ao Moni com sucesso.';
+            $mensagem_tipo = 'success';
+        } else {
+            $mensagem = 'Falha ao enviar ao Moni: ' . ($envio['erro'] ?? implode(' | ', $envio['erros'] ?? []));
+            $mensagem_tipo = 'error';
+        }
     }
 }
 
@@ -589,7 +605,17 @@ if (!empty($locacaoIds)) {
                                 </div>
                                 <span class="loc-card-date"><?= date('d/m/Y', strtotime($loc['data_registro'] ?? $loc['data_locacao'] ?? 'now')) ?> <?= date('H:i', strtotime($loc['data_registro'] ?? $loc['data_locacao'] ?? 'now')) ?></span>
                                 <span class="loc-card-registro" style="background:rgba(37,169,55,.15)">Confirmada por: <?= htmlspecialchars($loc['confirmado_por'] ?: '—') ?><?= !empty($loc['confirmado_em']) ? ' em ' . date('d/m/Y H:i', strtotime($loc['confirmado_em'])) : '' ?></span>
+                                <?php
+                                    $resumo_moni = locmoni_status_resumo($loc);
+                                    if ($resumo_moni !== ''):
+                                ?>
+                                <span class="loc-card-registro" title="Integração com o Moni"><?= htmlspecialchars($resumo_moni) ?></span>
+                                <?php endif; ?>
                                 <?php if ($pode_confirmar): ?>
+                                    <form method="POST" class="loc-card-delete" onsubmit="return confirm('Enviar esta locação ao Moni no edifício e apartamento informados?');">
+                                        <input type="hidden" name="id_enviar_moni" value="<?= $loc['id'] ?>">
+                                        <button type="submit" name="enviar_moni" class="icon-btn-green" title="Enviar ao Moni"><i class="fas fa-paper-plane" style="font-size:10px"></i></button>
+                                    </form>
                                     <form method="POST" class="loc-card-delete" onsubmit="return confirm('Reabrir esta locação? Ela voltará para a lista de pendentes.');">
                                         <input type="hidden" name="id_reabrir" value="<?= $loc['id'] ?>">
                                         <button type="submit" name="reabrir_locacao" class="icon-btn" title="Reabrir (voltar para pendentes)"><i class="fas fa-undo" style="font-size:10px"></i></button>

@@ -29,7 +29,7 @@ export default function Step2(p: Props) {
       <StepHeader
         icon="fas fa-building"
         title="Seleção do edifício"
-        subtitle="Encontre o edifício onde ficará hospedado e informe o apartamento."
+        subtitle="Encontre o edifício onde ficará hospedado e selecione o apartamento."
       />
 
       {selected && (
@@ -89,7 +89,7 @@ export default function Step2(p: Props) {
 
         {term.length > 0 && filtered.length > 0 && !selected && (
           <HintCard tone="info" title="Escolha um edifício">
-            Clique no edifício desejado para informar o número do apartamento. A lista filtra
+            Clique no edifício desejado para selecionar o apartamento. A lista filtra
             enquanto você digita, sem precisar apertar Enter.
           </HintCard>
         )}

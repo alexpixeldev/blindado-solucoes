@@ -10,7 +10,7 @@ import { clearDraft, loadDraft, saveDraft, type DraftState } from '@/lib/draft';
 import { readGuideState, STEP_GUIDES, writeGuideState } from '@/lib/guide';
 import { Stepper } from '@/components/Stepper';
 import { GuideTour } from '@/components/GuideTour';
-import { Button, Field, TextInput } from '@/components/ui';
+import { Button, Field, FieldError, TextInput } from '@/components/ui';
 import Step1 from '@/components/steps/Step1';
 import Step2 from '@/components/steps/Step2';
 import Step3 from '@/components/steps/Step3';
@@ -57,6 +57,7 @@ export default function Wizard() {
   const [modalOpen, setModalOpen] = useState(false);
   const [modalEdificio, setModalEdificio] = useState<Edificio | null>(null);
   const [modalApt, setModalApt] = useState('');
+  const [modalFiltro, setModalFiltro] = useState('');
   const [modalError, setModalError] = useState('');
   const modalTriggerRef = useRef<HTMLElement | null>(null);
   const wasModalOpenRef = useRef(false);
@@ -260,7 +261,7 @@ export default function Wizard() {
 
     if (step === 1) {
       if (!edificioId) e.edificio = 'Você precisa selecionar um edifício';
-      else if (!numeroApartamento.trim()) e.apartamento = 'Você precisa informar o número do apartamento';
+      else if (!numeroApartamento.trim()) e.apartamento = 'Você precisa selecionar um apartamento';
     }
 
     if (step === 2) {
@@ -445,18 +446,15 @@ export default function Wizard() {
     modalTriggerRef.current = document.activeElement as HTMLElement | null;
     setModalEdificio(edificio);
     setModalApt(String(edificio.id) === String(edificioId) ? numeroApartamento : '');
+    setModalFiltro('');
     setModalError('');
     setModalOpen(true);
   }
 
-  function confirmApartment() {
-    if (!modalApt.trim()) {
-      setModalError('Informe o número do apartamento');
-      return;
-    }
-    const apt = modalApt.trim();
+  function selectApartamento(apt: string) {
     setNumeroApartamento(apt);
     setEdificioId(String(modalEdificio?.id || ''));
+    setModalApt(apt);
     setModalError('');
     setModalOpen(false);
     setErrors((prev) => {
@@ -467,6 +465,12 @@ export default function Wizard() {
     });
   }
 
+  const apartamentosModal = useMemo(() => {
+    const lista = modalEdificio?.apartamentos || [];
+    const termo = modalFiltro.trim().toLowerCase();
+    return termo ? lista.filter((apt) => apt.toLowerCase().includes(termo)) : lista;
+  }, [modalEdificio, modalFiltro]);
+
   function buildArgs(): Parameters<typeof buildFormData>[0] {
     return {
       userType,
@@ -475,6 +479,7 @@ export default function Wizard() {
       locadorTelefone,
       registradorNome,
       edificioId,
+      edificioNome: selectedEdificio?.nome_edificio || '',
       numeroApartamento,
       dataEntrada,
       dataSaida,
@@ -819,7 +824,7 @@ export default function Wizard() {
                   <div className="pointer-events-none absolute -right-6 -top-8 h-28 w-28 rounded-full bg-white/10" />
                   <h3 id="modal-apartamento-titulo" className="relative flex items-center gap-2 text-base font-bold sm:text-xl">
                     <i className="fas fa-door-open"></i>
-                    Número do Apartamento
+                    Selecionar apartamento
                   </h3>
                   <button
                     type="button"
@@ -831,42 +836,78 @@ export default function Wizard() {
                   </button>
                 </div>
 
-                <div className={isMobile ? 'space-y-4 p-4' : 'space-y-6 p-6 sm:p-8'}>
+                <div className={isMobile ? 'space-y-4 p-4' : 'space-y-5 p-6 sm:p-8'}>
                   <div className="text-center">
-                    <p className="text-xs text-slate-500 sm:text-sm">Informe o número do apartamento para o edifício:</p>
-                    <p className="mt-0.5 text-base font-bold text-slate-900 sm:mt-1 sm:text-lg">{modalEdificio?.nome_edificio}</p>
+                    <p className="text-xs text-slate-500 sm:text-sm">Escolha o apartamento do edifício:</p>
+                    <p className="mt-0.5 text-base font-bold text-slate-900 sm:mt-1 sm:text-lg">
+                      {modalEdificio?.nome_edificio}
+                    </p>
                   </div>
 
-                  <Field label="Número do Apartamento" htmlFor="modal_apt_input" error={modalError}>
-                    <TextInput
-                      id="modal_apt_input"
-                      icon="fas fa-hashtag"
-                      type="text"
-                      value={modalApt}
-                      onChange={(e) => {
-                        setModalApt(e.target.value);
-                        setModalError('');
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') confirmApartment();
-                      }}
-                      placeholder="Ex: 101, 202-A"
-                      error={!!modalError}
-                      aria-describedby={modalError ? 'modal_apt_input-error' : undefined}
-                      autoFocus
-                    />
-                  </Field>
+                  {modalError && <FieldError>{modalError}</FieldError>}
 
-                  <Button
-                    type="button"
-                    variant="primary"
-                    size="lg"
-                    icon="fas fa-check"
-                    onClick={confirmApartment}
-                    className="w-full"
-                  >
-                    Confirmar apartamento
-                  </Button>
+                  {(modalEdificio?.apartamentos?.length || 0) > 0 && (
+                    <Field label="Filtrar apartamentos" htmlFor="modal_apt_filtro">
+                      <TextInput
+                        id="modal_apt_filtro"
+                        icon="fas fa-magnifying-glass"
+                        type="text"
+                        autoComplete="off"
+                        value={modalFiltro}
+                        onChange={(e) => setModalFiltro(e.target.value)}
+                        placeholder="Ex: 101"
+                        autoFocus
+                      />
+                    </Field>
+                  )}
+
+                  {apartamentosModal.length > 0 ? (
+                    <>
+                      <p className="text-xs font-medium text-slate-500" aria-live="polite">
+                        {apartamentosModal.length}{' '}
+                        {apartamentosModal.length === 1 ? 'apartamento disponível' : 'apartamentos disponíveis'}
+                      </p>
+                      <div
+                        id="modal_lista_apartamentos"
+                        className="custom-scrollbar grid max-h-[46vh] grid-cols-2 gap-2 overflow-y-auto pr-1 sm:grid-cols-3"
+                      >
+                        {apartamentosModal.map((apt) => {
+                          const selecionado = apt === modalApt;
+                          return (
+                            <button
+                              type="button"
+                              key={apt}
+                              onClick={() => selectApartamento(apt)}
+                              aria-current={selecionado ? 'true' : undefined}
+                              className={`flex items-center justify-center gap-2 rounded-xl border-2 px-3 py-3 text-center text-sm font-semibold transition-colors ${
+                                selecionado
+                                  ? 'border-primary-600 bg-primary-50 text-primary-700'
+                                  : 'border-slate-100 bg-white text-slate-700 hover:border-primary-300 hover:bg-primary-50/50'
+                              }`}
+                            >
+                              <i className="fas fa-door-closed text-xs opacity-70" aria-hidden="true"></i>
+                              <span className="break-words">{apt}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 px-4 py-8 text-center">
+                      <i className="fas fa-door-open text-2xl text-slate-300" aria-hidden="true"></i>
+                      <p className="text-sm font-semibold text-slate-600">Nenhum apartamento disponível</p>
+                      <p className="text-xs text-slate-500">
+                        Este edifício ainda não possui apartamentos cadastrados no Moni.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setModalOpen(false)}
+                        className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 shadow-soft transition-colors hover:text-primary-600"
+                      >
+                        Fechar
+                      </button>
+                    </div>
+                  )}
                 </div>
               </motion.div>
             </div>

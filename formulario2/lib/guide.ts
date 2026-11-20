@@ -16,7 +16,7 @@ export const STEP_GUIDES: StepGuide[] = [
     key: 'edificio',
     target: '#edificio_search',
     title: 'Encontre o edifício',
-    text: 'Digite parte do nome do edifício. A lista filtra enquanto você digita e ignora maiúsculas e acentos. Depois clique no edifício e informe o apartamento.'
+    text: 'Digite parte do nome do edifício. A lista filtra enquanto você digita e ignora maiúsculas e acentos. Depois clique no edifício e escolha o apartamento na lista.'
   },
   {
     key: 'hospedes',
